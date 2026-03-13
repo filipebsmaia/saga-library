@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { KafkaTransport } from '../src/kafka.transport';
-import type { KafkaTransportOptions } from '../src/kafka-transport-options';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { KafkaTransport, getKafkaHeartbeat } from "../src/kafka.transport";
+import type { KafkaTransportOptions } from "../src/kafka-transport-options";
 
 // Mock kafkajs
 const mockProducerConnect = vi.fn().mockResolvedValue(undefined);
@@ -10,12 +10,18 @@ const mockConsumerConnect = vi.fn().mockResolvedValue(undefined);
 const mockConsumerDisconnect = vi.fn().mockResolvedValue(undefined);
 const mockConsumerSubscribe = vi.fn().mockResolvedValue(undefined);
 const mockConsumerRun = vi.fn().mockResolvedValue(undefined);
+const mockConsumerFactory = vi.fn().mockReturnValue({
+  connect: mockConsumerConnect,
+  disconnect: mockConsumerDisconnect,
+  subscribe: mockConsumerSubscribe,
+  run: mockConsumerRun,
+});
 const mockAdminConnect = vi.fn().mockResolvedValue(undefined);
 const mockAdminDisconnect = vi.fn().mockResolvedValue(undefined);
 const mockAdminListTopics = vi.fn().mockResolvedValue([]);
 const mockAdminCreateTopics = vi.fn().mockResolvedValue(undefined);
 
-vi.mock('kafkajs', () => ({
+vi.mock("kafkajs", () => ({
   logLevel: { NOTHING: 0, ERROR: 1, WARN: 2, INFO: 4, DEBUG: 5 },
   Kafka: vi.fn().mockImplementation(() => ({
     producer: () => ({
@@ -23,12 +29,7 @@ vi.mock('kafkajs', () => ({
       disconnect: mockProducerDisconnect,
       send: mockProducerSend,
     }),
-    consumer: () => ({
-      connect: mockConsumerConnect,
-      disconnect: mockConsumerDisconnect,
-      subscribe: mockConsumerSubscribe,
-      run: mockConsumerRun,
-    }),
+    consumer: mockConsumerFactory,
     admin: () => ({
       connect: mockAdminConnect,
       disconnect: mockAdminDisconnect,
@@ -38,76 +39,84 @@ vi.mock('kafkajs', () => ({
   })),
 }));
 
-describe('KafkaTransport', () => {
+describe("KafkaTransport", () => {
   let transport: KafkaTransport;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockConsumerFactory.mockReturnValue({
+      connect: mockConsumerConnect,
+      disconnect: mockConsumerDisconnect,
+      subscribe: mockConsumerSubscribe,
+      run: mockConsumerRun,
+    });
     transport = new KafkaTransport({
-      brokers: ['localhost:9092'],
-      clientId: 'test-client',
+      brokers: ["localhost:9092"],
+      clientId: "test-client",
     });
   });
 
-  describe('connect', () => {
-    it('should connect the producer', async () => {
+  describe("connect", () => {
+    it("should connect the producer", async () => {
       await transport.connect();
       expect(mockProducerConnect).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('disconnect', () => {
-    it('should disconnect the producer', async () => {
+  describe("disconnect", () => {
+    it("should disconnect the producer", async () => {
       await transport.disconnect();
       expect(mockProducerDisconnect).toHaveBeenCalledTimes(1);
     });
 
-    it('should disconnect the consumer if subscribed', async () => {
-      await transport.subscribe(['topic1'], async () => {}, { groupId: 'test-group' });
+    it("should disconnect the consumer if subscribed", async () => {
+      await transport.subscribe(["topic1"], async () => {}, {
+        groupId: "test-group",
+      });
       await transport.disconnect();
       expect(mockConsumerDisconnect).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('publish', () => {
-    it('should send a message via the producer', async () => {
+  describe("publish", () => {
+    it("should send a message via the producer", async () => {
       await transport.publish({
-        topic: 'saga.order.created',
-        key: 'saga-123',
+        topic: "saga.order.created",
+        key: "saga-123",
         value: '{"eventType":"order.created"}',
-        headers: { 'saga-id': 'saga-123' },
+        headers: { "saga-id": "saga-123" },
       });
 
       expect(mockProducerSend).toHaveBeenCalledWith({
-        topic: 'saga.order.created',
+        topic: "saga.order.created",
         messages: [
           {
-            key: 'saga-123',
+            key: "saga-123",
             value: '{"eventType":"order.created"}',
-            headers: { 'saga-id': 'saga-123' },
+            headers: { "saga-id": "saga-123" },
           },
         ],
       });
     });
   });
 
-  describe('subscribe', () => {
-    it('should create a consumer, subscribe, and run', async () => {
+  describe("subscribe", () => {
+    it("should create a consumer, subscribe, and run", async () => {
       const handler = vi.fn();
 
-      await transport.subscribe(['topic1', 'topic2'], handler, {
-        groupId: 'test-group',
+      await transport.subscribe(["topic1", "topic2"], handler, {
+        groupId: "test-group",
         fromBeginning: true,
       });
 
       expect(mockConsumerConnect).toHaveBeenCalledTimes(1);
       expect(mockConsumerSubscribe).toHaveBeenCalledTimes(2);
       expect(mockConsumerSubscribe).toHaveBeenCalledWith({
-        topic: 'topic1',
+        topic: "topic1",
         fromBeginning: true,
       });
       expect(mockConsumerSubscribe).toHaveBeenCalledWith({
-        topic: 'topic2',
+        topic: "topic2",
         fromBeginning: true,
       });
       expect(mockConsumerRun).toHaveBeenCalledWith(
@@ -118,13 +127,15 @@ describe('KafkaTransport', () => {
       );
     });
 
-    it('should use custom partitionsConsumedConcurrently', async () => {
+    it("should use custom partitionsConsumedConcurrently", async () => {
       const customTransport = new KafkaTransport({
-        brokers: ['localhost:9092'],
+        brokers: ["localhost:9092"],
         partitionsConsumedConcurrently: 5,
       });
 
-      await customTransport.subscribe(['topic1'], async () => {}, { groupId: 'test-group' });
+      await customTransport.subscribe(["topic1"], async () => {}, {
+        groupId: "test-group",
+      });
 
       expect(mockConsumerRun).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -134,8 +145,8 @@ describe('KafkaTransport', () => {
     });
   });
 
-  describe('batch processing', () => {
-    it('should group messages by key and process sequentially within group', async () => {
+  describe("batch processing", () => {
+    it("should group messages by key and process sequentially within group", async () => {
       const handler = vi.fn().mockResolvedValue(undefined);
       const resolveOffset = vi.fn();
       const heartbeat = vi.fn().mockResolvedValue(undefined);
@@ -146,16 +157,33 @@ describe('KafkaTransport', () => {
         eachBatchHandler = config.eachBatch;
       });
 
-      await transport.subscribe(['saga.order.created'], handler, { groupId: 'test-group' });
+      await transport.subscribe(["saga.order.created"], handler, {
+        groupId: "test-group",
+      });
 
       // Simulate a batch with messages from two different sagas
       await eachBatchHandler!({
         batch: {
-          topic: 'saga.order.created',
+          topic: "saga.order.created",
           messages: [
-            { key: Buffer.from('saga-1'), value: Buffer.from('{"eventType":"e1"}'), offset: '0', headers: {} },
-            { key: Buffer.from('saga-2'), value: Buffer.from('{"eventType":"e2"}'), offset: '1', headers: {} },
-            { key: Buffer.from('saga-1'), value: Buffer.from('{"eventType":"e3"}'), offset: '2', headers: {} },
+            {
+              key: Buffer.from("saga-1"),
+              value: Buffer.from('{"eventType":"e1"}'),
+              offset: "0",
+              headers: {},
+            },
+            {
+              key: Buffer.from("saga-2"),
+              value: Buffer.from('{"eventType":"e2"}'),
+              offset: "1",
+              headers: {},
+            },
+            {
+              key: Buffer.from("saga-1"),
+              value: Buffer.from('{"eventType":"e3"}'),
+              offset: "2",
+              headers: {},
+            },
           ],
         },
         resolveOffset,
@@ -171,7 +199,7 @@ describe('KafkaTransport', () => {
       expect(resolveOffset).toHaveBeenCalled();
     });
 
-    it('should stop processing when isRunning returns false', async () => {
+    it("should stop processing when isRunning returns false", async () => {
       const handler = vi.fn().mockResolvedValue(undefined);
       const resolveOffset = vi.fn();
       const heartbeat = vi.fn().mockResolvedValue(undefined);
@@ -181,15 +209,27 @@ describe('KafkaTransport', () => {
         eachBatchHandler = config.eachBatch;
       });
 
-      await transport.subscribe(['saga.order.created'], handler, { groupId: 'test-group' });
+      await transport.subscribe(["saga.order.created"], handler, {
+        groupId: "test-group",
+      });
 
       let callCount = 0;
       await eachBatchHandler!({
         batch: {
-          topic: 'saga.order.created',
+          topic: "saga.order.created",
           messages: [
-            { key: Buffer.from('saga-1'), value: Buffer.from('{"eventType":"e1"}'), offset: '0', headers: {} },
-            { key: Buffer.from('saga-1'), value: Buffer.from('{"eventType":"e2"}'), offset: '1', headers: {} },
+            {
+              key: Buffer.from("saga-1"),
+              value: Buffer.from('{"eventType":"e1"}'),
+              offset: "0",
+              headers: {},
+            },
+            {
+              key: Buffer.from("saga-1"),
+              value: Buffer.from('{"eventType":"e2"}'),
+              offset: "1",
+              headers: {},
+            },
           ],
         },
         resolveOffset,
@@ -204,7 +244,7 @@ describe('KafkaTransport', () => {
       expect(handler).toHaveBeenCalledTimes(1);
     });
 
-    it('should convert Buffer headers to strings', async () => {
+    it("should convert Buffer headers to strings", async () => {
       const handler = vi.fn().mockResolvedValue(undefined);
       const resolveOffset = vi.fn();
       const heartbeat = vi.fn().mockResolvedValue(undefined);
@@ -214,19 +254,21 @@ describe('KafkaTransport', () => {
         eachBatchHandler = config.eachBatch;
       });
 
-      await transport.subscribe(['saga.order.created'], handler, { groupId: 'test-group' });
+      await transport.subscribe(["saga.order.created"], handler, {
+        groupId: "test-group",
+      });
 
       await eachBatchHandler!({
         batch: {
-          topic: 'saga.order.created',
+          topic: "saga.order.created",
           messages: [
             {
-              key: Buffer.from('saga-1'),
+              key: Buffer.from("saga-1"),
               value: Buffer.from('{"eventType":"e1"}'),
-              offset: '0',
+              offset: "0",
               headers: {
-                'saga-id': Buffer.from('saga-123'),
-                'plain-header': 'plain-value',
+                "saga-id": Buffer.from("saga-123"),
+                "plain-header": "plain-value",
               },
             },
           ],
@@ -238,8 +280,152 @@ describe('KafkaTransport', () => {
       });
 
       const inboundMsg = handler.mock.calls[0][0];
-      expect(inboundMsg.headers['saga-id']).toBe('saga-123');
-      expect(inboundMsg.headers['plain-header']).toBe('plain-value');
+      expect(inboundMsg.headers["saga-id"]).toBe("saga-123");
+      expect(inboundMsg.headers["plain-header"]).toBe("plain-value");
+    });
+  });
+
+  describe("heartbeat management", () => {
+    it("should pass sessionTimeout and heartbeatInterval to kafka.consumer()", async () => {
+      const customTransport = new KafkaTransport({
+        brokers: ["localhost:9092"],
+        sessionTimeout: 60_000,
+        heartbeatInterval: 5_000,
+      });
+
+      await customTransport.subscribe(["topic1"], async () => {}, {
+        groupId: "test-group",
+      });
+
+      expect(mockConsumerFactory).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sessionTimeout: 60_000,
+          heartbeatInterval: 5_000,
+        }),
+      );
+    });
+
+    it("should start a setInterval during handler execution when autoHeartbeatInterval > 0", async () => {
+      vi.useFakeTimers();
+
+      const heartbeat = vi.fn().mockResolvedValue(undefined);
+      let eachBatchHandler: Function;
+      mockConsumerRun.mockImplementation(async (config: any) => {
+        eachBatchHandler = config.eachBatch;
+      });
+
+      await transport.subscribe(["topic1"], async () => {}, {
+        groupId: "test-group",
+      });
+
+      const setIntervalSpy = vi.spyOn(globalThis, "setInterval");
+      const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
+
+      await eachBatchHandler!({
+        batch: {
+          topic: "topic1",
+          messages: [
+            {
+              key: Buffer.from("saga-1"),
+              value: Buffer.from("{}"),
+              offset: "0",
+              headers: {},
+            },
+          ],
+        },
+        resolveOffset: vi.fn(),
+        heartbeat,
+        isRunning: () => true,
+        isStale: () => false,
+      });
+
+      expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 5_000);
+      expect(clearIntervalSpy).toHaveBeenCalled();
+
+      vi.useRealTimers();
+    });
+
+    it("should NOT start setInterval when autoHeartbeatInterval is 0", async () => {
+      const noAutoTransport = new KafkaTransport({
+        brokers: ["localhost:9092"],
+        autoHeartbeatInterval: 0,
+      });
+
+      const heartbeat = vi.fn().mockResolvedValue(undefined);
+      let eachBatchHandler: Function;
+      mockConsumerRun.mockImplementation(async (config: any) => {
+        eachBatchHandler = config.eachBatch;
+      });
+
+      await noAutoTransport.subscribe(["topic1"], async () => {}, {
+        groupId: "test-group",
+      });
+
+      const setIntervalSpy = vi.spyOn(globalThis, "setInterval");
+
+      await eachBatchHandler!({
+        batch: {
+          topic: "topic1",
+          messages: [
+            {
+              key: Buffer.from("saga-1"),
+              value: Buffer.from("{}"),
+              offset: "0",
+              headers: {},
+            },
+          ],
+        },
+        resolveOffset: vi.fn(),
+        heartbeat,
+        isRunning: () => true,
+        isStale: () => false,
+      });
+
+      expect(setIntervalSpy).not.toHaveBeenCalled();
+    });
+
+    it("should expose the heartbeat function via getKafkaHeartbeat() inside a handler", async () => {
+      const heartbeat = vi.fn().mockResolvedValue(undefined);
+      let capturedHeartbeat: (() => Promise<void>) | undefined;
+
+      let eachBatchHandler: Function;
+      mockConsumerRun.mockImplementation(async (config: any) => {
+        eachBatchHandler = config.eachBatch;
+      });
+
+      const handlerWithCapture = async () => {
+        capturedHeartbeat = getKafkaHeartbeat();
+      };
+
+      await transport.subscribe(["topic1"], handlerWithCapture, {
+        groupId: "test-group",
+      });
+
+      await eachBatchHandler!({
+        batch: {
+          topic: "topic1",
+          messages: [
+            {
+              key: Buffer.from("saga-1"),
+              value: Buffer.from("{}"),
+              offset: "0",
+              headers: {},
+            },
+          ],
+        },
+        resolveOffset: vi.fn(),
+        heartbeat,
+        isRunning: () => true,
+        isStale: () => false,
+      });
+
+      expect(capturedHeartbeat).toBe(heartbeat);
+    });
+  });
+
+  describe("getKafkaHeartbeat", () => {
+    it("should return undefined when called outside a KafkaJS consumer context", () => {
+      expect(getKafkaHeartbeat()).toBeUndefined();
     });
   });
 });

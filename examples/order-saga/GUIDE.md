@@ -19,6 +19,7 @@ Este projeto demonstra o uso da biblioteca `@fbsm/saga-nestjs` com três cenári
 - [Cenário 1 — Recurring Billing (Cadeia Linear)](#cenário-1--recurring-billing-cadeia-linear)
 - [Cenário 2 — SIM Swap (Parent → Sub-Saga → Parent Resume)](#cenário-2--sim-swap-parent--sub-saga--parent-resume)
 - [Cenário 3 — Bulk Activation (Fan-Out / Fan-In)](#cenário-3--bulk-activation-fan-out--fan-in)
+- [Cenário 5 — Device Provisioning (Heartbeat em Handlers Longos)](#cenário-5--device-provisioning-heartbeat-em-handlers-longos)
 - [Sub-Sagas em Detalhe](#sub-sagas-em-detalhe)
 - [Referência de Endpoints](#referência-de-endpoints)
 - [Observabilidade](#observabilidade)
@@ -59,7 +60,7 @@ open http://localhost:3000/monitor
 ```bash
 # Cenário 1: Recurring billing (happy path)
 curl -X POST http://localhost:3000/recurrings
-  
+
 # Cenário 1: Com falha de pagamento (compensation)
 curl -X POST "http://localhost:3000/recurrings?paymentFail=true"
 
@@ -133,19 +134,23 @@ Cada **tipo de evento** corresponde a um **tópico Kafka**. Não existe um orque
 Um participant é uma classe NestJS decorada com `@SagaParticipant()` que estende `SagaParticipantBase`. Cada participant tem um `serviceId` único e um ou mais handlers.
 
 ```typescript
-import { Injectable } from '@nestjs/common';
-import { SagaParticipant, SagaParticipantBase, SagaHandler } from '@fbsm/saga-nestjs';
-import type { IncomingEvent, Emit } from '@fbsm/saga-nestjs';
+import { Injectable } from "@nestjs/common";
+import {
+  SagaParticipant,
+  SagaParticipantBase,
+  SagaHandler,
+} from "@fbsm/saga-nestjs";
+import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
 
 @Injectable()
 @SagaParticipant()
 export class MeuParticipant extends SagaParticipantBase {
-  readonly serviceId = 'meu-servico';
+  readonly serviceId = "meu-servico";
 
-  @SagaHandler('pedido.criado')
+  @SagaHandler("pedido.criado")
   async handlePedidoCriado(event: IncomingEvent, emit: Emit): Promise<void> {
     // processar evento...
-    await emit('pedido.processado', 'processar-pedido', { id: '123' });
+    await emit("pedido.processado", "processar-pedido", { id: "123" });
   }
 }
 ```
@@ -178,10 +183,10 @@ async handle(event: IncomingEvent, emit: Emit): Promise<void> {
 
 O handler recebe dois argumentos:
 
-| Argumento | Tipo | Descrição |
-|-----------|------|-----------|
-| `event` | `IncomingEvent` | Evento recebido com payload, sagaId, etc. |
-| `emit` | `Emit` | Função para emitir o próximo evento **na mesma saga** |
+| Argumento | Tipo            | Descrição                                             |
+| --------- | --------------- | ----------------------------------------------------- |
+| `event`   | `IncomingEvent` | Evento recebido com payload, sagaId, etc.             |
+| `emit`    | `Emit`          | Função para emitir o próximo evento **na mesma saga** |
 
 ### Emit
 
@@ -191,44 +196,46 @@ A função `emit` publica um evento no Kafka vinculado à saga atual.
 await emit(eventType, stepName, payload, options?)
 ```
 
-| Parâmetro | Tipo | Descrição |
-|-----------|------|-----------|
-| `eventType` | `string` | Tipo do evento (vira o tópico Kafka) |
-| `stepName` | `string` | Identificador do passo (para rastreamento) |
-| `payload` | `object` | Dados do evento |
-| `options` | `{ hint?: EventHint }` | Opcional — dica sobre a natureza do evento |
+| Parâmetro   | Tipo                   | Descrição                                  |
+| ----------- | ---------------------- | ------------------------------------------ |
+| `eventType` | `string`               | Tipo do evento (vira o tópico Kafka)       |
+| `stepName`  | `string`               | Identificador do passo (para rastreamento) |
+| `payload`   | `object`               | Dados do evento                            |
+| `options`   | `{ hint?: EventHint }` | Opcional — dica sobre a natureza do evento |
 
 **Quando usar `emit` vs `sagaPublisher.forSaga()`:**
 
-| Cenário | O que usar |
-|---------|-----------|
-| Emitir na **mesma saga** | `emit(...)` (recebido como 2o parâmetro do handler) |
-| Criar uma **sub-saga** | `sagaPublisher.forSaga(novoSagaId, { parentSagaId, rootSagaId })` |
-| Retomar a **saga pai** | `sagaPublisher.forSaga(parentSagaId, { parentSagaId, rootSagaId })` |
+| Cenário                  | O que usar                                                          |
+| ------------------------ | ------------------------------------------------------------------- |
+| Emitir na **mesma saga** | `emit(...)` (recebido como 2o parâmetro do handler)                 |
+| Criar uma **sub-saga**   | `sagaPublisher.forSaga(novoSagaId, { parentSagaId, rootSagaId })`   |
+| Retomar a **saga pai**   | `sagaPublisher.forSaga(parentSagaId, { parentSagaId, rootSagaId })` |
 
 ### EventHint
 
 O hint é um metadado que indica a **natureza** do evento. É propagado no header `saga-event-hint` do Kafka e usado pelo monitor para colorir e categorizar eventos.
 
-| Hint | Quando usar |
-|------|-------------|
-| *(sem hint)* | Evento de progresso normal dentro da saga |
-| `'terminal'` | Último evento da saga ou sub-saga — indica que ela **terminou** |
-| `'compensation'` | Evento de compensação/rollback (falha) |
-| `'spawn'` | Evento que **cria** uma nova sub-saga |
+| Hint             | Quando usar                                                     |
+| ---------------- | --------------------------------------------------------------- |
+| _(sem hint)_     | Evento de progresso normal dentro da saga                       |
+| `'terminal'`     | Último evento da saga ou sub-saga — indica que ela **terminou** |
+| `'compensation'` | Evento de compensação/rollback (falha)                          |
+| `'spawn'`        | Evento que **cria** uma nova sub-saga                           |
 
 ```typescript
 // Progresso normal — sem hint
-await emit('order.created', 'create-order', { orderId });
+await emit("order.created", "create-order", { orderId });
 
 // Saga terminou com sucesso
-await emit('order.completed', 'complete', { orderId }, { hint: 'terminal' });
+await emit("order.completed", "complete", { orderId }, { hint: "terminal" });
 
 // Compensação (falha)
-await emit('order.failed', 'fail', { reason }, { hint: 'compensation' });
+await emit("order.failed", "fail", { reason }, { hint: "compensation" });
 
 // Criando sub-saga
-await subEmit('validation.requested', 'spawn-validation', data, { hint: 'spawn' });
+await subEmit("validation.requested", "spawn-validation", data, {
+  hint: "spawn",
+});
 ```
 
 ### SagaRetryableError
@@ -254,11 +261,11 @@ Para tratar o caso de **retries esgotados**, implemente `onRetryExhausted`:
 @Injectable()
 @SagaParticipant()
 export class PaymentParticipant extends SagaParticipantBase {
-  readonly serviceId = 'payment';
+  readonly serviceId = "payment";
 
-  @SagaHandler('order.created')
+  @SagaHandler("order.created")
   async handle(event: IncomingEvent, emit: Emit): Promise<void> {
-    throw new SagaRetryableError('Timeout', 2); // max 2 retries
+    throw new SagaRetryableError("Timeout", 2); // max 2 retries
   }
 
   override async onRetryExhausted(
@@ -267,21 +274,26 @@ export class PaymentParticipant extends SagaParticipantBase {
     emit: Emit,
   ): Promise<void> {
     // Emitir compensação quando retries acabam
-    await emit('payment.rejected', 'payment-exhausted', {
-      reason: `Retries esgotados: ${error.message}`,
-    }, { hint: 'compensation' });
+    await emit(
+      "payment.rejected",
+      "payment-exhausted",
+      {
+        reason: `Retries esgotados: ${error.message}`,
+      },
+      { hint: "compensation" },
+    );
   }
 }
 ```
 
 **Comportamento do retry:**
 
-| Tentativa | Delay |
-|-----------|-------|
-| 1a | `initialDelayMs` (padrão: 500ms) |
-| 2a | `initialDelayMs * 2` |
-| 3a | `initialDelayMs * 4` |
-| ... | backoff exponencial |
+| Tentativa | Delay                            |
+| --------- | -------------------------------- |
+| 1a        | `initialDelayMs` (padrão: 500ms) |
+| 2a        | `initialDelayMs * 2`             |
+| 3a        | `initialDelayMs * 4`             |
+| ...       | backoff exponencial              |
 
 > Erros que **não** são `SagaRetryableError` são logados e descartados (sem retry).
 
@@ -380,15 +392,15 @@ POST /recurrings?transient=true
 
 ### Participants
 
-| Participant | Eventos | Responsabilidade |
-|---|---|---|
-| `plan-management` | `recurring.triggered` | Recebe trigger e inicia o fluxo de pedido |
-| `plan-ordering-management` | `plan.order.requested`, `order.completed`, `order.failed` | Bridge entre domínios plan ↔ ordering |
-| `ordering-management` | `order.requested`, `payment.approved`, `payment.rejected` | Gerencia ciclo de vida do pedido |
-| `payment-management` | `order.created` | Processa pagamento (retry + compensation) |
-| `plan-recurring-management` | `plan.order.completed`, `plan.order.failed` | Finaliza ciclo, inicia próximo |
-| `mobile-product-lifecycle` | `recurring.created`, `product.provisioned` | Gerencia provisionamento do produto |
-| `mobile-product-provision` | `product.activation.requested` | Provisiona produto na rede |
+| Participant                 | Eventos                                                   | Responsabilidade                          |
+| --------------------------- | --------------------------------------------------------- | ----------------------------------------- |
+| `plan-management`           | `recurring.triggered`                                     | Recebe trigger e inicia o fluxo de pedido |
+| `plan-ordering-management`  | `plan.order.requested`, `order.completed`, `order.failed` | Bridge entre domínios plan ↔ ordering     |
+| `ordering-management`       | `order.requested`, `payment.approved`, `payment.rejected` | Gerencia ciclo de vida do pedido          |
+| `payment-management`        | `order.created`                                           | Processa pagamento (retry + compensation) |
+| `plan-recurring-management` | `plan.order.completed`, `plan.order.failed`               | Finaliza ciclo, inicia próximo            |
+| `mobile-product-lifecycle`  | `recurring.created`, `product.provisioned`                | Gerencia provisionamento do produto       |
+| `mobile-product-provision`  | `product.activation.requested`                            | Provisiona produto na rede                |
 
 ---
 
@@ -425,8 +437,12 @@ POST /sim-swaps
      parentSagaId: event.sagaId,
      rootSagaId: event.rootSagaId,
    });
-   await subEmit('portability.validation.requested', 'request-validation',
-     { swapId, msisdn }, { hint: 'spawn' });
+   await subEmit(
+     "portability.validation.requested",
+     "request-validation",
+     { swapId, msisdn },
+     { hint: "spawn" },
+   );
    // NÃO emite terminal — pai fica vivo
    ```
 3. O `number-portability` processa a validação e emite `portability.validated` com `{ hint: 'terminal' }` — encerrando a **sub-saga**
@@ -436,7 +452,9 @@ POST /sim-swaps
      parentSagaId: swap.sagaId,
      rootSagaId: event.rootSagaId,
    });
-   await parentEmit('sim-swap.completed', 'complete', data, { hint: 'terminal' });
+   await parentEmit("sim-swap.completed", "complete", data, {
+     hint: "terminal",
+   });
    ```
 
 ### Ponto-chave
@@ -481,6 +499,7 @@ POST /bulk-activations?lines=3
 
 1. O controller cria a saga pai e emite `bulk-activation.requested`
 2. O `bulk-activation-orchestration` recebe e faz **fan-out** de N sub-sagas:
+
    ```typescript
    for (let i = 0; i < lines; i++) {
      const subSagaId = uuidv7();
@@ -491,14 +510,23 @@ POST /bulk-activations?lines=3
        rootSagaId: event.rootSagaId,
      });
 
-     await subEmit('line-activation.requested', 'request-line', {
-       bulkId, lineIndex: i, lineNumber,
-     }, { hint: 'spawn' });
+     await subEmit(
+       "line-activation.requested",
+       "request-line",
+       {
+         bulkId,
+         lineIndex: i,
+         lineNumber,
+       },
+       { hint: "spawn" },
+     );
    }
    // NÃO emite terminal — pai espera todas
    ```
+
 3. Cada `line-activation` processa independentemente e emite `line-activation.completed` com `{ hint: 'terminal' }`
 4. O `bulk-activation-orchestration` recebe cada completion e incrementa o contador (**fan-in**):
+
    ```typescript
    const bulk = this.bulkStore.incrementCompleted(bulkId);
 
@@ -515,6 +543,91 @@ O `BulkActivationStore` mantém o contador `completedLines` como **barreira de f
 
 ---
 
+## Cenário 5 — Device Provisioning (Heartbeat em Handlers Longos)
+
+Demonstra: **heartbeat manual com `getKafkaHeartbeat()`**. O handler executa 4 etapas sequenciais (~8 s cada = ~32 s total), ultrapassando o `sessionTimeout` padrão do Kafka (30 s). Sem heartbeat, o broker expulsaria o consumer do grupo e a mensagem seria reprocessada.
+
+### O problema sem heartbeat
+
+```
+handler inicia
+  ↓ etapa 1 (8s) ...
+  ↓ etapa 2 (8s) ...         ← sessionTimeout (30s) expira aqui
+  ↓ etapa 3 (8s) ...         ← broker expulsa o consumer → REBALANCE
+  ↓ etapa 4 (8s)
+handler termina              ← muito tarde: mensagem já foi reentregue
+```
+
+### Fluxo
+
+```
+POST /provisionings
+       │
+       ▼
+device-provisioning.requested
+       │
+       ▼  [DeviceProvisioningParticipant — handler único, 4 etapas]
+       │   configure (~8s) → heartbeat()
+       │   install  (~8s) → heartbeat()
+       │   test     (~8s) → heartbeat()
+       │   activate (~8s) → heartbeat()
+       ▼
+device-provisioning.completed  [final]
+```
+
+### Como funciona
+
+O `DeviceProvisioningParticipant` usa `getKafkaHeartbeat()` para obter a função de heartbeat do KafkaJS via `AsyncLocalStorage`:
+
+```typescript
+import { getKafkaHeartbeat } from '@fbsm/saga-transport-kafka';
+
+@SagaHandler('device-provisioning.requested', { final: true })
+async handleProvisioningRequested(event: IncomingEvent, emit: Emit): Promise<void> {
+  const heartbeat = getKafkaHeartbeat();
+
+  for (const step of steps) {
+    await this.simulateLongStep(step);  // ~8s
+    await heartbeat?.();                // mantém o consumer vivo
+  }
+
+  await emit({ eventType: 'device-provisioning.completed', ... });
+}
+```
+
+`getKafkaHeartbeat()` retorna `undefined` quando chamado fora de um consumer KafkaJS (ex: testes unitários), por isso o uso de `?.()` é sempre seguro.
+
+### Modos de heartbeat disponíveis
+
+| Modo                    | Como configurar                                    | Quando usar                                              |
+| ----------------------- | -------------------------------------------------- | -------------------------------------------------------- |
+| **Automático** (padrão) | `autoHeartbeatInterval: 5_000` (default)           | Maioria dos handlers — sem mudança de código             |
+| **Manual**              | `autoHeartbeatInterval: 0` + `getKafkaHeartbeat()` | Loops com checkpoints explícitos                         |
+| **Timeout ajustado**    | `sessionTimeout: 60_000`                           | Handlers muito longos onde o automático não é suficiente |
+
+Para a maioria dos handlers o modo automático é suficiente e não requer alteração no código do participant.
+
+### Testando
+
+```bash
+# Inicia um provisionamento (~32s de duração)
+curl -X POST http://localhost:3000/provisionings
+
+# Lista estado dos provisionamentos
+curl http://localhost:3000/provisionings
+
+# Acelerar para testes locais (2s por etapa = 8s total)
+PROVISIONING_STEP_MS=2000 pnpm start:dev
+```
+
+### Participants
+
+| Participant                     | Evento                          | Responsabilidade                                        |
+| ------------------------------- | ------------------------------- | ------------------------------------------------------- |
+| `DeviceProvisioningParticipant` | `device-provisioning.requested` | Provisiona dispositivo em 4 etapas com heartbeat manual |
+
+---
+
 ## Sub-Sagas em Detalhe
 
 ### O que é uma sub-saga?
@@ -523,32 +636,37 @@ Uma sub-saga é uma saga independente que possui um **parentSagaId** e um **root
 
 ### Quando usar sub-sagas
 
-| Padrão | Quando usar | Exemplo |
-|--------|-------------|---------|
-| **Sem sub-saga** | Fluxo linear, cada passo emite para o próximo | Recurring billing |
-| **Sub-saga com retorno** | Precisa de um resultado antes de continuar | SIM swap → validação → continua swap |
-| **Fan-out de sub-sagas** | Precisa executar N operações em paralelo | Bulk activation → N ativações |
-| **Sub-saga fire-and-forget** | Trabalho independente que não afeta o pai | Recurring → provisionamento de produto |
+| Padrão                       | Quando usar                                   | Exemplo                                |
+| ---------------------------- | --------------------------------------------- | -------------------------------------- |
+| **Sem sub-saga**             | Fluxo linear, cada passo emite para o próximo | Recurring billing                      |
+| **Sub-saga com retorno**     | Precisa de um resultado antes de continuar    | SIM swap → validação → continua swap   |
+| **Fan-out de sub-sagas**     | Precisa executar N operações em paralelo      | Bulk activation → N ativações          |
+| **Sub-saga fire-and-forget** | Trabalho independente que não afeta o pai     | Recurring → provisionamento de produto |
 
 ### Como criar uma sub-saga
 
 ```typescript
-import { v7 as uuidv7 } from 'uuid';
+import { v7 as uuidv7 } from "uuid";
 
 // 1. Gerar novo sagaId para a sub-saga
 const subSagaId = uuidv7();
 
 // 2. Criar emit vinculado à sub-saga, com contexto do pai
 const subEmit = this.sagaPublisher.forSaga(subSagaId, {
-  parentSagaId: event.sagaId,     // quem é o pai
-  rootSagaId: event.rootSagaId,   // raiz da árvore (não muda)
+  parentSagaId: event.sagaId, // quem é o pai
+  rootSagaId: event.rootSagaId, // raiz da árvore (não muda)
 });
 
 // 3. Emitir o primeiro evento da sub-saga
-await subEmit('sub-task.requested', 'start-sub-task', {
-  ...dados,
-  parentSagaId: event.sagaId,     // passar no payload para lookup posterior
-}, { hint: 'spawn' });
+await subEmit(
+  "sub-task.requested",
+  "start-sub-task",
+  {
+    ...dados,
+    parentSagaId: event.sagaId, // passar no payload para lookup posterior
+  },
+  { hint: "spawn" },
+);
 
 // 4. NÃO emitir terminal aqui — o pai fica "esperando"
 ```
@@ -568,9 +686,14 @@ const parentEmit = this.sagaPublisher.forSaga(parent.sagaId, {
 });
 
 // 3. Emitir terminal no pai
-await parentEmit('parent-task.completed', 'resume-parent', {
-  resultado: '...',
-}, { hint: 'terminal' });
+await parentEmit(
+  "parent-task.completed",
+  "resume-parent",
+  {
+    resultado: "...",
+  },
+  { hint: "terminal" },
+);
 ```
 
 ### Propagação de IDs
@@ -594,38 +717,45 @@ Exemplo (Bulk Activation com 3 linhas):
 
 ### Recurring Billing
 
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `POST` | `/recurrings` | Trigger recurring (happy path) |
+| Método | Endpoint                       | Descrição                                   |
+| ------ | ------------------------------ | ------------------------------------------- |
+| `POST` | `/recurrings`                  | Trigger recurring (happy path)              |
 | `POST` | `/recurrings?paymentFail=true` | Simula rejeição de pagamento → compensation |
-| `POST` | `/recurrings?transient=true` | Simula erro transiente → retry → exhaustion |
-| `GET` | `/recurrings` | Lista todos os ciclos de recurring |
-| `GET` | `/orders` | Lista todos os pedidos |
-| `GET` | `/products` | Lista todos os produtos provisionados |
+| `POST` | `/recurrings?transient=true`   | Simula erro transiente → retry → exhaustion |
+| `GET`  | `/recurrings`                  | Lista todos os ciclos de recurring          |
+| `GET`  | `/orders`                      | Lista todos os pedidos                      |
+| `GET`  | `/products`                    | Lista todos os produtos provisionados       |
 
 ### SIM Swap
 
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
+| Método | Endpoint     | Descrição                           |
+| ------ | ------------ | ----------------------------------- |
 | `POST` | `/sim-swaps` | Inicia SIM swap (parent + sub-saga) |
-| `GET` | `/sim-swaps` | Lista todos os SIM swaps |
+| `GET`  | `/sim-swaps` | Lista todos os SIM swaps            |
 
 ### Bulk Activation
 
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
+| Método | Endpoint                    | Descrição                                            |
+| ------ | --------------------------- | ---------------------------------------------------- |
 | `POST` | `/bulk-activations?lines=N` | Inicia bulk activation com N linhas (1-10, padrão 3) |
-| `GET` | `/bulk-activations` | Lista todas as bulk activations |
+| `GET`  | `/bulk-activations`         | Lista todas as bulk activations                      |
+
+### Device Provisioning
+
+| Método | Endpoint         | Descrição                                                      |
+| ------ | ---------------- | -------------------------------------------------------------- |
+| `POST` | `/provisionings` | Inicia provisionamento de dispositivo (~32s, heartbeat manual) |
+| `GET`  | `/provisionings` | Lista todos os provisionamentos                                |
 
 ---
 
 ## Observabilidade
 
-| Ferramenta | URL | Descrição |
-|------------|-----|-----------|
+| Ferramenta       | URL                           | Descrição                                    |
+| ---------------- | ----------------------------- | -------------------------------------------- |
 | **Saga Monitor** | http://localhost:3000/monitor | Dashboard com Trace, Waterfall e Flame Graph |
-| **Jaeger UI** | http://localhost:16686 | Distributed tracing (spans por saga) |
-| **Kafka UI** | http://localhost:8080 | Inspeção de tópicos e mensagens |
+| **Jaeger UI**    | http://localhost:16686        | Distributed tracing (spans por saga)         |
+| **Kafka UI**     | http://localhost:8080         | Inspeção de tópicos e mensagens              |
 
 ### Saga Monitor
 
@@ -636,6 +766,7 @@ O monitor oferece 3 visualizações:
 - **Flame Graph** — Visualização hierárquica com parent/sub-sagas
 
 Cada visualização suporta o toggle **Grouped/Individual**:
+
 - **Grouped** — Sub-sagas agrupadas sob o root saga
 - **Individual** — Cada saga exibida separadamente
 
@@ -664,18 +795,19 @@ SagaModule.forRoot({
 
 ### Variáveis de Ambiente
 
-| Variável | Padrão | Descrição |
-|----------|--------|-----------|
-| `SAGA_DELAY_MIN` | `200` | Delay mínimo (ms) da simulação nos participants |
-| `SAGA_DELAY_MAX` | `2500` | Delay máximo (ms) da simulação nos participants |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4318/v1/traces` | Endpoint do coletor OTLP |
+| Variável                      | Padrão                            | Descrição                                               |
+| ----------------------------- | --------------------------------- | ------------------------------------------------------- |
+| `SAGA_DELAY_MIN`              | `200`                             | Delay mínimo (ms) da simulação nos participants         |
+| `SAGA_DELAY_MAX`              | `2500`                            | Delay máximo (ms) da simulação nos participants         |
+| `PROVISIONING_STEP_MS`        | `8000`                            | Duração de cada etapa do provisionamento de dispositivo |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4318/v1/traces` | Endpoint do coletor OTLP                                |
 
 ### Scripts
 
-| Script | Comando | Descrição |
-|--------|---------|-----------|
-| `start:dev` | `pnpm start:dev` | Inicia com ts-node (desenvolvimento) |
-| `build` | `pnpm build` | Compila TypeScript |
-| `start` | `pnpm start` | Inicia build compilado |
-| `docker:up` | `pnpm docker:up` | Sobe Kafka + Jaeger + Kafka UI |
-| `docker:down` | `pnpm docker:down` | Derruba infraestrutura |
+| Script        | Comando            | Descrição                            |
+| ------------- | ------------------ | ------------------------------------ |
+| `start:dev`   | `pnpm start:dev`   | Inicia com ts-node (desenvolvimento) |
+| `build`       | `pnpm build`       | Compila TypeScript                   |
+| `start`       | `pnpm start`       | Inicia build compilado               |
+| `docker:up`   | `pnpm docker:up`   | Sobe Kafka + Jaeger + Kafka UI       |
+| `docker:down` | `pnpm docker:down` | Derruba infraestrutura               |

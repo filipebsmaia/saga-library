@@ -1,14 +1,34 @@
-import { Kafka, Producer, Consumer, EachBatchPayload, IHeaders, logLevel } from 'kafkajs';
+import { AsyncLocalStorage } from "node:async_hooks";
+import {
+  Kafka,
+  Producer,
+  Consumer,
+  EachBatchPayload,
+  IHeaders,
+  logLevel,
+} from "kafkajs";
 import type {
   SagaTransport,
   InboundMessage,
   OutboundMessage,
   TransportSubscribeOptions,
   SagaLogger,
-} from '@fbsm/saga-core';
-import { ConsoleSagaLogger } from '@fbsm/saga-core';
-import { WatermarkTracker } from './watermark-tracker';
-import type { KafkaTransportOptions } from './kafka-transport-options';
+} from "@fbsm/saga-core";
+import { ConsoleSagaLogger } from "@fbsm/saga-core";
+import { WatermarkTracker } from "./watermark-tracker";
+import type { KafkaTransportOptions } from "./kafka-transport-options";
+
+const kafkaHeartbeatStore = new AsyncLocalStorage<() => Promise<void>>();
+
+/**
+ * Returns the KafkaJS `heartbeat` function from the current execution context.
+ * Only available inside a message handler running within `KafkaTransport`.
+ * Returns `undefined` when called outside that context (e.g. in unit tests or
+ * when using a different transport). Safe to call with optional chaining: `await heartbeat?.()`.
+ */
+export function getKafkaHeartbeat(): (() => Promise<void>) | undefined {
+  return kafkaHeartbeatStore.getStore();
+}
 
 export class KafkaTransport implements SagaTransport {
   private kafka: Kafka;
@@ -19,7 +39,7 @@ export class KafkaTransport implements SagaTransport {
   constructor(private options: KafkaTransportOptions) {
     this.logger = options.logger ?? new ConsoleSagaLogger();
     this.kafka = new Kafka({
-      clientId: options.clientId ?? 'saga-client',
+      clientId: options.clientId ?? "saga-client",
       brokers: options.brokers,
       ssl: options.ssl,
       sasl: options.sasl,
@@ -65,7 +85,7 @@ export class KafkaTransport implements SagaTransport {
     handler: (message: InboundMessage) => Promise<void>,
     options?: TransportSubscribeOptions,
   ): Promise<void> {
-    const groupId = options?.groupId ?? 'saga-default-group';
+    const groupId = options?.groupId ?? "saga-default-group";
 
     if (this.options.autoCreateTopics) {
       await this.ensureTopicsExist(topics);
@@ -82,7 +102,11 @@ export class KafkaTransport implements SagaTransport {
       const missing = topics.filter((t) => !existing.includes(t));
       if (missing.length > 0) {
         await admin.createTopics({
-          topics: missing.map((t) => ({ topic: t, numPartitions: 3, replicationFactor: 1 })),
+          topics: missing.map((t) => ({
+            topic: t,
+            numPartitions: 3,
+            replicationFactor: 1,
+          })),
         });
       }
     } finally {
@@ -101,6 +125,8 @@ export class KafkaTransport implements SagaTransport {
       try {
         this.consumer = this.kafka.consumer({
           groupId,
+          sessionTimeout: this.options.sessionTimeout,
+          heartbeatInterval: this.options.heartbeatInterval,
           retry: { initialRetryTime: 500, retries: 8 },
         });
 
@@ -114,7 +140,8 @@ export class KafkaTransport implements SagaTransport {
         }
 
         await this.consumer.run({
-          partitionsConsumedConcurrently: this.options.partitionsConsumedConcurrently ?? 3,
+          partitionsConsumedConcurrently:
+            this.options.partitionsConsumedConcurrently ?? 3,
           eachBatch: async (payload: EachBatchPayload) => {
             await this.processBatch(payload, handler);
           },
@@ -157,7 +184,7 @@ export class KafkaTransport implements SagaTransport {
     const groups = new Map<string, typeof batch.messages>();
 
     for (const message of batch.messages) {
-      const key = message.key?.toString() ?? '__no_key__';
+      const key = message.key?.toString() ?? "__no_key__";
       if (!groups.has(key)) {
         groups.set(key, []);
       }
@@ -174,12 +201,31 @@ export class KafkaTransport implements SagaTransport {
 
           const inbound: InboundMessage = {
             topic: batch.topic,
-            key: message.key?.toString() ?? '',
-            value: message.value?.toString() ?? '',
+            key: message.key?.toString() ?? "",
+            value: message.value?.toString() ?? "",
             headers: this.convertHeaders(message.headers),
           };
 
-          await handler(inbound);
+          const autoInterval = this.options.autoHeartbeatInterval ?? 5_000;
+
+          await kafkaHeartbeatStore.run(heartbeat, async () => {
+            let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
+
+            if (autoInterval > 0) {
+              heartbeatTimer = setInterval(
+                () => void heartbeat(),
+                autoInterval,
+              );
+            }
+
+            try {
+              await handler(inbound);
+            } finally {
+              if (heartbeatTimer !== undefined) {
+                clearInterval(heartbeatTimer);
+              }
+            }
+          });
 
           tracker.markCompleted(message.offset);
           const committable = tracker.getCommittableOffset();
@@ -200,7 +246,7 @@ export class KafkaTransport implements SagaTransport {
     for (const [key, value] of Object.entries(headers)) {
       if (Buffer.isBuffer(value)) {
         result[key] = value.toString();
-      } else if (typeof value === 'string') {
+      } else if (typeof value === "string") {
         result[key] = value;
       } else if (Array.isArray(value) && value.length > 0) {
         const first = value[0];
