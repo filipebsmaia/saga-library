@@ -139,6 +139,15 @@ importers:
 
   examples/order-saga:
     dependencies:
+      '@fbsm/saga-core':
+        specifier: workspace:*
+        version: link:../../packages/saga-core
+      '@fbsm/saga-nestjs':
+        specifier: workspace:*
+        version: link:../../packages/saga-nestjs
+      '@fbsm/saga-transport-kafka':
+        specifier: workspace:*
+        version: link:../../packages/saga-transport-kafka
       '@nestjs/common':
         specifier: ^10.0.0
         version: 10.4.22(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -169,15 +178,6 @@ importers:
       '@opentelemetry/semantic-conventions':
         specifier: ^1.40.0
         version: 1.40.0
-      '@saga/core':
-        specifier: workspace:*
-        version: link:../../packages/saga-core
-      '@saga/nestjs':
-        specifier: workspace:*
-        version: link:../../packages/saga-nestjs
-      '@saga/transport-kafka':
-        specifier: workspace:*
-        version: link:../../packages/saga-transport-kafka
       kafkajs:
         specifier: ^2.2.0
         version: 2.2.4
@@ -215,7 +215,7 @@ importers:
 
   packages/saga-nestjs:
     dependencies:
-      '@saga/core':
+      '@fbsm/saga-core':
         specifier: workspace:*
         version: link:../saga-core
     devDependencies:
@@ -237,12 +237,12 @@ importers:
 
   packages/saga-transport-kafka:
     dependencies:
+      '@fbsm/saga-core':
+        specifier: workspace:*
+        version: link:../saga-core
       '@opentelemetry/instrumentation-kafkajs':
         specifier: ^0.7.0
         version: 0.7.1(@opentelemetry/api@1.9.0)
-      '@saga/core':
-        specifier: workspace:*
-        version: link:../saga-core
       kafkajs:
         specifier: ^2.2.0
         version: 2.2.4

@@ -17,7 +17,7 @@ pnpm vitest run packages/saga-transport-kafka
 
 ## Architecture
 
-This package implements the `SagaTransport` interface from `@saga/core` using KafkaJS.
+This package implements the `SagaTransport` interface from `@fbsm/saga-core` using KafkaJS.
 
 ### Files
 

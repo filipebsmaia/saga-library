@@ -4,7 +4,7 @@ import path from 'path';
 export default defineConfig({
   resolve: {
     alias: {
-      '@saga/core': path.resolve(__dirname, '../saga-core/src/index.ts'),
+      '@fbsm/saga-core': path.resolve(__dirname, '../saga-core/src/index.ts'),
     },
   },
   test: {

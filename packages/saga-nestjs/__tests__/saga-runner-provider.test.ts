@@ -6,8 +6,8 @@ import { SagaRunnerProvider } from '../src/providers/saga-runner.provider';
 import { SagaParticipant } from '../src/decorators/saga-participant.decorator';
 import { SagaHandler } from '../src/decorators/saga-handler.decorator';
 import { SagaParticipantBase } from '../src/saga-participant-base';
-import { SagaRunner, SagaRegistry } from '@saga/core';
-import type { IncomingEvent, Emit } from '@saga/core';
+import { SagaRunner, SagaRegistry } from '@fbsm/saga-core';
+import type { IncomingEvent, Emit } from '@fbsm/saga-core';
 
 @SagaParticipant()
 @Injectable()

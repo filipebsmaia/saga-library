@@ -1,21 +1,21 @@
-# @saga/transport-kafka
+# @fbsm/saga-transport-kafka
 
-KafkaJS-based transport adapter for `@saga/core`. Provides `eachBatch` consumption, key-based message grouping, and watermark-based offset tracking.
+KafkaJS-based transport adapter for `@fbsm/saga-core`. Provides `eachBatch` consumption, key-based message grouping, and watermark-based offset tracking.
 
 ## Installation
 
 ```bash
-npm install @saga/transport-kafka kafkajs
+npm install @fbsm/saga-transport-kafka kafkajs
 ```
 
 ## Usage
 
-### With NestJS (`@saga/nestjs`)
+### With NestJS (`@fbsm/saga-nestjs`)
 
 ```typescript
 import { Module } from '@nestjs/common';
-import { SagaModule } from '@saga/nestjs';
-import { KafkaTransport } from '@saga/transport-kafka';
+import { SagaModule } from '@fbsm/saga-nestjs';
+import { KafkaTransport } from '@fbsm/saga-transport-kafka';
 
 @Module({
   imports: [
@@ -35,8 +35,8 @@ export class AppModule {}
 ### Standalone (without NestJS)
 
 ```typescript
-import { SagaPublisher, SagaRunner, SagaRegistry, SagaParser, createOtelContext } from '@saga/core';
-import { KafkaTransport } from '@saga/transport-kafka';
+import { SagaPublisher, SagaRunner, SagaRegistry, SagaParser, createOtelContext } from '@fbsm/saga-core';
+import { KafkaTransport } from '@fbsm/saga-transport-kafka';
 
 const transport = new KafkaTransport({
   brokers: ['localhost:9092'],
@@ -62,7 +62,7 @@ await runner.start();
 ### `KafkaTransport`
 
 ```typescript
-import { KafkaTransport } from '@saga/transport-kafka';
+import { KafkaTransport } from '@fbsm/saga-transport-kafka';
 
 const transport = new KafkaTransport({
   brokers: ['localhost:9092'],
@@ -136,6 +136,6 @@ All saga context metadata is propagated via Kafka headers. See [Kafka Headers](.
 
 ## Further Reading
 
-- [@saga/core](../saga-core/README.md) — Core library reference
-- [@saga/nestjs](../saga-nestjs/README.md) — NestJS integration
+- [@fbsm/saga-core](../saga-core/README.md) — Core library reference
+- [@fbsm/saga-nestjs](../saga-nestjs/README.md) — NestJS integration
 - [Custom Transport](../doc/custom-transport.md) — Implement your own transport

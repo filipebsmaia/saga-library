@@ -25,7 +25,7 @@ export {
   SagaDuplicateHandlerError,
   SagaParseError,
   SagaTransportNotConnectedError,
-} from '@saga/core';
+} from '@fbsm/saga-core';
 export type {
   SagaEvent,
   IncomingEvent,
@@ -36,4 +36,4 @@ export type {
   ParentSagaContext,
   HandlerConfig,
   SagaTransport,
-} from '@saga/core';
+} from '@fbsm/saga-core';

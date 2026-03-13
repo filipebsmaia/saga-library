@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Query, Logger } from '@nestjs/common';
 import { v7 as uuidv7 } from 'uuid';
-import { SagaPublisherProvider } from '@saga/nestjs';
+import { SagaPublisherProvider } from '@fbsm/saga-nestjs';
 import { RecurringStore } from './stores/recurring.store';
 import { OrderStore } from './stores/order.store';
 import { ProductStore } from './stores/product.store';

@@ -5,7 +5,7 @@ Implement the `SagaTransport` interface to use any message broker (RabbitMQ, Red
 ## SagaTransport Interface
 
 ```typescript
-import type { SagaTransport, OutboundMessage, InboundMessage, TransportSubscribeOptions } from '@saga/core';
+import type { SagaTransport, OutboundMessage, InboundMessage, TransportSubscribeOptions } from '@fbsm/saga-core';
 ```
 
 ```typescript
@@ -54,7 +54,7 @@ interface TransportSubscribeOptions {
 ## Example Skeleton
 
 ```typescript
-import type { SagaTransport, OutboundMessage, InboundMessage, TransportSubscribeOptions } from '@saga/core';
+import type { SagaTransport, OutboundMessage, InboundMessage, TransportSubscribeOptions } from '@fbsm/saga-core';
 
 export class RedisStreamsTransport implements SagaTransport {
   constructor(private redisUrl: string) {}
@@ -90,6 +90,6 @@ export class RedisStreamsTransport implements SagaTransport {
 - Headers must be propagated faithfully (they contain saga context metadata).
 - The `key` field should be used for ordering guarantees (messages with the same key should be processed sequentially).
 - The library expects at-least-once delivery semantics.
-- See [@saga/transport-kafka](../saga-transport-kafka/README.md) for a production reference implementation.
+- See [@fbsm/saga-transport-kafka](../saga-transport-kafka/README.md) for a production reference implementation.
 
 [Documentation Hub](README.md)

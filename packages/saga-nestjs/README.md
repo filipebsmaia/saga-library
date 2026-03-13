@@ -1,11 +1,11 @@
-# @saga/nestjs
+# @fbsm/saga-nestjs
 
 NestJS integration for the saga choreography library. Provides a dynamic module, decorators for auto-discovery, and injectable providers.
 
 ## Installation
 
 ```bash
-npm install @saga/nestjs @saga/core @saga/transport-kafka
+npm install @fbsm/saga-nestjs @fbsm/saga-core @fbsm/saga-transport-kafka
 ```
 
 ## API Reference
@@ -157,8 +157,8 @@ import {
   SagaParticipant,
   SagaParticipantBase,
   SagaHandler,
-} from '@saga/nestjs';
-import type { IncomingEvent, Emit } from '@saga/core';
+} from '@fbsm/saga-nestjs';
+import type { IncomingEvent, Emit } from '@fbsm/saga-core';
 
 @Injectable()
 @SagaParticipant()
@@ -187,7 +187,7 @@ export class PaymentParticipant extends SagaParticipantBase {
 ```typescript
 // orders.controller.ts
 import { Controller, Post, Body } from '@nestjs/common';
-import { SagaPublisherProvider } from '@saga/nestjs';
+import { SagaPublisherProvider } from '@fbsm/saga-nestjs';
 
 @Controller('orders')
 export class OrdersController {
@@ -222,8 +222,8 @@ import {
   SagaParticipantBase,
   SagaHandler,
   SagaPublisherProvider,
-} from '@saga/nestjs';
-import type { IncomingEvent, Emit } from '@saga/core';
+} from '@fbsm/saga-nestjs';
+import type { IncomingEvent, Emit } from '@fbsm/saga-core';
 
 @Injectable()
 @SagaParticipant()
@@ -435,7 +435,7 @@ For when you need full control or can't use callbacks (e.g., Express middleware,
 ```typescript
 import { Controller, Post, Body } from '@nestjs/common';
 import { v7 as uuidv7 } from 'uuid';
-import { SagaPublisherProvider } from '@saga/nestjs';
+import { SagaPublisherProvider } from '@fbsm/saga-nestjs';
 
 @Controller('orders')
 export class ManualOrdersController {
@@ -501,6 +501,6 @@ export class ManualOrdersController {
 
 - [Concepts](../doc/concepts.md) — sagaId, hint, eventType, and other domain terms
 - [Core Functions](../doc/core-functions.md) — detailed semantics of emit, emitToParent, etc.
-- [@saga/core API](../saga-core/README.md) — framework-agnostic core reference
-- [@saga/transport-kafka API](../saga-transport-kafka/README.md) — Kafka transport options
+- [@fbsm/saga-core API](../saga-core/README.md) — framework-agnostic core reference
+- [@fbsm/saga-transport-kafka API](../saga-transport-kafka/README.md) — Kafka transport options
 - [Example Projects](../../examples/README.md) — production-realistic demo applications

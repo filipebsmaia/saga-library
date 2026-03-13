@@ -4,8 +4,8 @@ import {
   SagaParticipantBase,
   SagaHandler,
   SagaRetryableError,
-} from '@saga/nestjs';
-import type { IncomingEvent, Emit } from '@saga/nestjs';
+} from '@fbsm/saga-nestjs';
+import type { IncomingEvent, Emit } from '@fbsm/saga-nestjs';
 import { randomDelay } from '../../delay';
 
 @Injectable()

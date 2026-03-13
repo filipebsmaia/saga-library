@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { SagaModule } from '../src/saga.module';
 import { SagaPublisherProvider } from '../src/providers/saga-publisher.provider';
 import { SAGA_OPTIONS_TOKEN } from '../src/constants';
-import type { SagaTransport } from '@saga/core';
+import type { SagaTransport } from '@fbsm/saga-core';
 
 function createMockTransport(): SagaTransport {
   return {

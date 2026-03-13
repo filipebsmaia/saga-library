@@ -17,7 +17,7 @@ pnpm vitest run packages/saga-nestjs
 
 ## Architecture
 
-This package is a thin NestJS wrapper over `@saga/core`. It adds:
+This package is a thin NestJS wrapper over `@fbsm/saga-core`. It adds:
 1. A dynamic module (`SagaModule`) that wires the core classes as NestJS providers
 2. Decorators (`@SagaParticipant`, `@SagaHandler`) for auto-discovery
 3. An injectable `SagaPublisherProvider` that delegates to `SagaPublisher`
@@ -27,7 +27,7 @@ This package is a thin NestJS wrapper over `@saga/core`. It adds:
 ```
 SagaModule.forRoot(options)
   │
-  ├─ Provides: SagaRegistry, SagaParser, SagaPublisher, SagaRunner (from @saga/core)
+  ├─ Provides: SagaRegistry, SagaParser, SagaPublisher, SagaRunner (from @fbsm/saga-core)
   ├─ Provides: SagaPublisherProvider (injectable wrapper)
   │
   └─ SagaRunnerProvider (OnApplicationBootstrap)

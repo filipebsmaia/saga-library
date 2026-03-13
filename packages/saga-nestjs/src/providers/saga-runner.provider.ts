@@ -1,10 +1,10 @@
 import { Inject, Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { DiscoveryService } from '@nestjs/core';
-import { SagaRunner, SagaRegistry } from '@saga/core';
-import type { EventHandler } from '@saga/core';
+import { SagaRunner, SagaRegistry } from '@fbsm/saga-core';
+import type { EventHandler } from '@fbsm/saga-core';
 import { SAGA_PARTICIPANT_METADATA, SAGA_HANDLER_METADATA, SAGA_HANDLER_OPTIONS_METADATA } from '../constants';
 import type { SagaHandlerOptions } from '../decorators/saga-handler.decorator';
-import type { HandlerConfig } from '@saga/core';
+import type { HandlerConfig } from '@fbsm/saga-core';
 
 @Injectable()
 export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {

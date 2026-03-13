@@ -1,4 +1,4 @@
-# @saga/* Documentation
+# @fbsm/saga-* Documentation
 
 Central documentation hub for the saga choreography library.
 
@@ -10,9 +10,9 @@ Central documentation hub for the saga choreography library.
 
 ## API Reference
 
-- [@saga/core](../saga-core/README.md) — framework-agnostic core: runner, publisher, parser, errors
-- [@saga/nestjs](../saga-nestjs/README.md) — NestJS integration: module, decorators, auto-discovery
-- [@saga/transport-kafka](../saga-transport-kafka/README.md) — KafkaJS transport adapter
+- [@fbsm/saga-core](../saga-core/README.md) — framework-agnostic core: runner, publisher, parser, errors
+- [@fbsm/saga-nestjs](../saga-nestjs/README.md) — NestJS integration: module, decorators, auto-discovery
+- [@fbsm/saga-transport-kafka](../saga-transport-kafka/README.md) — KafkaJS transport adapter
 
 ## Examples
 

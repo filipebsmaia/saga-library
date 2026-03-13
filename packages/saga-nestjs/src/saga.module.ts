@@ -6,7 +6,7 @@ import {
   SagaPublisher,
   SagaParser,
   createOtelContext,
-} from '@saga/core';
+} from '@fbsm/saga-core';
 import { SAGA_OPTIONS_TOKEN, SAGA_TRANSPORT_TOKEN } from './constants';
 import type { SagaModuleOptions, SagaModuleAsyncOptions } from './saga-module-options.interface';
 import { SagaRunnerProvider } from './providers/saga-runner.provider';

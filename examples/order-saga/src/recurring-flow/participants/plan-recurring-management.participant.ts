@@ -4,8 +4,8 @@ import {
   SagaParticipantBase,
   SagaHandler,
   SagaPublisherProvider,
-} from '@saga/nestjs';
-import type { IncomingEvent, Emit } from '@saga/nestjs';
+} from '@fbsm/saga-nestjs';
+import type { IncomingEvent, Emit } from '@fbsm/saga-nestjs';
 import { v7 as uuidv7 } from 'uuid';
 import { randomDelay } from '../../telecom/delay';
 import { RFRecurringStore } from '../stores/recurring.store';

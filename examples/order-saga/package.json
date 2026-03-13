@@ -1,5 +1,5 @@
 {
-  "name": "@saga/example-saga",
+  "name": "@fbsm/saga-example",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -21,9 +21,9 @@
     "@opentelemetry/sdk-node": "^0.212.0",
     "@opentelemetry/sdk-trace-node": "^2.5.1",
     "@opentelemetry/semantic-conventions": "^1.40.0",
-    "@saga/core": "workspace:*",
-    "@saga/nestjs": "workspace:*",
-    "@saga/transport-kafka": "workspace:*",
+    "@fbsm/saga-core": "workspace:*",
+    "@fbsm/saga-nestjs": "workspace:*",
+    "@fbsm/saga-transport-kafka": "workspace:*",
     "kafkajs": "^2.2.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0",

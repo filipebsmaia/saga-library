@@ -3,8 +3,8 @@ import {
   SagaParticipant,
   SagaParticipantBase,
   SagaHandler,
-} from '@saga/nestjs';
-import type { IncomingEvent, Emit } from '@saga/nestjs';
+} from '@fbsm/saga-nestjs';
+import type { IncomingEvent, Emit } from '@fbsm/saga-nestjs';
 import { ProductStore } from '../../stores/product.store';
 import { randomDelay } from '../../delay';
 

@@ -1,5 +1,5 @@
 import type { KafkaConfig, logLevel } from 'kafkajs';
-import type { SagaLogger } from '@saga/core';
+import type { SagaLogger } from '@fbsm/saga-core';
 
 export interface KafkaTransportOptions {
   /** Kafka broker addresses */

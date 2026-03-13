@@ -1,6 +1,18 @@
 {
-  "name": "@saga/core",
-  "version": "0.1.0",
+  "name": "@fbsm/saga-core",
+  "version": "0.0.1-beta.0",
+  "description": "Framework-agnostic saga choreography core: runner, publisher, parser, context management",
+  "license": "MIT",
+  "author": "fbsm",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fbsm/saga-library",
+    "directory": "packages/saga-core"
+  },
+  "keywords": ["saga", "choreography", "microservices", "event-driven", "distributed-transactions"],
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

@@ -1,4 +1,4 @@
-# @saga/* — Saga Choreography Library
+# @fbsm/saga-* — Saga Choreography Library
 
 A framework-agnostic saga choreography library for Node.js, with first-class NestJS integration and Kafka transport.
 
@@ -6,20 +6,20 @@ A framework-agnostic saga choreography library for Node.js, with first-class Nes
 
 | Package | Description |
 |---------|-------------|
-| [`@saga/core`](packages/saga-core/README.md) | Framework-agnostic core: runner, publisher, parser, errors |
-| [`@saga/nestjs`](packages/saga-nestjs/README.md) | NestJS integration: dynamic module, decorators, auto-discovery |
-| [`@saga/transport-kafka`](packages/saga-transport-kafka/README.md) | KafkaJS transport adapter with eachBatch, watermark offset tracking |
+| [`@fbsm/saga-core`](packages/saga-core/README.md) | Framework-agnostic core: runner, publisher, parser, errors |
+| [`@fbsm/saga-nestjs`](packages/saga-nestjs/README.md) | NestJS integration: dynamic module, decorators, auto-discovery |
+| [`@fbsm/saga-transport-kafka`](packages/saga-transport-kafka/README.md) | KafkaJS transport adapter with eachBatch, watermark offset tracking |
 
 ## Quick Start
 
 ```bash
-npm install @saga/core @saga/nestjs @saga/transport-kafka
+npm install @fbsm/saga-core @fbsm/saga-nestjs @fbsm/saga-transport-kafka
 ```
 
 ```typescript
 import { Module } from '@nestjs/common';
-import { SagaModule } from '@saga/nestjs';
-import { KafkaTransport } from '@saga/transport-kafka';
+import { SagaModule } from '@fbsm/saga-nestjs';
+import { KafkaTransport } from '@fbsm/saga-transport-kafka';
 
 @Module({
   imports: [
@@ -37,8 +37,8 @@ export class AppModule {}
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { SagaParticipant, SagaParticipantBase, SagaHandler } from '@saga/nestjs';
-import type { IncomingEvent, Emit } from '@saga/core';
+import { SagaParticipant, SagaParticipantBase, SagaHandler } from '@fbsm/saga-nestjs';
+import type { IncomingEvent, Emit } from '@fbsm/saga-core';
 
 @Injectable()
 @SagaParticipant()
@@ -68,9 +68,9 @@ export class PaymentParticipant extends SagaParticipantBase {
 
 ## API Reference
 
-- [@saga/core](packages/saga-core/README.md) — SagaContext, SagaPublisher, SagaRunner, errors, Kafka headers
-- [@saga/nestjs](packages/saga-nestjs/README.md) — SagaModule, @SagaParticipant, @SagaHandler, SagaPublisherProvider
-- [@saga/transport-kafka](packages/saga-transport-kafka/README.md) — KafkaTransport, KafkaTransportOptions
+- [@fbsm/saga-core](packages/saga-core/README.md) — SagaContext, SagaPublisher, SagaRunner, errors, Kafka headers
+- [@fbsm/saga-nestjs](packages/saga-nestjs/README.md) — SagaModule, @SagaParticipant, @SagaHandler, SagaPublisherProvider
+- [@fbsm/saga-transport-kafka](packages/saga-transport-kafka/README.md) — KafkaTransport, KafkaTransportOptions
 
 ## Examples
 

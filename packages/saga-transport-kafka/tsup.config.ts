@@ -8,5 +8,5 @@ export default defineConfig({
   sourcemap: true,
   target: 'node20',
   splitting: false,
-  external: ['@saga/core', 'kafkajs', '@opentelemetry/instrumentation-kafkajs'],
+  external: ['@fbsm/saga-core', 'kafkajs', '@opentelemetry/instrumentation-kafkajs'],
 });

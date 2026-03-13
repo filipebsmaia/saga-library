@@ -64,7 +64,7 @@ export class W3cOtelContext implements OtelContext {
   }
 
   async withSpan<T>(name: string, attrs: Record<string, string>, fn: () => Promise<T>): Promise<T> {
-    const tracer = this.api.trace.getTracer('@saga/core');
+    const tracer = this.api.trace.getTracer('@fbsm/saga-core');
     return tracer.startActiveSpan(name, async (span) => {
       span.setAttributes(attrs);
       try {
@@ -95,7 +95,7 @@ export class W3cOtelContext implements OtelContext {
     fn: () => Promise<T>,
   ): Promise<T> {
     const parentCtx = this.api.propagation.extract(this.api.ROOT_CONTEXT, headers);
-    const tracer = this.api.trace.getTracer('@saga/core');
+    const tracer = this.api.trace.getTracer('@fbsm/saga-core');
 
     return this.api.context.with(parentCtx, () =>
       tracer.startActiveSpan(name, { kind: this.api.SpanKind.CONSUMER }, async (span) => {

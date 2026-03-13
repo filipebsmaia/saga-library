@@ -5,8 +5,8 @@ import type {
   OutboundMessage,
   TransportSubscribeOptions,
   SagaLogger,
-} from '@saga/core';
-import { ConsoleSagaLogger } from '@saga/core';
+} from '@fbsm/saga-core';
+import { ConsoleSagaLogger } from '@fbsm/saga-core';
 import { WatermarkTracker } from './watermark-tracker';
 import type { KafkaTransportOptions } from './kafka-transport-options';
 

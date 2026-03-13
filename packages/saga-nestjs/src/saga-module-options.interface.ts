@@ -1,4 +1,4 @@
-import type { SagaTransport, RunnerOptions, SagaLogger } from '@saga/core';
+import type { SagaTransport, RunnerOptions, SagaLogger } from '@fbsm/saga-core';
 
 export interface SagaModuleOptions extends RunnerOptions {
   transport: SagaTransport;

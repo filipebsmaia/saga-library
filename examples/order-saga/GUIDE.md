@@ -1,6 +1,6 @@
 # Guia de Uso — Telecom Saga Example
 
-Este projeto demonstra o uso da biblioteca `@saga/nestjs` com três cenários reais de telecomunicações, cada um explorando um padrão diferente de saga coreografada.
+Este projeto demonstra o uso da biblioteca `@fbsm/saga-nestjs` com três cenários reais de telecomunicações, cada um explorando um padrão diferente de saga coreografada.
 
 ---
 
@@ -106,7 +106,7 @@ pnpm docker:down
 │  └──────┬───────┘  └─────▲──────┘  └──────▲───────┘  │
 │         │                │                │          │
 │  ┌──────▼────────────────┴────────────────┴───────┐  │
-│  │              SagaModule (@saga/nestjs)          │  │
+│  │              SagaModule (@fbsm/saga-nestjs)          │  │
 │  │  ┌──────────┐  ┌──────────┐  ┌──────────────┐  │  │
 │  │  │Publisher  │  │ Runner   │  │ Participants │  │  │
 │  │  │(forSaga) │  │(dispatch)│  │ (handlers)   │  │  │
@@ -134,8 +134,8 @@ Um participant é uma classe NestJS decorada com `@SagaParticipant()` que estend
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { SagaParticipant, SagaParticipantBase, SagaHandler } from '@saga/nestjs';
-import type { IncomingEvent, Emit } from '@saga/nestjs';
+import { SagaParticipant, SagaParticipantBase, SagaHandler } from '@fbsm/saga-nestjs';
+import type { IncomingEvent, Emit } from '@fbsm/saga-nestjs';
 
 @Injectable()
 @SagaParticipant()
@@ -236,7 +236,7 @@ await subEmit('validation.requested', 'spawn-validation', data, { hint: 'spawn' 
 Para erros **transientes** (timeout de API, indisponibilidade temporária), lance `SagaRetryableError`. O runner fará retry automático com backoff exponencial.
 
 ```typescript
-import { SagaRetryableError } from '@saga/nestjs';
+import { SagaRetryableError } from '@fbsm/saga-nestjs';
 
 @SagaHandler('order.created')
 async handle(event: IncomingEvent, emit: Emit): Promise<void> {

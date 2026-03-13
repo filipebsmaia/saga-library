@@ -14,7 +14,7 @@ function headerToString(value: Buffer | string | undefined): string | undefined 
  * Extracts saga headers from a Kafka message's headers map.
  * Returns null if the message has no saga-id header (not a saga event).
  *
- * Aligns with the header keys produced by @saga/core's buildOutboundMessage():
+ * Aligns with the header keys produced by @fbsm/saga-core's buildOutboundMessage():
  * saga-id, saga-causation-id, saga-event-id, saga-step-name,
  * saga-published-at, saga-schema-version, saga-root-id, saga-parent-id (optional),
  * saga-event-hint (optional), saga-name (optional), saga-description (optional),

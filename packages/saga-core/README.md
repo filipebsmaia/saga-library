@@ -1,11 +1,11 @@
-# @saga/core
+# @fbsm/saga-core
 
 Framework-agnostic core library for saga choreography. Provides the runner, publisher, parser, registry, context management, and error types.
 
 ## Installation
 
 ```bash
-npm install @saga/core
+npm install @fbsm/saga-core
 ```
 
 ## Overview
@@ -23,7 +23,7 @@ npm install @saga/core
 Uses `AsyncLocalStorage` to propagate saga metadata through async call chains.
 
 ```typescript
-import { SagaContext } from '@saga/core';
+import { SagaContext } from '@fbsm/saga-core';
 
 // Read current context (or undefined)
 const ctx = SagaContext.current();
@@ -55,7 +55,7 @@ Context is set automatically by:
 Creates sagas and publishes events. See [Core Functions](../doc/core-functions.md) for detailed usage of each method.
 
 ```typescript
-import { SagaPublisher } from '@saga/core';
+import { SagaPublisher } from '@fbsm/saga-core';
 
 const publisher = new SagaPublisher(transport, otelContext, topicPrefix);
 ```
@@ -82,7 +82,7 @@ interface SagaStartOptions {
 Consumes events from transport, routes to handlers, and applies retry logic.
 
 ```typescript
-import { SagaRunner } from '@saga/core';
+import { SagaRunner } from '@fbsm/saga-core';
 
 const runner = new SagaRunner(
   registry,    // SagaRegistry
@@ -130,7 +130,7 @@ Parses inbound messages using a 3-layer fallback strategy:
 
 ## Kafka Headers
 
-When using the header-based format (default with `@saga/transport-kafka`):
+When using the header-based format (default with `@fbsm/saga-transport-kafka`):
 
 | Header | Description |
 |--------|-------------|
@@ -166,7 +166,7 @@ When using the header-based format (default with `@saga/transport-kafka`):
 ## OTel Integration
 
 ```typescript
-import { createOtelContext, W3cOtelContext, NoopOtelContext } from '@saga/core';
+import { createOtelContext, W3cOtelContext, NoopOtelContext } from '@fbsm/saga-core';
 
 // Auto-detect: uses W3cOtelContext if @opentelemetry/api is available, NoopOtelContext otherwise
 const otelCtx = createOtelContext();
@@ -217,5 +217,5 @@ Default: `ConsoleSagaLogger` (wraps `console.log/warn/error`).
 
 - [Concepts](../doc/concepts.md) — sagaId, hint, eventType, and other domain terms
 - [Core Functions](../doc/core-functions.md) — emit, emitToParent, start, startChild, forSaga
-- [@saga/nestjs](../saga-nestjs/README.md) — NestJS decorators and auto-discovery
-- [@saga/transport-kafka](../saga-transport-kafka/README.md) — Kafka transport
+- [@fbsm/saga-nestjs](../saga-nestjs/README.md) — NestJS decorators and auto-discovery
+- [@fbsm/saga-transport-kafka](../saga-transport-kafka/README.md) — Kafka transport

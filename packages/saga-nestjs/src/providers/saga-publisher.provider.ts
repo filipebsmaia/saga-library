@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { Emit, EmitParams, ParentSagaContext, SagaStartOptions } from '@saga/core';
-import { SagaPublisher } from '@saga/core';
+import type { Emit, EmitParams, ParentSagaContext, SagaStartOptions } from '@fbsm/saga-core';
+import { SagaPublisher } from '@fbsm/saga-core';
 
 @Injectable()
 export class SagaPublisherProvider {

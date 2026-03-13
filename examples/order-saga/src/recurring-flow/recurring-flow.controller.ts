@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Query, Param, Logger, BadRequestException } from '@nestjs/common';
 import { v7 as uuidv7 } from 'uuid';
-import { SagaPublisherProvider } from '@saga/nestjs';
+import { SagaPublisherProvider } from '@fbsm/saga-nestjs';
 import { RFRecurringStore } from './stores/recurring.store';
 import { RFPlanStore } from './stores/plan.store';
 import { RFPlanOrderStore } from './stores/plan-order.store';

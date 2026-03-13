@@ -9,7 +9,7 @@ export default defineConfig({
   target: 'node20',
   splitting: false,
   external: [
-    '@saga/core',
+    '@fbsm/saga-core',
     '@nestjs/common',
     '@nestjs/core',
     'reflect-metadata',

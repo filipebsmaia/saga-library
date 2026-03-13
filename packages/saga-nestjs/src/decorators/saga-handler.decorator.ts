@@ -1,6 +1,6 @@
 import { SAGA_HANDLER_METADATA, SAGA_HANDLER_OPTIONS_METADATA } from '../constants';
 
-import type { ForkConfig } from '@saga/core';
+import type { ForkConfig } from '@fbsm/saga-core';
 
 export interface SagaHandlerOptions {
   final?: boolean;
