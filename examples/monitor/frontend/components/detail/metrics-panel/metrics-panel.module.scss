@@ -1,0 +1,48 @@
+@use '../../../styles/mixins' as *;
+
+.panel {
+  @include card;
+  padding: var(--space-4);
+}
+
+.title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-1) 0;
+}
+
+.label {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.value {
+  @include mono-text;
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.highlight {
+  color: var(--color-status-compensating);
+}
+
+.danger {
+  color: var(--color-status-stuck);
+  font-weight: var(--font-weight-semibold);
+}

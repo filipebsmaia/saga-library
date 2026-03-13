@@ -1,0 +1,10 @@
+.cell {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  cursor: default;
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+}

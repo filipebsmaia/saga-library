@@ -1,0 +1,38 @@
+{
+  "name": "@saga/example-saga",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "start:dev": "ts-node -r reflect-metadata src/main.ts",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "load-test": "node scripts/load-test.mjs"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/platform-express": "^10.0.0",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.212.0",
+    "@opentelemetry/instrumentation-http": "^0.212.0",
+    "@opentelemetry/resources": "^2.5.1",
+    "@opentelemetry/sdk-node": "^0.212.0",
+    "@opentelemetry/sdk-trace-node": "^2.5.1",
+    "@opentelemetry/semantic-conventions": "^1.40.0",
+    "@saga/core": "workspace:*",
+    "@saga/nestjs": "workspace:*",
+    "@saga/transport-kafka": "workspace:*",
+    "kafkajs": "^2.2.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0",
+    "uuid": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.0"
+  }
+}

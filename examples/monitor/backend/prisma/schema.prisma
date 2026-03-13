@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SagaStatus {
+  RUNNING
+  COMPENSATING
+  COMPLETED
+}
+
+model SagaState {
+  sagaId                 String      @id @map("saga_id")
+  sagaRootId             String      @map("saga_root_id")
+  sagaParentId           String?     @map("saga_parent_id")
+  sagaName               String?     @map("saga_name")
+  sagaDescription        String?     @map("saga_description")
+  status                 SagaStatus  @default(RUNNING)
+  currentStepName        String      @map("current_step_name")
+  currentStepDescription String?     @map("current_step_description")
+  lastEventId            String      @map("last_event_id")
+  lastEventHint          String?     @map("last_event_hint")
+  lastCausationId        String      @map("last_causation_id")
+  startedAt              DateTime    @map("started_at")
+  updatedAt              DateTime    @updatedAt @map("updated_at")
+  endedAt                DateTime?   @map("ended_at")
+  eventCount             Int         @default(1) @map("event_count")
+  schemaVersion          Int         @default(1) @map("schema_version")
+  lastTopic              String?     @map("last_topic")
+  lastPartition          Int?        @map("last_partition")
+  lastOffset             String?     @map("last_offset")
+  createdAt              DateTime    @default(now()) @map("created_at")
+  version                Int         @default(1)
+  metadata               Json?       @db.JsonB
+
+  events SagaEventLog[]
+
+  @@index([status, updatedAt(sort: Desc)], map: "idx_saga_state_status_updated")
+  @@index([sagaRootId, updatedAt(sort: Desc)], map: "idx_saga_state_root_updated")
+  @@index([sagaParentId, updatedAt(sort: Desc)], map: "idx_saga_state_parent_updated")
+  @@index([sagaName, updatedAt(sort: Desc)], map: "idx_saga_state_name_updated")
+  @@index([updatedAt(sort: Desc)], map: "idx_saga_state_updated")
+  @@index([endedAt], map: "idx_saga_state_ended_at")
+  @@index([startedAt, endedAt], map: "idx_saga_state_started_ended")
+  @@index([sagaName, createdAt], map: "idx_saga_state_name_created")
+  @@map("saga_state")
+}
+
+model SagaEventLog {
+  sagaEventId        String      @id @map("saga_event_id")
+  sagaId             String      @map("saga_id")
+  sagaRootId         String      @map("saga_root_id")
+  sagaParentId       String?     @map("saga_parent_id")
+  sagaCausationId    String      @map("saga_causation_id")
+  sagaName           String?     @map("saga_name")
+  sagaDescription    String?     @map("saga_description")
+  sagaStepName       String      @map("saga_step_name")
+  sagaStepDescription String?    @map("saga_step_description")
+  sagaEventHint      String?     @map("saga_event_hint")
+  sagaPublishedAt    DateTime    @map("saga_published_at")
+  sagaSchemaVersion  Int         @default(1) @map("saga_schema_version")
+  topic              String
+  partition          Int?
+  offset             String?     @map("offset_")
+  statusBefore       SagaStatus? @map("status_before")
+  statusAfter        SagaStatus  @map("status_after")
+  headersJson        Json?       @map("headers_json") @db.JsonB
+  createdAt          DateTime    @default(now()) @map("created_at")
+
+  saga SagaState @relation(fields: [sagaId], references: [sagaId])
+
+  @@index([sagaId, sagaPublishedAt(sort: Asc)], map: "idx_event_log_saga_published")
+  @@index([sagaRootId, sagaPublishedAt(sort: Asc)], map: "idx_event_log_root_published")
+  @@index([sagaCausationId], map: "idx_event_log_causation")
+  @@index([sagaEventHint, sagaPublishedAt(sort: Desc)], map: "idx_event_log_hint_published")
+  @@index([topic, partition, offset], map: "idx_event_log_topic_partition_offset")
+  @@index([sagaPublishedAt(sort: Desc)], map: "idx_event_log_published")
+  @@map("saga_event_log")
+}

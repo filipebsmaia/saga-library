@@ -1,0 +1,62 @@
+@use '../../../styles/mixins' as *;
+
+.container {
+  @include card;
+  padding: var(--space-4);
+  overflow-x: auto;
+  @include scrollbar-thin;
+}
+
+.empty {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--space-3);
+}
+
+.chain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: fit-content;
+}
+
+.chainItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.arrow {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  flex-shrink: 0;
+}
+
+.chainNode {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle);
+  white-space: nowrap;
+}
+
+.chainNodeSelected {
+  border-color: var(--color-accent);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.chainStep {
+  @include mono-text;
+  font-size: var(--text-xs);
+  color: var(--color-text-primary);
+}
+
+.chainId {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}

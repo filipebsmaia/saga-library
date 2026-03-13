@@ -1,0 +1,73 @@
+### ===========================
+### Saga Monitor API - REST Client
+### ===========================
+
+@baseUrl = http://localhost:3100/v1
+
+### ----- SAGAS -----
+
+### List all sagas
+GET {{baseUrl}}/sagas
+
+### List sagas with filters
+GET {{baseUrl}}/sagas?status=RUNNING&limit=10
+
+### List sagas by name
+GET {{baseUrl}}/sagas?sagaName=RecurringPaymentSaga&limit=20
+
+### List sagas by root ID
+GET {{baseUrl}}/sagas?sagaRootId={{rootId}}&limit=20
+
+### List COMPENSATING sagas
+GET {{baseUrl}}/sagas?status=COMPENSATING
+
+### List COMPLETED sagas
+GET {{baseUrl}}/sagas?status=COMPLETED&limit=50
+
+### List sagas with cursor pagination
+GET {{baseUrl}}/sagas?limit=5&cursor={{sagaId}}
+
+### ----- SAGA DETAIL -----
+
+### Get saga detail
+GET {{baseUrl}}/sagas/{{sagaId}}
+
+### ----- SAGA EVENTS (TIMELINE) -----
+
+### Get saga event timeline
+GET {{baseUrl}}/sagas/{{sagaId}}/events
+
+### Get saga events with pagination
+GET {{baseUrl}}/sagas/{{sagaId}}/events?limit=10
+
+### Get saga events with cursor
+GET {{baseUrl}}/sagas/{{sagaId}}/events?limit=10&cursor={{eventId}}
+
+### ----- SAGA TREE -----
+
+### Get saga tree by root ID
+GET {{baseUrl}}/sagas/root/{{rootId}}
+
+### ----- SAGA METRICS -----
+
+### Get saga execution metrics
+GET {{baseUrl}}/sagas/{{sagaId}}/metrics
+
+### ----- SSE STREAMS -----
+
+### Stream all saga updates (SSE)
+GET {{baseUrl}}/stream/sagas
+Accept: text/event-stream
+
+### Stream updates for a specific saga (SSE)
+GET {{baseUrl}}/stream/sagas/{{sagaId}}
+Accept: text/event-stream
+
+### Stream updates for a saga root tree (SSE)
+GET {{baseUrl}}/stream/sagas/root/{{rootId}}
+Accept: text/event-stream
+
+### ----- SWAGGER -----
+
+### Open Swagger UI
+GET http://localhost:3100/api

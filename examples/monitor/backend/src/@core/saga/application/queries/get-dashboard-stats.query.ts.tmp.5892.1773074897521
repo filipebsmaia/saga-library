@@ -1,0 +1,67 @@
+import { SagaStateRepository } from '../../domain/repositories/saga-state.repository';
+import { RedisService } from '../../infra/redis/redis.service';
+
+export interface DashboardStatsDto {
+  running: number;
+  compensating: number;
+  completed: number;
+  total: number;
+  totalEvents: number;
+  compensatingRecent: number;
+  stuck: number;
+  eventsPerMinute: number;
+  p95DurationMs: number | null;
+}
+
+const STUCK_THRESHOLD_MS = 5 * 60_000;
+const P95_CACHE_KEY = 'obs:cache:p95duration';
+const TOTAL_EVENTS_CACHE_KEY = 'obs:cache:totalevents';
+const CACHE_TTL_SECONDS = 60;
+const RECENT_FAILED_KEY = 'obs:recent:failed';
+const RECENT_EVENTS_KEY = 'obs:recent:events';
+
+export class GetDashboardStatsQuery {
+  constructor(
+    private readonly sagaStateRepo: SagaStateRepository,
+    private readonly redis: RedisService,
+  ) {}
+
+  async execute(): Promise<DashboardStatsDto> {
+    const now = Date.now();
+    const fiveMinAgo = now - 5 * 60_000;
+    const oneMinAgo = now - 60_000;
+
+    const [counts, stuck, compensatingRecent, eventsPerMinute, p95] = await Promise.all([
+      this.sagaStateRepo.countByStatus(),
+      this.sagaStateRepo.countStuck(STUCK_THRESHOLD_MS),
+      this.redis.countSortedSetInRange(RECENT_FAILED_KEY, fiveMinAgo, now),
+      this.redis.countSortedSetInRange(RECENT_EVENTS_KEY, oneMinAgo, now),
+      this.getCachedP95(),
+    ]);
+
+    const running = counts['RUNNING'] ?? 0;
+    const compensating = counts['COMPENSATING'] ?? 0;
+    const completed = counts['COMPLETED'] ?? 0;
+
+    return {
+      running,
+      compensating,
+      completed,
+      total: running + compensating + completed,
+      compensatingRecent,
+      stuck,
+      eventsPerMinute,
+      p95DurationMs: p95,
+    };
+  }
+
+  private async getCachedP95(): Promise<number | null> {
+    const cached = await this.redis.get(P95_CACHE_KEY);
+    if (cached !== null) return Number(cached);
+    const p95 = await this.sagaStateRepo.p95DurationMs();
+    if (p95 !== null) {
+      await this.redis.setWithTtl(P95_CACHE_KEY, String(p95), P95_TTL_SECONDS);
+    }
+    return p95;
+  }
+}

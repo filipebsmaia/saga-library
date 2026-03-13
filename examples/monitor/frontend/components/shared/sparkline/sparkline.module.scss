@@ -1,0 +1,20 @@
+.wrapper {
+  position: relative;
+  display: inline-block;
+  cursor: crosshair;
+
+  svg {
+    display: block;
+  }
+}
+
+.tooltip {
+  position: absolute;
+  top: -18px;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  pointer-events: none;
+}

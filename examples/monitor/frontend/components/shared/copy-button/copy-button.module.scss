@@ -1,0 +1,44 @@
+@use '../../../styles/mixins' as *;
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 1px var(--space-1);
+  border-radius: var(--radius-sm);
+  @include mono-text;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-fast), background var(--transition-fast);
+  cursor: pointer;
+  max-width: 100%;
+  min-width: 0;
+
+  &:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-hover);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.copied {
+  color: var(--color-status-completed);
+}
+
+.text {
+  @include truncate;
+}
+
+.icon {
+  font-size: var(--text-sm);
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+
+  .button:hover &,
+  .copied & {
+    opacity: 1;
+  }
+}

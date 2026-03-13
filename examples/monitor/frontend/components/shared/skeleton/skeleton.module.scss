@@ -1,0 +1,43 @@
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-elevated) 25%,
+    var(--color-bg-hover) 50%,
+    var(--color-bg-elevated) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-sm);
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+.line {
+  height: 14px;
+  width: 100%;
+}
+
+.block {
+  height: 80px;
+  width: 100%;
+  border-radius: var(--radius-md);
+}
+
+.circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.badge {
+  width: 80px;
+  height: 20px;
+  border-radius: var(--radius-full);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}

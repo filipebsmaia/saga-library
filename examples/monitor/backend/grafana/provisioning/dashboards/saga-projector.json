@@ -1,0 +1,427 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "templating": {
+    "list": [
+      {
+        "name": "topic",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": "label_values(projector_batch_total, topic)",
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "multi": true,
+        "refresh": 2,
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "Batch Throughput (batches/s)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2
+          },
+          "unit": "ops"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "total"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    10,
+                    10
+                  ]
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "rate(projector_batch_total{topic=~\"$topic\"}[$__rate_interval])",
+          "legendFormat": "{{topic}}"
+        },
+        {
+          "expr": "sum(rate(projector_batch_total{topic=~\"$topic\"}[$__rate_interval]))",
+          "legendFormat": "total"
+        }
+      ]
+    },
+    {
+      "title": "Events Processed (events/s)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2
+          },
+          "unit": "ops"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/^total/"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    10,
+                    10
+                  ]
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "rate(projector_events_processed_total{topic=~\"$topic\"}[$__rate_interval])",
+          "legendFormat": "processed - {{topic}}"
+        },
+        {
+          "expr": "rate(projector_events_skipped_total{topic=~\"$topic\"}[$__rate_interval])",
+          "legendFormat": "skipped - {{topic}}"
+        },
+        {
+          "expr": "rate(projector_events_deduped_total{topic=~\"$topic\"}[$__rate_interval])",
+          "legendFormat": "deduped - {{topic}}"
+        },
+        {
+          "expr": "sum(rate(projector_events_processed_total{topic=~\"$topic\"}[$__rate_interval]))",
+          "legendFormat": "total processed"
+        },
+        {
+          "expr": "sum(rate(projector_events_skipped_total{topic=~\"$topic\"}[$__rate_interval]))",
+          "legendFormat": "total skipped"
+        },
+        {
+          "expr": "sum(rate(projector_events_deduped_total{topic=~\"$topic\"}[$__rate_interval]))",
+          "legendFormat": "total deduped"
+        }
+      ]
+    },
+    {
+      "title": "Batch Duration (p50 / p95 / p99)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 5,
+            "lineWidth": 2
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(projector_batch_duration_ms_bucket{topic=~\"$topic\"}[$__rate_interval])))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(projector_batch_duration_ms_bucket{topic=~\"$topic\"}[$__rate_interval])))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(projector_batch_duration_ms_bucket{topic=~\"$topic\"}[$__rate_interval])))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "title": "Phase Duration (p95 by phase)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, phase) (rate(projector_phase_duration_ms_bucket{topic=~\"$topic\"}[$__rate_interval])))",
+          "legendFormat": "{{phase}}"
+        }
+      ]
+    },
+    {
+      "title": "Errors & Guards (events/s)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "auto"
+          },
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "errors"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/^total/"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    10,
+                    10
+                  ]
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "rate(projector_events_errors_total{topic=~\"$topic\"}[$__rate_interval])",
+          "legendFormat": "errors - {{topic}}"
+        },
+        {
+          "expr": "rate(projector_events_completed_guard_total{topic=~\"$topic\"}[$__rate_interval])",
+          "legendFormat": "completed_guard - {{topic}}"
+        },
+        {
+          "expr": "sum(rate(projector_events_errors_total{topic=~\"$topic\"}[$__rate_interval]))",
+          "legendFormat": "total errors"
+        },
+        {
+          "expr": "sum(rate(projector_events_completed_guard_total{topic=~\"$topic\"}[$__rate_interval]))",
+          "legendFormat": "total completed_guard"
+        }
+      ]
+    },
+    {
+      "title": "Event Breakdown (totals)",
+      "type": "stat",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "errors"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "sum(projector_events_processed_total{topic=~\"$topic\"})",
+          "legendFormat": "processed"
+        },
+        {
+          "expr": "sum(projector_events_skipped_total{topic=~\"$topic\"})",
+          "legendFormat": "skipped"
+        },
+        {
+          "expr": "sum(projector_events_deduped_total{topic=~\"$topic\"})",
+          "legendFormat": "deduped"
+        },
+        {
+          "expr": "sum(projector_events_errors_total{topic=~\"$topic\"})",
+          "legendFormat": "errors - {{topic}}"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": [
+    "saga",
+    "projector"
+  ],
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "refresh": "10s",
+  "title": "Saga Projector",
+  "uid": "saga-projector"
+}

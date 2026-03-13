@@ -1,0 +1,267 @@
+{
+  "info": {
+    "name": "Saga Monitor API",
+    "description": "Saga observability monitor backend API collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "host", "value": "localhost" },
+    { "key": "port", "value": "3100" },
+    { "key": "sagaId", "value": "REPLACE_WITH_SAGA_ID" },
+    { "key": "rootId", "value": "REPLACE_WITH_ROOT_ID" },
+    { "key": "eventId", "value": "REPLACE_WITH_EVENT_ID" }
+  ],
+  "item": [
+    {
+      "name": "Sagas",
+      "item": [
+        {
+          "name": "List Sagas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://{{host}}:{{port}}/v1/sagas?limit=20",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["v1", "sagas"],
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "status", "value": "RUNNING", "disabled": true },
+                { "key": "sagaName", "value": "", "disabled": true },
+                { "key": "sagaRootId", "value": "", "disabled": true },
+                { "key": "cursor", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Running Sagas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://{{host}}:{{port}}/v1/sagas?status=RUNNING&limit=20",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["v1", "sagas"],
+              "query": [
+                { "key": "status", "value": "RUNNING" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Compensating Sagas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://{{host}}:{{port}}/v1/sagas?status=COMPENSATING&limit=20",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["v1", "sagas"],
+              "query": [
+                { "key": "status", "value": "COMPENSATING" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Completed Sagas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://{{host}}:{{port}}/v1/sagas?status=COMPLETED&limit=20",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["v1", "sagas"],
+              "query": [
+                { "key": "status", "value": "COMPLETED" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Sagas by Name",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://{{host}}:{{port}}/v1/sagas?sagaName=RecurringPaymentSaga&limit=20",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["v1", "sagas"],
+              "query": [
+                { "key": "sagaName", "value": "RecurringPaymentSaga" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Sagas with Cursor",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://{{host}}:{{port}}/v1/sagas?limit=5&cursor={{sagaId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["v1", "sagas"],
+              "query": [
+                { "key": "limit", "value": "5" },
+                { "key": "cursor", "value": "{{sagaId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Saga Detail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://{{host}}:{{port}}/v1/sagas/{{sagaId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["v1", "sagas", "{{sagaId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events (Timeline)",
+      "item": [
+        {
+          "name": "Get Saga Timeline",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://{{host}}:{{port}}/v1/sagas/{{sagaId}}/events?limit=50",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["v1", "sagas", "{{sagaId}}", "events"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "cursor", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Saga Timeline (Paginated)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://{{host}}:{{port}}/v1/sagas/{{sagaId}}/events?limit=10&cursor={{eventId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["v1", "sagas", "{{sagaId}}", "events"],
+              "query": [
+                { "key": "limit", "value": "10" },
+                { "key": "cursor", "value": "{{eventId}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Saga Tree",
+      "item": [
+        {
+          "name": "Get Saga Tree by Root",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://{{host}}:{{port}}/v1/sagas/root/{{rootId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["v1", "sagas", "root", "{{rootId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Metrics",
+      "item": [
+        {
+          "name": "Get Saga Metrics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://{{host}}:{{port}}/v1/sagas/{{sagaId}}/metrics",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["v1", "sagas", "{{sagaId}}", "metrics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSE Streams",
+      "item": [
+        {
+          "name": "Stream All Sagas (SSE)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "text/event-stream" }
+            ],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/v1/stream/sagas",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["v1", "stream", "sagas"]
+            }
+          }
+        },
+        {
+          "name": "Stream Saga by ID (SSE)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "text/event-stream" }
+            ],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/v1/stream/sagas/{{sagaId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["v1", "stream", "sagas", "{{sagaId}}"]
+            }
+          }
+        },
+        {
+          "name": "Stream Saga Root (SSE)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "text/event-stream" }
+            ],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/v1/stream/sagas/root/{{rootId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["v1", "stream", "sagas", "root", "{{rootId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

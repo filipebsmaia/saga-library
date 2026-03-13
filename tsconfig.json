@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/saga-core" },
+    { "path": "packages/saga-transport-kafka" },
+    { "path": "packages/saga-nestjs" }
+  ]
+}

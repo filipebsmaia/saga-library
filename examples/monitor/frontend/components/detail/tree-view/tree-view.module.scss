@@ -1,0 +1,80 @@
+@use '../../../styles/mixins' as *;
+
+.panel {
+  @include card;
+  padding: var(--space-4);
+}
+
+.title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tree {
+  display: flex;
+  flex-direction: column;
+}
+
+.nodeGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.node {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--transition-fast);
+  border-left: 2px solid transparent;
+
+  &:hover {
+    background: var(--color-bg-hover);
+  }
+}
+
+.current {
+  background: rgba(99, 102, 241, 0.08);
+  border-left-color: var(--color-accent);
+}
+
+.nodeType {
+  font-size: 9px;
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0 4px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.nodeName {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  @include truncate;
+  max-width: 140px;
+}
+
+.nodeStep {
+  @include mono-text;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  @include truncate;
+  max-width: 120px;
+}
+
+.nodeDuration {
+  @include mono-text;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-left: auto;
+  flex-shrink: 0;
+}
