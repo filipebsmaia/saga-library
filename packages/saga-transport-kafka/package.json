@@ -9,7 +9,14 @@
     "url": "https://github.com/fbsm/saga-library",
     "directory": "packages/saga-transport-kafka"
   },
-  "keywords": ["saga", "kafka", "kafkajs", "transport", "microservices", "event-driven"],
+  "keywords": [
+    "saga",
+    "kafka",
+    "kafkajs",
+    "transport",
+    "microservices",
+    "event-driven"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -29,7 +36,9 @@
       }
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

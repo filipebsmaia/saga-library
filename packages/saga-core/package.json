@@ -9,7 +9,13 @@
     "url": "https://github.com/fbsm/saga-library",
     "directory": "packages/saga-core"
   },
-  "keywords": ["saga", "choreography", "microservices", "event-driven", "distributed-transactions"],
+  "keywords": [
+    "saga",
+    "choreography",
+    "microservices",
+    "event-driven",
+    "distributed-transactions"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -29,7 +35,9 @@
       }
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

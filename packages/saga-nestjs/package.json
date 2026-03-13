@@ -9,7 +9,13 @@
     "url": "https://github.com/fbsm/saga-library",
     "directory": "packages/saga-nestjs"
   },
-  "keywords": ["saga", "nestjs", "choreography", "microservices", "event-driven"],
+  "keywords": [
+    "saga",
+    "nestjs",
+    "choreography",
+    "microservices",
+    "event-driven"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -29,7 +35,9 @@
       }
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
