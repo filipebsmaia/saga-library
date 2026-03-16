@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
-export type PaymentStatus = 'PENDING' | 'SUCCESS' | 'FAILED';
-export type PaymentMethod = 'CARD' | 'PIX' | 'INVOICE';
+export type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED";
+export type PaymentMethod = "CARD" | "PIX" | "INVOICE";
 
 export interface PaymentRecord {
   paymentId: string;
@@ -16,7 +16,7 @@ export interface PaymentRecord {
   updatedAt: string;
 }
 
-const METHODS: PaymentMethod[] = ['CARD', 'PIX', 'INVOICE'];
+const METHODS: PaymentMethod[] = ["CARD", "PIX", "INVOICE"];
 
 @Injectable()
 export class RFPaymentStore {
@@ -26,7 +26,12 @@ export class RFPaymentStore {
   create(
     paymentId: string,
     sagaId: string,
-    data: { orderId: string; customerId: string; amount: number; status: PaymentStatus },
+    data: {
+      orderId: string;
+      customerId: string;
+      amount: number;
+      status: PaymentStatus;
+    },
   ): PaymentRecord {
     const now = new Date().toISOString();
     const method = METHODS[Math.floor(Math.random() * METHODS.length)];

@@ -1,4 +1,4 @@
-@use '../../../styles/mixins' as *;
+@use "../../../styles/mixins" as *;
 
 .grid {
   display: grid;
@@ -22,7 +22,7 @@
   overflow: hidden;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -46,24 +46,59 @@
   color: var(--color-text-secondary);
 }
 
-.running .value { color: var(--color-status-running); }
-.compensating .value { color: var(--color-status-compensating); }
-.completed .value { color: var(--color-status-completed); }
+.running .value {
+  color: var(--color-status-running);
+}
+.compensating .value {
+  color: var(--color-status-compensating);
+}
+.completed .value {
+  color: var(--color-status-completed);
+}
 
-.running::before { background: linear-gradient(90deg, var(--color-status-running), transparent); }
-.compensating::before { background: linear-gradient(90deg, var(--color-status-compensating), transparent); }
-.completed::before { background: linear-gradient(90deg, var(--color-status-completed), transparent); }
+.running::before {
+  background: linear-gradient(90deg, var(--color-status-running), transparent);
+}
+.compensating::before {
+  background: linear-gradient(
+    90deg,
+    var(--color-status-compensating),
+    transparent
+  );
+}
+.completed::before {
+  background: linear-gradient(
+    90deg,
+    var(--color-status-completed),
+    transparent
+  );
+}
 
-.stuck .value { color: var(--color-text-secondary); }
-.stuckActive .value { color: var(--color-status-stuck); }
-.stuckActive::before { background: linear-gradient(90deg, var(--color-status-stuck), transparent); }
+.stuck .value {
+  color: var(--color-text-secondary);
+}
+.stuckActive .value {
+  color: var(--color-status-stuck);
+}
+.stuckActive::before {
+  background: linear-gradient(90deg, var(--color-status-stuck), transparent);
+}
 
-.events .value { color: var(--color-accent); }
-.events::before { background: linear-gradient(90deg, var(--color-accent), transparent); }
+.events .value {
+  color: var(--color-accent);
+}
+.events::before {
+  background: linear-gradient(90deg, var(--color-accent), transparent);
+}
 
 .skeleton {
   animation: shimmer 1.8s ease-in-out infinite;
-  background: linear-gradient(90deg, var(--color-bg-elevated) 25%, var(--color-bg-hover) 50%, var(--color-bg-elevated) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-elevated) 25%,
+    var(--color-bg-hover) 50%,
+    var(--color-bg-elevated) 75%
+  );
   background-size: 200% 100%;
 }
 

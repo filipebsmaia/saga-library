@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import { SagaEventDto } from '@/lib/types/saga';
-import { HintBadge } from '@/components/shared/hint-badge/hint-badge';
-import { truncateId, cn } from '@/lib/utils/format';
-import styles from './causal-chain.module.scss';
+import { useMemo } from "react";
+import { SagaEventDto } from "@/lib/types/saga";
+import { HintBadge } from "@/components/shared/hint-badge/hint-badge";
+import { truncateId, cn } from "@/lib/utils/format";
+import styles from "./causal-chain.module.scss";
 
 interface CausalChainProps {
   events: SagaEventDto[];
@@ -27,7 +27,10 @@ export function CausalChain({ events, selectedEventId }: CausalChainProps) {
     // Walk forward: find events caused by selected
     const forward: SagaEventDto[] = [];
     for (const e of events) {
-      if (e.sagaCausationId === selectedEventId && e.sagaEventId !== selectedEventId) {
+      if (
+        e.sagaCausationId === selectedEventId &&
+        e.sagaEventId !== selectedEventId
+      ) {
         forward.push(e);
       }
     }
@@ -52,10 +55,17 @@ export function CausalChain({ events, selectedEventId }: CausalChainProps) {
           return (
             <div key={event.sagaEventId} className={styles.chainItem}>
               {i > 0 && <span className={styles.arrow}>→</span>}
-              <div className={cn(styles.chainNode, isSelected && styles.chainNodeSelected)}>
+              <div
+                className={cn(
+                  styles.chainNode,
+                  isSelected && styles.chainNodeSelected,
+                )}
+              >
                 <HintBadge hint={event.sagaEventHint} />
                 <span className={styles.chainStep}>{event.sagaStepName}</span>
-                <span className={styles.chainId}>{truncateId(event.sagaEventId, 6)}</span>
+                <span className={styles.chainId}>
+                  {truncateId(event.sagaEventId, 6)}
+                </span>
               </div>
             </div>
           );

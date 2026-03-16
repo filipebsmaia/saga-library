@@ -1,17 +1,28 @@
-import { Inject, Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { DiscoveryService } from '@nestjs/core';
-import { SagaRunner, SagaRegistry } from '@fbsm/saga-core';
-import type { EventHandler } from '@fbsm/saga-core';
-import { SAGA_PARTICIPANT_METADATA, SAGA_HANDLER_METADATA, SAGA_HANDLER_OPTIONS_METADATA } from '../constants';
-import type { SagaHandlerOptions } from '../decorators/saga-handler.decorator';
-import type { HandlerConfig } from '@fbsm/saga-core';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from "@nestjs/common";
+import { DiscoveryService } from "@nestjs/core";
+import { SagaRunner, SagaRegistry } from "@fbsm/saga-core";
+import type { EventHandler } from "@fbsm/saga-core";
+import {
+  SAGA_PARTICIPANT_METADATA,
+  SAGA_HANDLER_METADATA,
+  SAGA_HANDLER_OPTIONS_METADATA,
+} from "../constants";
+import type { SagaHandlerOptions } from "../decorators/saga-handler.decorator";
+import type { HandlerConfig } from "@fbsm/saga-core";
 
 @Injectable()
 export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger('SagaRunner');
+  private readonly logger = new Logger("SagaRunner");
 
   constructor(
-    @Inject(DiscoveryService) private readonly discoveryService: DiscoveryService,
+    @Inject(DiscoveryService)
+    private readonly discoveryService: DiscoveryService,
     @Inject(SagaRegistry) private readonly registry: SagaRegistry,
     @Inject(SagaRunner) private readonly runner: SagaRunner,
   ) {}
@@ -42,22 +53,25 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
       }
 
       const on: Record<string, EventHandler<any>> = {};
-      
+
       for (const [eventType, methodName] of handlesMap.entries()) {
         const method = (instance as any)[methodName];
-        if (typeof method === 'function') {
+        if (typeof method === "function") {
           on[eventType] = method.bind(instance);
         }
       }
 
       // Populate the `on` property if instance extends SagaParticipantBase
-      if ('on' in instance && typeof instance.on === 'object') {
+      if ("on" in instance && typeof instance.on === "object") {
         Object.assign(instance.on, on);
       }
 
       // Extract handler options (final, fork, etc.) from decorator metadata
       const handlerOptionsMap: Map<string, SagaHandlerOptions> | undefined =
-        Reflect.getMetadata(SAGA_HANDLER_OPTIONS_METADATA, instance.constructor);
+        Reflect.getMetadata(
+          SAGA_HANDLER_OPTIONS_METADATA,
+          instance.constructor,
+        );
 
       const handlerOptions: Record<string, HandlerConfig> = {};
       if (handlerOptionsMap) {
@@ -66,17 +80,18 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
         }
       }
 
-      const serviceId = (instance as any).serviceId ?? 'unknown';
+      const serviceId = (instance as any).serviceId ?? "unknown";
       this.logger.log(
-        `Registered participant "${serviceId}" handling: [${Object.keys(on).join(', ')}]`,
+        `Registered participant "${serviceId}" handling: [${Object.keys(on).join(", ")}]`,
       );
 
       this.registry.register({
         serviceId,
         on,
-        handlerOptions: Object.keys(handlerOptions).length > 0 ? handlerOptions : undefined,
+        handlerOptions:
+          Object.keys(handlerOptions).length > 0 ? handlerOptions : undefined,
         onRetryExhausted:
-          typeof (instance as any).onRetryExhausted === 'function'
+          typeof (instance as any).onRetryExhausted === "function"
             ? (instance as any).onRetryExhausted.bind(instance)
             : undefined,
       });

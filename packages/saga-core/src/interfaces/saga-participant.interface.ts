@@ -1,7 +1,7 @@
-import type { IncomingEvent } from './incoming-event.interface';
-import type { Emit } from './emit.type';
-import type { EventHandler } from './event-handler.type';
-import type { SagaRetryableError } from '../errors/saga-retryable.error';
+import type { IncomingEvent } from "./incoming-event.interface";
+import type { Emit } from "./emit.type";
+import type { EventHandler } from "./event-handler.type";
+import type { SagaRetryableError } from "../errors/saga-retryable.error";
 
 export interface ForkConfig {
   sagaName?: string;

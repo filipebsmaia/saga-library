@@ -1,4 +1,4 @@
-import { SagaStatus } from './saga';
+import { SagaStatus } from "./saga";
 
 export interface CursorPaginationResult<T> {
   data: T[];

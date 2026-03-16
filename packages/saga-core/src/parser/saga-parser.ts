@@ -1,14 +1,14 @@
-import { v7 as uuidv7 } from 'uuid';
-import type { SagaEvent } from '../interfaces/saga-event.interface';
-import type { InboundMessage } from '../transport/transport.interface';
-import type { OtelContext } from '../otel/otel-context';
+import { v7 as uuidv7 } from "uuid";
+import type { SagaEvent } from "../interfaces/saga-event.interface";
+import type { InboundMessage } from "../transport/transport.interface";
+import type { OtelContext } from "../otel/otel-context";
 
 export class SagaParser {
   constructor(private otelCtx: OtelContext) {}
 
   parse<T>(message: InboundMessage): SagaEvent<T> | null {
     try {
-      if (message.headers['saga-id']) {
+      if (message.headers["saga-id"]) {
         return this.parseFromHeaders<T>(message);
       }
 
@@ -30,27 +30,27 @@ export class SagaParser {
     const headers = message.headers;
     const body = JSON.parse(message.value);
 
-    const sagaId = headers['saga-id'];
+    const sagaId = headers["saga-id"];
     if (!sagaId) {
       return null;
     }
 
     return {
       sagaId,
-      causationId: headers['saga-causation-id'] ?? sagaId,
-      eventId: headers['saga-event-id'] ?? uuidv7(),
+      causationId: headers["saga-causation-id"] ?? sagaId,
+      eventId: headers["saga-event-id"] ?? uuidv7(),
       eventType: body.eventType,
-      stepName: headers['saga-step-name'] ?? '',
+      stepName: headers["saga-step-name"] ?? "",
       occurredAt: body.occurredAt ?? new Date().toISOString(),
-      publishedAt: headers['saga-published-at'] ?? new Date().toISOString(),
+      publishedAt: headers["saga-published-at"] ?? new Date().toISOString(),
       schemaVersion: 1,
-      rootSagaId: headers['saga-root-id'] ?? sagaId,
-      parentSagaId: headers['saga-parent-id'] || undefined,
+      rootSagaId: headers["saga-root-id"] ?? sagaId,
+      parentSagaId: headers["saga-parent-id"] || undefined,
       payload: body.payload as T,
-      sagaName: headers['saga-name'] || undefined,
-      sagaDescription: headers['saga-description'] || undefined,
-      stepDescription: headers['saga-step-description'] || undefined,
-      key: headers['saga-key'] || undefined,
+      sagaName: headers["saga-name"] || undefined,
+      sagaDescription: headers["saga-description"] || undefined,
+      stepDescription: headers["saga-step-description"] || undefined,
+      key: headers["saga-key"] || undefined,
     };
   }
 
@@ -59,12 +59,12 @@ export class SagaParser {
     let rootSagaId: string | undefined;
     let parentSagaId: string | undefined;
 
-    const baggageHeader = message.headers['baggage'];
+    const baggageHeader = message.headers["baggage"];
     if (baggageHeader) {
       const entries = this.parseBaggageHeader(baggageHeader);
-      sagaId = entries['saga.id'];
-      rootSagaId = entries['saga.root.id'];
-      parentSagaId = entries['saga.parent.id'];
+      sagaId = entries["saga.id"];
+      rootSagaId = entries["saga.root.id"];
+      parentSagaId = entries["saga.parent.id"];
     }
 
     // Fallback to OTel context extraction
@@ -84,7 +84,7 @@ export class SagaParser {
       causationId: sagaId,
       eventId: uuidv7(),
       eventType: body.eventType,
-      stepName: '',
+      stepName: "",
       occurredAt: body.occurredAt ?? new Date().toISOString(),
       publishedAt: new Date().toISOString(),
       schemaVersion: 1,
@@ -96,8 +96,8 @@ export class SagaParser {
 
   private parseBaggageHeader(baggage: string): Record<string, string> {
     const result: Record<string, string> = {};
-    for (const entry of baggage.split(',')) {
-      const [key, value] = entry.trim().split('=');
+    for (const entry of baggage.split(",")) {
+      const [key, value] = entry.trim().split("=");
       if (key && value) {
         result[key.trim()] = decodeURIComponent(value.trim());
       }

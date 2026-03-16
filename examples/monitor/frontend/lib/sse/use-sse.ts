@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useCallback } from 'react';
-import { SagaSseMessage } from '@/lib/types/sse';
+import { useEffect, useRef, useCallback } from "react";
+import { SagaSseMessage } from "@/lib/types/sse";
 
-type SseStatus = 'connected' | 'reconnecting' | 'disconnected';
+type SseStatus = "connected" | "reconnecting" | "disconnected";
 
 interface UseSseOptions {
   url: string;
@@ -14,7 +14,12 @@ interface UseSseOptions {
 
 const MAX_SEEN = 1000;
 
-export function useSse({ url, enabled = true, onMessage, onStatusChange }: UseSseOptions) {
+export function useSse({
+  url,
+  enabled = true,
+  onMessage,
+  onStatusChange,
+}: UseSseOptions) {
   const onMessageRef = useRef(onMessage);
   const onStatusRef = useRef(onStatusChange);
   onMessageRef.current = onMessage;
@@ -36,7 +41,7 @@ export function useSse({ url, enabled = true, onMessage, onStatusChange }: UseSs
 
       es.onopen = () => {
         backoff = 1000;
-        onStatusRef.current?.('connected');
+        onStatusRef.current?.("connected");
       };
 
       es.onmessage = (event) => {
@@ -51,12 +56,14 @@ export function useSse({ url, enabled = true, onMessage, onStatusChange }: UseSs
             if (old) seenIds.delete(old);
           }
           onMessageRef.current(data);
-        } catch { /* ignore parse errors */ }
+        } catch {
+          /* ignore parse errors */
+        }
       };
 
       es.onerror = () => {
         es?.close();
-        onStatusRef.current?.('reconnecting');
+        onStatusRef.current?.("reconnecting");
         reconnectTimer = setTimeout(() => {
           backoff = Math.min(backoff * 2, 30_000);
           connect();
@@ -70,7 +77,7 @@ export function useSse({ url, enabled = true, onMessage, onStatusChange }: UseSs
       closed = true;
       es?.close();
       clearTimeout(reconnectTimer);
-      onStatusRef.current?.('disconnected');
+      onStatusRef.current?.("disconnected");
     };
   }, [url, enabled]);
 }

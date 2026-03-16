@@ -1,6 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
-export type RecurringStatus = 'TRIGGERED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+export type RecurringStatus =
+  | "TRIGGERED"
+  | "PROCESSING"
+  | "COMPLETED"
+  | "FAILED";
 
 export interface RecurringRecord {
   recurringId: string;
@@ -29,16 +33,21 @@ export class RecurringStore {
       recurringId,
       sagaId,
       ...data,
-      status: 'TRIGGERED',
+      status: "TRIGGERED",
       createdAt: now,
       updatedAt: now,
     };
     this.records.set(recurringId, record);
-    this.logger.log(`Recurring ${recurringId} created (cycle ${data.cycle}, saga: ${sagaId})`);
+    this.logger.log(
+      `Recurring ${recurringId} created (cycle ${data.cycle}, saga: ${sagaId})`,
+    );
     return record;
   }
 
-  updateStatus(recurringId: string, status: RecurringStatus): RecurringRecord | undefined {
+  updateStatus(
+    recurringId: string,
+    status: RecurringStatus,
+  ): RecurringRecord | undefined {
     const record = this.records.get(recurringId);
     if (record) {
       record.status = status;

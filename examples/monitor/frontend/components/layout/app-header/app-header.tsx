@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { ConnectionStatus } from '@/components/layout/connection-status/connection-status';
-import styles from './app-header.module.scss';
+import Link from "next/link";
+import { ConnectionStatus } from "@/components/layout/connection-status/connection-status";
+import styles from "./app-header.module.scss";
 
 export function AppHeader() {
   return (
@@ -13,7 +13,9 @@ export function AppHeader() {
           Saga Monitor
         </Link>
         <nav className={styles.nav}>
-          <Link href="/" className={styles.navLink}>Dashboard</Link>
+          <Link href="/" className={styles.navLink}>
+            Dashboard
+          </Link>
         </nav>
         <div className={styles.right}>
           <ConnectionStatus />

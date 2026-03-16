@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
-export type PlanOrderStatus = 'PENDING' | 'COMPLETED' | 'PAYMENT_FAILED';
+export type PlanOrderStatus = "PENDING" | "COMPLETED" | "PAYMENT_FAILED";
 
 export interface PlanOrderRecord {
   planOrderId: string;
@@ -9,7 +9,7 @@ export interface PlanOrderRecord {
   planId: string;
   customerId: string;
   amount: number;
-  orderType: 'RECURRING' | 'CHANGE';
+  orderType: "RECURRING" | "CHANGE";
   status: PlanOrderStatus;
   createdAt: string;
   updatedAt: string;
@@ -28,7 +28,7 @@ export class RFPlanOrderStore {
       planId: string;
       customerId: string;
       amount: number;
-      orderType: 'RECURRING' | 'CHANGE';
+      orderType: "RECURRING" | "CHANGE";
     },
   ): PlanOrderRecord {
     const now = new Date().toISOString();
@@ -36,16 +36,21 @@ export class RFPlanOrderStore {
       planOrderId,
       sagaId,
       ...data,
-      status: 'PENDING',
+      status: "PENDING",
       createdAt: now,
       updatedAt: now,
     };
     this.records.set(planOrderId, record);
-    this.logger.log(`PlanOrder ${planOrderId} created (type: ${data.orderType})`);
+    this.logger.log(
+      `PlanOrder ${planOrderId} created (type: ${data.orderType})`,
+    );
     return record;
   }
 
-  updateStatus(planOrderId: string, status: PlanOrderStatus): PlanOrderRecord | undefined {
+  updateStatus(
+    planOrderId: string,
+    status: PlanOrderStatus,
+  ): PlanOrderRecord | undefined {
     const record = this.records.get(planOrderId);
     if (record) {
       record.status = status;

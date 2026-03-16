@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   createContext,
@@ -8,10 +8,10 @@ import {
   useSyncExternalStore,
   useCallback,
   ReactNode,
-} from 'react';
-import { SagaSseMessage } from '@/lib/types/sse';
+} from "react";
+import { SagaSseMessage } from "@/lib/types/sse";
 
-type SseStatus = 'connected' | 'reconnecting' | 'disconnected';
+type SseStatus = "connected" | "reconnecting" | "disconnected";
 
 const MAX_SEEN = 1000;
 
@@ -24,7 +24,11 @@ interface StatusSnapshot {
 }
 
 function createSseStore(url: string) {
-  const statusSnap: StatusSnapshot = { status: 'disconnected', lastEventAt: null, lastPublishedAt: null };
+  const statusSnap: StatusSnapshot = {
+    status: "disconnected",
+    lastEventAt: null,
+    lastPublishedAt: null,
+  };
   let messageSnap: SagaSseMessage | null = null;
   let paused = false;
 
@@ -66,7 +70,7 @@ function createSseStore(url: string) {
 
     eventSource.onopen = () => {
       backoff = 1000;
-      setStatus('connected');
+      setStatus("connected");
     };
 
     eventSource.onmessage = (event) => {
@@ -78,7 +82,7 @@ function createSseStore(url: string) {
           notifyStatus();
           return;
         }
-        
+
         if (seenIds.has(data.eventId)) {
           return;
         }
@@ -96,7 +100,7 @@ function createSseStore(url: string) {
         statusSnap.lastPublishedAt = data.publishedAt ?? null;
 
         notifyStatus();
-        
+
         if (paused) {
           return;
         }
@@ -110,7 +114,7 @@ function createSseStore(url: string) {
     eventSource.onerror = () => {
       eventSource?.close();
       eventSource = null;
-      setStatus('reconnecting');
+      setStatus("reconnecting");
       reconnectTimer = setTimeout(() => {
         backoff = Math.min(backoff * 2, 30_000);
         connect();
@@ -149,17 +153,23 @@ function createSseStore(url: string) {
   // Stable subscribe functions for useSyncExternalStore
   function subscribeStatus(cb: () => void) {
     statusSubs.add(cb);
-    return () => { statusSubs.delete(cb); };
+    return () => {
+      statusSubs.delete(cb);
+    };
   }
 
   function subscribeMessage(cb: () => void) {
     messageSubs.add(cb);
-    return () => { messageSubs.delete(cb); };
+    return () => {
+      messageSubs.delete(cb);
+    };
   }
 
   function subscribePause(cb: () => void) {
     pauseSubs.add(cb);
-    return () => { pauseSubs.delete(cb); };
+    return () => {
+      pauseSubs.delete(cb);
+    };
   }
 
   return {
@@ -176,7 +186,6 @@ function createSseStore(url: string) {
   };
 }
 
-
 // ---------------------------------------------------------------------------
 // Context & hooks
 // ---------------------------------------------------------------------------
@@ -187,7 +196,11 @@ export function useSseStore(): SseStore | null {
   return useContext(SseStoreContext);
 }
 
-const DEFAULT_STATUS: StatusSnapshot = { status: 'disconnected', lastEventAt: null, lastPublishedAt: null };
+const DEFAULT_STATUS: StatusSnapshot = {
+  status: "disconnected",
+  lastEventAt: null,
+  lastPublishedAt: null,
+};
 const noopUnsub = () => () => {};
 
 /** Connection status — re-renders only on connect/disconnect */
@@ -212,17 +225,17 @@ export function useSseMessages(): { lastMessage: SagaSseMessage | null } {
 }
 
 /** Pause/resume SSE message processing */
-export function useSsePause(): { paused: boolean; setPaused: (v: boolean) => void } {
+export function useSsePause(): {
+  paused: boolean;
+  setPaused: (v: boolean) => void;
+} {
   const store = useContext(SseStoreContext);
   const paused = useSyncExternalStore(
     store ? store.subscribePause : noopUnsub,
     store ? store.getPaused : () => false,
     () => false,
   );
-  const setPaused = useCallback(
-    (v: boolean) => store?.setPaused(v),
-    [store],
-  );
+  const setPaused = useCallback((v: boolean) => store?.setPaused(v), [store]);
   return { paused, setPaused };
 }
 

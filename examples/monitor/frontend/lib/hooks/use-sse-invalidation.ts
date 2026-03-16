@@ -1,11 +1,17 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useCallback, useMemo, useSyncExternalStore } from 'react';
-import { QueryClient, InfiniteData } from '@tanstack/react-query';
-import { useSseStore } from '@/lib/sse/sse-provider';
-import { SagaSseMessage } from '@/lib/types/sse';
-import { SagaStateDto } from '@/lib/types/saga';
-import { CursorPaginationResult } from '@/lib/types/api';
+import {
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  useSyncExternalStore,
+} from "react";
+import { QueryClient, InfiniteData } from "@tanstack/react-query";
+import { useSseStore } from "@/lib/sse/sse-provider";
+import { SagaSseMessage } from "@/lib/types/sse";
+import { SagaStateDto } from "@/lib/types/saga";
+import { CursorPaginationResult } from "@/lib/types/api";
 
 const FLUSH_INTERVAL = 300;
 const HIGHLIGHT_DURATION = 3_000;
@@ -20,7 +26,10 @@ export interface SseInvalidationResult {
 
 // SSE message may arrive in old format (rootId, stepName) or new enriched format (sagaRootId, currentStepName)
 // We handle both transparently.
-function getField<T>(source: Record<string, unknown>, ...keys: string[]): T | undefined {
+function getField<T>(
+  source: Record<string, unknown>,
+  ...keys: string[]
+): T | undefined {
   for (const key of keys) {
     if (source[key] !== undefined) {
       return source[key] as T;
@@ -33,14 +42,20 @@ function sseToPartialUpdate(message: SagaSseMessage): Partial<SagaStateDto> {
   const raw = message as unknown as Record<string, unknown>;
   return {
     status: message.status,
-    currentStepName: (getField<string>(raw, 'currentStepName', 'stepName')) ?? '',
-    currentStepDescription: (getField<string>(raw, 'currentStepDescription')) ?? null,
+    currentStepName: getField<string>(raw, "currentStepName", "stepName") ?? "",
+    currentStepDescription:
+      getField<string>(raw, "currentStepDescription") ?? null,
     lastEventId: message.eventId,
-    lastEventHint: (getField(raw, 'lastEventHint', 'eventHint')) as SagaStateDto['lastEventHint'] ?? null,
-    lastTopic: (getField<string>(raw, 'lastTopic')) ?? null,
+    lastEventHint:
+      (getField(
+        raw,
+        "lastEventHint",
+        "eventHint",
+      ) as SagaStateDto["lastEventHint"]) ?? null,
+    lastTopic: getField<string>(raw, "lastTopic") ?? null,
     updatedAt: message.updatedAt,
-    endedAt: (getField<string>(raw, 'endedAt')) ?? null,
-    eventCount: (getField<number>(raw, 'eventCount')) ?? undefined,
+    endedAt: getField<string>(raw, "endedAt") ?? null,
+    eventCount: getField<number>(raw, "eventCount") ?? undefined,
   };
 }
 
@@ -51,7 +66,9 @@ function sseToPartialUpdate(message: SagaSseMessage): Partial<SagaStateDto> {
  * New sagas (not in cache) are NOT added — instead a counter is
  * incremented so the UI can show a "N new sagas" refresh banner.
  */
-export function useSseInvalidation(queryClient: QueryClient): SseInvalidationResult {
+export function useSseInvalidation(
+  queryClient: QueryClient,
+): SseInvalidationResult {
   const store = useSseStore();
 
   const pendingMessages = useRef(new Map<string, SagaSseMessage>());
@@ -94,17 +111,25 @@ export function useSseInvalidation(queryClient: QueryClient): SseInvalidationRes
 
   const subscribe = useCallback((callback: () => void) => {
     subscribersRef.current.add(callback);
-    return () => { subscribersRef.current.delete(callback); };
+    return () => {
+      subscribersRef.current.delete(callback);
+    };
   }, []);
 
   const getSnapshot = useCallback(() => snapshotRef.current, []);
 
-  const SERVER_SNAPSHOT: SseInvalidationResult = useMemo(() => ({
-    recentlyUpdatedIds: new Set<string>(),
-    newSagasCount: 0,
-    resetNewCount: () => {},
-  }), []);
-  const getServerSnapshot = useCallback(() => SERVER_SNAPSHOT, [SERVER_SNAPSHOT]);
+  const SERVER_SNAPSHOT: SseInvalidationResult = useMemo(
+    () => ({
+      recentlyUpdatedIds: new Set<string>(),
+      newSagasCount: 0,
+      resetNewCount: () => {},
+    }),
+    [],
+  );
+  const getServerSnapshot = useCallback(
+    () => SERVER_SNAPSHOT,
+    [SERVER_SNAPSHOT],
+  );
 
   useEffect(() => {
     if (!store) {
@@ -131,7 +156,9 @@ export function useSseInvalidation(queryClient: QueryClient): SseInvalidationRes
         pendingMessages.current.clear();
 
         // Merge into React Query cache (only existing sagas)
-        const sagaQueries = queryClient.getQueriesData<SagaPages>({ queryKey: ['sagas'] });
+        const sagaQueries = queryClient.getQueriesData<SagaPages>({
+          queryKey: ["sagas"],
+        });
         const allExistingIds = new Set<string>();
 
         for (const [queryKey, pageData] of sagaQueries) {
@@ -168,7 +195,10 @@ export function useSseInvalidation(queryClient: QueryClient): SseInvalidationRes
 
         // Count new sagas not present in any query cache
         for (const sagaId of batch.keys()) {
-          if (!allExistingIds.has(sagaId) && !newSeenIdsRef.current.has(sagaId)) {
+          if (
+            !allExistingIds.has(sagaId) &&
+            !newSeenIdsRef.current.has(sagaId)
+          ) {
             newSeenIdsRef.current.add(sagaId);
             newCountRef.current++;
           }
@@ -183,7 +213,10 @@ export function useSseInvalidation(queryClient: QueryClient): SseInvalidationRes
         }
 
         if (updatedIds.size > 0) {
-          highlightRef.current = new Set([...highlightRef.current, ...updatedIds]);
+          highlightRef.current = new Set([
+            ...highlightRef.current,
+            ...updatedIds,
+          ]);
         }
         notify();
 

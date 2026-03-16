@@ -9,18 +9,18 @@ function arg(name, fallback) {
   return i !== -1 && process.argv[i + 1] ? process.argv[i + 1] : fallback;
 }
 
-const BASE_URL = arg('--base-url', 'http://localhost:3000');
-const TARGET_RPS = parseInt(arg('--rps', '10'), 10);
-const DURATION_SEC = parseInt(arg('--duration', '10'), 10);
+const BASE_URL = arg("--base-url", "http://localhost:3000");
+const TARGET_RPS = parseInt(arg("--rps", "10"), 10);
+const DURATION_SEC = parseInt(arg("--duration", "10"), 10);
 
 // ─── Flow definitions ────────────────────────────────────────
 const FLOWS = [
-  { name: 'recurring',              path: '/recurrings',                  weight: 30 },
-  { name: 'sim-swap',               path: '/sim-swaps',                   weight: 20 },
-  { name: 'upgrade',                path: '/upgrades',                    weight: 15 },
-  { name: 'upgrade-fail',           path: '/upgrades?fail=true',          weight: 15 },
-  { name: 'recurring-fail',         path: '/recurrings?paymentFail=true', weight: 10 },
-  { name: 'bulk-activation',        path: '/bulk-activations?lines=3',    weight: 10 },
+  { name: "recurring", path: "/recurrings", weight: 30 },
+  { name: "sim-swap", path: "/sim-swaps", weight: 20 },
+  { name: "upgrade", path: "/upgrades", weight: 15 },
+  { name: "upgrade-fail", path: "/upgrades?fail=true", weight: 15 },
+  { name: "recurring-fail", path: "/recurrings?paymentFail=true", weight: 10 },
+  { name: "bulk-activation", path: "/bulk-activations?lines=3", weight: 10 },
 ];
 
 const totalWeight = FLOWS.reduce((s, f) => s + f.weight, 0);
@@ -33,7 +33,7 @@ for (const f of FLOWS) {
 
 function pickFlow() {
   const r = Math.random() * totalWeight;
-  return cumulative.find(f => r < f.cum);
+  return cumulative.find((f) => r < f.cum);
 }
 
 // ─── Stats ───────────────────────────────────────────────────
@@ -43,7 +43,7 @@ const stats = {
   errors: 0,
   byFlow: {},
   latencies: [],
-  errorBreakdown: {},   // "reason" → { count, flows: Set, lastDetail, lastLatency }
+  errorBreakdown: {}, // "reason" → { count, flows: Set, lastDetail, lastLatency }
 };
 
 for (const f of FLOWS) {
@@ -52,8 +52,10 @@ for (const f of FLOWS) {
 
 function classifyError(result) {
   if (result.error) return `NETWORK: ${result.error}`;
-  if (result.status >= 500) return `HTTP ${result.status}: ${result.body ?? 'Server Error'}`;
-  if (result.status >= 400) return `HTTP ${result.status}: ${result.body ?? 'Client Error'}`;
+  if (result.status >= 500)
+    return `HTTP ${result.status}: ${result.body ?? "Server Error"}`;
+  if (result.status >= 400)
+    return `HTTP ${result.status}: ${result.body ?? "Client Error"}`;
   return null;
 }
 
@@ -66,7 +68,11 @@ function recordResult(result) {
   if (errKey) {
     stats.errors++;
     fs.errors++;
-    const entry = stats.errorBreakdown[errKey] ??= { count: 0, flows: new Set(), lastLatency: 0 };
+    const entry = (stats.errorBreakdown[errKey] ??= {
+      count: 0,
+      flows: new Set(),
+      lastLatency: 0,
+    });
     entry.count++;
     entry.flows.add(result.flow);
     entry.lastLatency = result.latency;
@@ -82,18 +88,29 @@ async function fireRequest(flow) {
   const start = performance.now();
   try {
     const res = await fetch(`${BASE_URL}${flow.path}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
     });
     const latency = Math.round(performance.now() - start);
     let body;
     try {
       const text = await res.text();
-      body = text.length > 200 ? text.slice(0, 200) + '…' : text;
-    } catch { body = undefined; }
-    return { flow: flow.name, status: res.status, latency, body: res.ok ? undefined : body };
+      body = text.length > 200 ? text.slice(0, 200) + "…" : text;
+    } catch {
+      body = undefined;
+    }
+    return {
+      flow: flow.name,
+      status: res.status,
+      latency,
+      body: res.ok ? undefined : body,
+    };
   } catch (err) {
-    return { flow: flow.name, error: err.message, latency: Math.round(performance.now() - start) };
+    return {
+      flow: flow.name,
+      error: err.message,
+      latency: Math.round(performance.now() - start),
+    };
   }
 }
 
@@ -107,65 +124,101 @@ function pct(arr, p) {
 
 // ─── Progress ────────────────────────────────────────────────
 function printProgress(elapsed) {
-  const rps = stats.total > 0 ? (stats.total / elapsed).toFixed(1) : '0';
+  const rps = stats.total > 0 ? (stats.total / elapsed).toFixed(1) : "0";
   const p50 = pct(stats.latencies, 50);
   process.stdout.write(
-    `\r  [${Math.floor(elapsed)}s/${DURATION_SEC}s] ${stats.total} req | ${rps} req/s | p50: ${p50}ms | err: ${stats.errors}   `
+    `\r  [${Math.floor(elapsed)}s/${DURATION_SEC}s] ${stats.total} req | ${rps} req/s | p50: ${p50}ms | err: ${stats.errors}   `,
   );
 }
 
 // ─── Report ──────────────────────────────────────────────────
 function printReport() {
-  console.log('\n');
-  console.log('╔══════════════════════════════════════════════════════════════════╗');
-  console.log('║                      LOAD TEST REPORT                           ║');
-  console.log('╠══════════════════════════════════════════════════════════════════╣');
-  console.log(`║  Duration:  ${DURATION_SEC}s    Target RPS: ${TARGET_RPS}    Base: ${BASE_URL}`);
-  console.log(`║  Total:     ${stats.total}      Success: ${stats.success}      Errors: ${stats.errors}`);
-  console.log('╠══════════════════════════════════════════════════════════════════╣');
-  console.log('║  Flow                  Count   Err   p50    p90    p95    p99   ║');
-  console.log('╠══════════════════════════════════════════════════════════════════╣');
+  console.log("\n");
+  console.log(
+    "╔══════════════════════════════════════════════════════════════════╗",
+  );
+  console.log(
+    "║                      LOAD TEST REPORT                           ║",
+  );
+  console.log(
+    "╠══════════════════════════════════════════════════════════════════╣",
+  );
+  console.log(
+    `║  Duration:  ${DURATION_SEC}s    Target RPS: ${TARGET_RPS}    Base: ${BASE_URL}`,
+  );
+  console.log(
+    `║  Total:     ${stats.total}      Success: ${stats.success}      Errors: ${stats.errors}`,
+  );
+  console.log(
+    "╠══════════════════════════════════════════════════════════════════╣",
+  );
+  console.log(
+    "║  Flow                  Count   Err   p50    p90    p95    p99   ║",
+  );
+  console.log(
+    "╠══════════════════════════════════════════════════════════════════╣",
+  );
 
   for (const f of FLOWS) {
     const s = stats.byFlow[f.name];
     const name = f.name.padEnd(20);
     const count = String(s.count).padStart(5);
     const err = String(s.errors).padStart(5);
-    const p50 = String(pct(s.latencies, 50) + 'ms').padStart(6);
-    const p90 = String(pct(s.latencies, 90) + 'ms').padStart(6);
-    const p95 = String(pct(s.latencies, 95) + 'ms').padStart(6);
-    const p99 = String(pct(s.latencies, 99) + 'ms').padStart(6);
+    const p50 = String(pct(s.latencies, 50) + "ms").padStart(6);
+    const p90 = String(pct(s.latencies, 90) + "ms").padStart(6);
+    const p95 = String(pct(s.latencies, 95) + "ms").padStart(6);
+    const p99 = String(pct(s.latencies, 99) + "ms").padStart(6);
     console.log(`║  ${name} ${count} ${err} ${p50} ${p90} ${p95} ${p99}   ║`);
   }
 
-  console.log('╠══════════════════════════════════════════════════════════════════╣');
-  const p50 = String(pct(stats.latencies, 50) + 'ms').padStart(6);
-  const p90 = String(pct(stats.latencies, 90) + 'ms').padStart(6);
-  const p95 = String(pct(stats.latencies, 95) + 'ms').padStart(6);
-  const p99 = String(pct(stats.latencies, 99) + 'ms').padStart(6);
-  console.log(`║  ${'TOTAL'.padEnd(20)} ${String(stats.total).padStart(5)} ${String(stats.errors).padStart(5)} ${p50} ${p90} ${p95} ${p99}   ║`);
-  console.log('╚══════════════════════════════════════════════════════════════════╝');
+  console.log(
+    "╠══════════════════════════════════════════════════════════════════╣",
+  );
+  const p50 = String(pct(stats.latencies, 50) + "ms").padStart(6);
+  const p90 = String(pct(stats.latencies, 90) + "ms").padStart(6);
+  const p95 = String(pct(stats.latencies, 95) + "ms").padStart(6);
+  const p99 = String(pct(stats.latencies, 99) + "ms").padStart(6);
+  console.log(
+    `║  ${"TOTAL".padEnd(20)} ${String(stats.total).padStart(5)} ${String(stats.errors).padStart(5)} ${p50} ${p90} ${p95} ${p99}   ║`,
+  );
+  console.log(
+    "╚══════════════════════════════════════════════════════════════════╝",
+  );
 
   // ── Error breakdown ──
-  const errEntries = Object.entries(stats.errorBreakdown).sort((a, b) => b[1].count - a[1].count);
+  const errEntries = Object.entries(stats.errorBreakdown).sort(
+    (a, b) => b[1].count - a[1].count,
+  );
   if (errEntries.length > 0) {
-    console.log('\n┌──────────────────────────────────────────────────────────────────┐');
-    console.log('│                      ERROR BREAKDOWN                             │');
-    console.log('├──────────────────────────────────────────────────────────────────┤');
+    console.log(
+      "\n┌──────────────────────────────────────────────────────────────────┐",
+    );
+    console.log(
+      "│                      ERROR BREAKDOWN                             │",
+    );
+    console.log(
+      "├──────────────────────────────────────────────────────────────────┤",
+    );
     for (const [reason, info] of errEntries) {
       const pctOfTotal = ((info.count / stats.total) * 100).toFixed(1);
-      const flows = [...info.flows].join(', ');
+      const flows = [...info.flows].join(", ");
       console.log(`│  ${reason}`);
-      console.log(`│    Count: ${info.count} (${pctOfTotal}%)   Flows: ${flows}`);
-      console.log('│');
+      console.log(
+        `│    Count: ${info.count} (${pctOfTotal}%)   Flows: ${flows}`,
+      );
+      console.log("│");
     }
-    console.log('└──────────────────────────────────────────────────────────────────┘');
+    console.log(
+      "└──────────────────────────────────────────────────────────────────┘",
+    );
   }
 }
 
 // ─── Main ────────────────────────────────────────────────────
 async function run() {
-  console.log(`\n  Saga Load Test — ${TARGET_RPS} rps for ${DURATION_SEC}s against ${BASE_URL}\n`);
+  console.log(
+    `\n  Saga Load Test — ${TARGET_RPS} rps for ${DURATION_SEC}s against ${BASE_URL}\n`,
+  );
 
   const intervalMs = 1000 / TARGET_RPS;
   const startTime = Date.now();
@@ -189,17 +242,19 @@ async function run() {
   });
 
   // Drain in-flight requests (max 5s)
-  process.stdout.write('\r  Draining in-flight requests...                                   ');
+  process.stdout.write(
+    "\r  Draining in-flight requests...                                   ",
+  );
   await Promise.race([
     Promise.allSettled(promises),
-    new Promise(r => setTimeout(r, 5000)),
+    new Promise((r) => setTimeout(r, 5000)),
   ]);
 
   clearInterval(progressTimer);
   printReport();
 }
 
-run().catch(err => {
-  console.error('Load test failed:', err);
+run().catch((err) => {
+  console.error("Load test failed:", err);
   process.exit(1);
 });

@@ -5,11 +5,6 @@ import { MetricsModule } from './infra/metrics/metrics.module';
 import { SagaModule } from './infra/saga/saga.module';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    LoggerModule,
-    MetricsModule,
-    SagaModule,
-  ],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), LoggerModule, MetricsModule, SagaModule],
 })
 export class AppModule {}

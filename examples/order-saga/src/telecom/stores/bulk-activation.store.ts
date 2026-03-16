@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
-export type BulkActivationStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+export type BulkActivationStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED";
 
 export interface BulkActivationRecord {
   bulkId: string;
@@ -31,13 +31,15 @@ export class BulkActivationStore {
       totalLines: data.totalLines,
       completedLines: 0,
       subSagaIds: [],
-      status: 'PENDING',
+      status: "PENDING",
       createdAt: now,
       updatedAt: now,
     };
     this.records.set(bulkId, record);
     this.bySagaId.set(sagaId, bulkId);
-    this.logger.log(`BulkActivation ${bulkId} created (saga: ${sagaId}, lines: ${data.totalLines})`);
+    this.logger.log(
+      `BulkActivation ${bulkId} created (saga: ${sagaId}, lines: ${data.totalLines})`,
+    );
     return record;
   }
 
@@ -45,7 +47,7 @@ export class BulkActivationStore {
     const record = this.records.get(bulkId);
     if (record) {
       record.subSagaIds.push(subSagaId);
-      record.status = 'IN_PROGRESS';
+      record.status = "IN_PROGRESS";
       record.updatedAt = new Date().toISOString();
       this.bySagaId.set(subSagaId, bulkId);
     }
@@ -56,9 +58,11 @@ export class BulkActivationStore {
     if (record) {
       record.completedLines++;
       record.updatedAt = new Date().toISOString();
-      this.logger.log(`BulkActivation ${bulkId}: ${record.completedLines}/${record.totalLines} completed`);
+      this.logger.log(
+        `BulkActivation ${bulkId}: ${record.completedLines}/${record.totalLines} completed`,
+      );
       if (record.completedLines >= record.totalLines) {
-        record.status = 'COMPLETED';
+        record.status = "COMPLETED";
       }
     }
     return record;

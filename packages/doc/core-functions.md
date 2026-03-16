@@ -4,25 +4,28 @@ These functions are available via `SagaPublisherProvider` (NestJS) or `SagaPubli
 
 ## Overview
 
-| Function | Requires Context? | Creates New Saga? | Use Case |
-|----------|:-:|:-:|----------|
-| `start(fn)` | No | Yes (root) | Entry point: HTTP controller, cron job, CLI |
-| `startChild(fn)` | Yes | Yes (child) | Spawn related sub-process within a handler |
-| `emit(params)` | Yes | No | Publish event in current saga |
-| `emitToParent(params\|fn)` | Yes (child) | No | Sub-saga reporting back to parent |
-| `forSaga(sagaId)` | No | No | Manual control without AsyncLocalStorage |
+| Function                   | Requires Context? | Creates New Saga? | Use Case                                    |
+| -------------------------- | :---------------: | :---------------: | ------------------------------------------- |
+| `start(fn)`                |        No         |    Yes (root)     | Entry point: HTTP controller, cron job, CLI |
+| `startChild(fn)`           |        Yes        |    Yes (child)    | Spawn related sub-process within a handler  |
+| `emit(params)`             |        Yes        |        No         | Publish event in current saga               |
+| `emitToParent(params\|fn)` |    Yes (child)    |        No         | Sub-saga reporting back to parent           |
+| `forSaga(sagaId)`          |        No         |        No         | Manual control without AsyncLocalStorage    |
 
 ## `start(fn, opts?)`
 
 ```typescript
-const { sagaId, result } = await sagaPublisher.start(async () => {
-  await sagaPublisher.emit({
-    eventType: 'order.created',
-    stepName: 'create-order',
-    payload: { orderId: '123', amount: 99.90 },
-  });
-  return { orderId: '123' };
-}, { sagaName: 'order-flow' });
+const { sagaId, result } = await sagaPublisher.start(
+  async () => {
+    await sagaPublisher.emit({
+      eventType: "order.created",
+      stepName: "create-order",
+      payload: { orderId: "123", amount: 99.9 },
+    });
+    return { orderId: "123" };
+  },
+  { sagaName: "order-flow" },
+);
 ```
 
 - Generates a new `sagaId` (UUID v7)
@@ -37,9 +40,9 @@ const { sagaId, result } = await sagaPublisher.start(async () => {
 // Must be inside an existing saga context (handler or start callback)
 const { sagaId: childId } = await sagaPublisher.startChild(async () => {
   await sagaPublisher.emit({
-    eventType: 'provisioning.started',
-    stepName: 'start-provisioning',
-    payload: { productId: 'abc' },
+    eventType: "provisioning.started",
+    stepName: "start-provisioning",
+    payload: { productId: "abc" },
   });
 });
 ```
@@ -54,10 +57,10 @@ const { sagaId: childId } = await sagaPublisher.startChild(async () => {
 
 ```typescript
 await sagaPublisher.emit({
-  eventType: 'payment.completed',
-  stepName: 'process-payment',
+  eventType: "payment.completed",
+  stepName: "process-payment",
   payload: { orderId, transactionId },
-  hint: 'compensation', // optional
+  hint: "compensation", // optional
 });
 ```
 
@@ -73,10 +76,10 @@ Two forms:
 
 ```typescript
 await sagaPublisher.emitToParent({
-  eventType: 'sub-task.completed',
-  stepName: 'complete-sub-task',
-  payload: { result: 'ok' },
-  hint: 'final',
+  eventType: "sub-task.completed",
+  stepName: "complete-sub-task",
+  payload: { result: "ok" },
+  hint: "final",
 });
 ```
 
@@ -85,9 +88,9 @@ await sagaPublisher.emitToParent({
 ```typescript
 await sagaPublisher.emitToParent(async () => {
   await sagaPublisher.emit({
-    eventType: 'sub-task.completed',
-    stepName: 'complete-sub-task',
-    payload: { result: 'ok' },
+    eventType: "sub-task.completed",
+    stepName: "complete-sub-task",
+    payload: { result: "ok" },
   });
 });
 ```
@@ -99,26 +102,30 @@ await sagaPublisher.emitToParent(async () => {
 ## `forSaga(sagaId, parentCtx?, causationId?, key?)`
 
 ```typescript
-import { v7 as uuidv7 } from 'uuid';
+import { v7 as uuidv7 } from "uuid";
 
 // Root saga (manual)
 const sagaId = uuidv7();
 const emit = sagaPublisher.forSaga(sagaId);
 await emit({
-  eventType: 'order.created',
-  stepName: 'create-order',
-  payload: { orderId: '123' },
+  eventType: "order.created",
+  stepName: "create-order",
+  payload: { orderId: "123" },
 });
 
 // Child saga (manual)
 const childId = uuidv7();
-const childEmit = sagaPublisher.forSaga(childId, {
-  parentSagaId: sagaId,
-  rootSagaId: sagaId,
-}, causationEventId);
+const childEmit = sagaPublisher.forSaga(
+  childId,
+  {
+    parentSagaId: sagaId,
+    rootSagaId: sagaId,
+  },
+  causationEventId,
+);
 await childEmit({
-  eventType: 'child.started',
-  stepName: 'start-child',
+  eventType: "child.started",
+  stepName: "start-child",
   payload: {},
 });
 ```

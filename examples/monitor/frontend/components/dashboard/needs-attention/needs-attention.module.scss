@@ -1,4 +1,4 @@
-@use '../../../styles/mixins' as *;
+@use "../../../styles/mixins" as *;
 
 .section {
   @include card;
@@ -26,9 +26,10 @@
 .row {
   border-radius: var(--radius-sm);
   border-left: 0 solid transparent;
-  transition: background var(--transition-fast) var(--ease-out),
-              border-left-width var(--transition-fast) var(--ease-out),
-              border-color var(--transition-fast) var(--ease-out);
+  transition:
+    background var(--transition-fast) var(--ease-out),
+    border-left-width var(--transition-fast) var(--ease-out),
+    border-color var(--transition-fast) var(--ease-out);
 
   &:hover {
     background: var(--color-accent-glow);

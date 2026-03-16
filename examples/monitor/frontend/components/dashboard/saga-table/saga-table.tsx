@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { SagaStateDto, SagaStatus } from '@/lib/types/saga';
-import { StatusBadge } from '@/components/shared/status-badge/status-badge';
-import { CopyButton } from '@/components/shared/copy-button/copy-button';
-import { HintBadge } from '@/components/shared/hint-badge/hint-badge';
-import { TimestampCell } from '@/components/shared/timestamp-cell/timestamp-cell';
-import { formatDuration, truncateId, cn } from '@/lib/utils/format';
-import Link from 'next/link';
-import styles from './saga-table.module.scss';
+import { memo } from "react";
+import { SagaStateDto, SagaStatus } from "@/lib/types/saga";
+import { StatusBadge } from "@/components/shared/status-badge/status-badge";
+import { CopyButton } from "@/components/shared/copy-button/copy-button";
+import { HintBadge } from "@/components/shared/hint-badge/hint-badge";
+import { TimestampCell } from "@/components/shared/timestamp-cell/timestamp-cell";
+import { formatDuration, truncateId, cn } from "@/lib/utils/format";
+import Link from "next/link";
+import styles from "./saga-table.module.scss";
 
 interface SagaTableProps {
   sagas: SagaStateDto[];
@@ -24,7 +24,11 @@ interface SagaRowProps {
   incidentMode: boolean;
 }
 
-const SagaRow = memo(function SagaRow({ saga, isLive, incidentMode }: SagaRowProps) {
+const SagaRow = memo(function SagaRow({
+  saga,
+  isLive,
+  incidentMode,
+}: SagaRowProps) {
   const isStuck =
     saga.status !== SagaStatus.COMPLETED &&
     Date.now() - new Date(saga.updatedAt).getTime() > STUCK_THRESHOLD;
@@ -41,7 +45,10 @@ const SagaRow = memo(function SagaRow({ saga, isLive, incidentMode }: SagaRowPro
         styles.dataRow,
         isLive && styles.live,
         incidentMode && isStuck && styles.incidentStuck,
-        incidentMode && saga.status === SagaStatus.COMPENSATING && !isStuck && styles.incidentCompensating,
+        incidentMode &&
+          saga.status === SagaStatus.COMPENSATING &&
+          !isStuck &&
+          styles.incidentCompensating,
       )}
     >
       <span>
@@ -57,37 +64,53 @@ const SagaRow = memo(function SagaRow({ saga, isLive, incidentMode }: SagaRowPro
         {isRoot ? (
           <span className={styles.rootSelf}>—</span>
         ) : (
-          <CopyButton text={saga.sagaRootId} displayText={truncateId(saga.sagaRootId)} />
+          <CopyButton
+            text={saga.sagaRootId}
+            displayText={truncateId(saga.sagaRootId)}
+          />
         )}
       </span>
       <span className={styles.step}>{saga.currentStepName}</span>
       <span>
         <HintBadge hint={saga.lastEventHint} />
       </span>
-      <span className={styles.topic}>{saga.lastTopic ?? '—'}</span>
+      <span className={styles.topic}>{saga.lastTopic ?? "—"}</span>
       <span>
         <TimestampCell iso={saga.updatedAt} />
       </span>
-      <span className={styles.duration}>
-        {formatDuration(elapsed)}
-      </span>
+      <span className={styles.duration}>{formatDuration(elapsed)}</span>
       <span className={styles.events}>{saga.eventCount}</span>
       <span>
-        <span className={cn(styles.topologyBadge, isRoot ? styles.rootBadge : styles.childBadge)}>
-          {isRoot ? 'ROOT' : 'CHILD'}
+        <span
+          className={cn(
+            styles.topologyBadge,
+            isRoot ? styles.rootBadge : styles.childBadge,
+          )}
+        >
+          {isRoot ? "ROOT" : "CHILD"}
         </span>
       </span>
       <span className={styles.indicators}>
-        {isStuck && <span className={styles.stuckBadge} title="Possibly stuck">stuck</span>}
+        {isStuck && (
+          <span className={styles.stuckBadge} title="Possibly stuck">
+            stuck
+          </span>
+        )}
         {saga.status === SagaStatus.COMPENSATING && (
-          <span className={styles.compensatingBadge} title="Compensating">comp</span>
+          <span className={styles.compensatingBadge} title="Compensating">
+            comp
+          </span>
         )}
       </span>
     </Link>
   );
 });
 
-export function SagaTable({ sagas, recentlyUpdatedIds, incidentMode }: SagaTableProps) {
+export function SagaTable({
+  sagas,
+  recentlyUpdatedIds,
+  incidentMode,
+}: SagaTableProps) {
   return (
     <div className={styles.wrapper}>
       <div className={styles.table}>

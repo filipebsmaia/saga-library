@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useEventBuffer } from '@/lib/hooks/use-event-buffer';
-import { useSsePause } from '@/lib/sse/sse-provider';
-import { StatusBadge } from '@/components/shared/status-badge/status-badge';
-import { HintBadge } from '@/components/shared/hint-badge/hint-badge';
-import { formatTimestamp, truncateId, cn } from '@/lib/utils/format';
-import styles from './live-event-stream.module.scss';
+import Link from "next/link";
+import { useEventBuffer } from "@/lib/hooks/use-event-buffer";
+import { useSsePause } from "@/lib/sse/sse-provider";
+import { StatusBadge } from "@/components/shared/status-badge/status-badge";
+import { HintBadge } from "@/components/shared/hint-badge/hint-badge";
+import { formatTimestamp, truncateId, cn } from "@/lib/utils/format";
+import styles from "./live-event-stream.module.scss";
 
 export function LiveEventStream() {
   const events = useEventBuffer();
@@ -21,7 +21,7 @@ export function LiveEventStream() {
           className={cn(styles.pauseBtn, paused && styles.paused)}
           onClick={() => setPaused(!paused)}
         >
-          {paused ? 'Resume' : 'Pause'}
+          {paused ? "Resume" : "Pause"}
         </button>
       </div>
       <div className={styles.feed}>
@@ -34,7 +34,9 @@ export function LiveEventStream() {
               href={`/sagas/${evt.sagaId}`}
               className={cn(styles.row, i === 0 && styles.latest)}
             >
-              <span className={styles.time}>{formatTimestamp(evt.publishedAt)}</span>
+              <span className={styles.time}>
+                {formatTimestamp(evt.publishedAt)}
+              </span>
               <span className={styles.step}>{evt.stepName}</span>
               <span className={styles.id}>{truncateId(evt.sagaId)}</span>
               <StatusBadge status={evt.status} size="sm" />

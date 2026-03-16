@@ -62,10 +62,7 @@
                 "id": "custom.lineStyle",
                 "value": {
                   "fill": "dash",
-                  "dash": [
-                    10,
-                    10
-                  ]
+                  "dash": [10, 10]
                 }
               },
               {
@@ -124,10 +121,7 @@
                 "id": "custom.lineStyle",
                 "value": {
                   "fill": "dash",
-                  "dash": [
-                    10,
-                    10
-                  ]
+                  "dash": [10, 10]
                 }
               },
               {
@@ -292,10 +286,7 @@
                 "id": "custom.lineStyle",
                 "value": {
                   "fill": "dash",
-                  "dash": [
-                    10,
-                    10
-                  ]
+                  "dash": [10, 10]
                 }
               },
               {
@@ -386,9 +377,7 @@
         "colorMode": "background",
         "graphMode": "area",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"]
         },
         "textMode": "auto"
       },
@@ -413,10 +402,7 @@
     }
   ],
   "schemaVersion": 39,
-  "tags": [
-    "saga",
-    "projector"
-  ],
+  "tags": ["saga", "projector"],
   "time": {
     "from": "now-30m",
     "to": "now"

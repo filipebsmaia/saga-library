@@ -1,5 +1,5 @@
-@use '../styles/tokens';
-@use '../styles/animations';
+@use "../styles/tokens";
+@use "../styles/animations";
 
 *,
 *::before,
@@ -60,12 +60,14 @@ button {
   color: inherit;
 }
 
-input, select {
+input,
+select {
   font: inherit;
   color: inherit;
 }
 
-code, pre {
+code,
+pre {
   font-family: var(--font-mono);
 }
 

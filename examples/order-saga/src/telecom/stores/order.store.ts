@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
-export type OrderStatus = 'PENDING' | 'COMPLETED' | 'FAILED';
+export type OrderStatus = "PENDING" | "COMPLETED" | "FAILED";
 
 export interface OrderRecord {
   orderId: string;
@@ -28,7 +28,7 @@ export class OrderStore {
       orderId,
       sagaId,
       ...data,
-      status: 'PENDING',
+      status: "PENDING",
       createdAt: now,
       updatedAt: now,
     };

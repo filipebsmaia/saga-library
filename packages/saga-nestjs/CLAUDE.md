@@ -11,6 +11,7 @@ pnpm typecheck   # tsc --noEmit
 ```
 
 Tests are run from the **monorepo root** (no test files in this package currently):
+
 ```bash
 pnpm vitest run packages/saga-nestjs
 ```
@@ -18,6 +19,7 @@ pnpm vitest run packages/saga-nestjs
 ## Architecture
 
 This package is a thin NestJS wrapper over `@fbsm/saga-core`. It adds:
+
 1. A dynamic module (`SagaModule`) that wires the core classes as NestJS providers
 2. Decorators (`@SagaParticipant`, `@SagaHandler`) for auto-discovery
 3. An injectable `SagaPublisherProvider` that delegates to `SagaPublisher`
@@ -45,6 +47,7 @@ SagaModule.forRoot(options)
 `@SagaParticipant()` — sets a metadata symbol on the class. Checked by `SagaRunnerProvider` during bootstrap.
 
 `@SagaHandler(...eventTypes, options?)` — sets handler metadata on the method. The last argument is treated as `SagaHandlerOptions` if it's a plain object (not a string). This allows:
+
 ```typescript
 @SagaHandler('a', 'b', { final: true })   // multiple eventTypes + options
 @SagaHandler('a', { fork: true })          // single eventType + options

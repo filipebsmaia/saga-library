@@ -217,9 +217,7 @@
           "name": "Stream All Sagas (SSE)",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "text/event-stream" }
-            ],
+            "header": [{ "key": "Accept", "value": "text/event-stream" }],
             "url": {
               "raw": "http://{{host}}:{{port}}/v1/stream/sagas",
               "protocol": "http",
@@ -233,9 +231,7 @@
           "name": "Stream Saga by ID (SSE)",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "text/event-stream" }
-            ],
+            "header": [{ "key": "Accept", "value": "text/event-stream" }],
             "url": {
               "raw": "http://{{host}}:{{port}}/v1/stream/sagas/{{sagaId}}",
               "protocol": "http",
@@ -249,9 +245,7 @@
           "name": "Stream Saga Root (SSE)",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Accept", "value": "text/event-stream" }
-            ],
+            "header": [{ "key": "Accept", "value": "text/event-stream" }],
             "url": {
               "raw": "http://{{host}}:{{port}}/v1/stream/sagas/root/{{rootId}}",
               "protocol": "http",

@@ -56,9 +56,7 @@ export class RedisPublisherService extends SagaPublisher {
       this.redis.addToSortedSet(RECENT_EVENTS_KEY, event.sagaEventId, now),
 
       // Track failed/compensating sagas
-      ...(state.status === 'COMPENSATING'
-        ? [this.redis.addToSortedSet(RECENT_FAILED_KEY, state.sagaId, now)]
-        : []),
+      ...(state.status === 'COMPENSATING' ? [this.redis.addToSortedSet(RECENT_FAILED_KEY, state.sagaId, now)] : []),
     ]);
   }
 }

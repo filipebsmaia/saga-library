@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useMemo, lazy, Suspense } from 'react';
-import { useSagaTree } from '@/lib/hooks/use-saga-tree';
-import { useTreeEvents } from '@/lib/hooks/use-tree-events';
-import { eventsToWaterfallSpans } from '@/lib/transformers/waterfall';
-import { filterSubtree } from '@/lib/transformers/filter-subtree';
-import { WaterfallLoading } from './waterfall-chart';
-import styles from './waterfall-section.module.scss';
+import { useState, useMemo, lazy, Suspense } from "react";
+import { useSagaTree } from "@/lib/hooks/use-saga-tree";
+import { useTreeEvents } from "@/lib/hooks/use-tree-events";
+import { eventsToWaterfallSpans } from "@/lib/transformers/waterfall";
+import { filterSubtree } from "@/lib/transformers/filter-subtree";
+import { WaterfallLoading } from "./waterfall-chart";
+import styles from "./waterfall-section.module.scss";
 
 const WaterfallChart = lazy(() =>
-  import('./waterfall-chart').then((m) => ({ default: m.WaterfallChart })),
+  import("./waterfall-chart").then((m) => ({ default: m.WaterfallChart })),
 );
 
 interface WaterfallSectionProps {
@@ -26,10 +26,7 @@ export function WaterfallSection({ sagaId, rootId }: WaterfallSectionProps) {
     [treeSagas, sagaId],
   );
 
-  const sagaIds = useMemo(
-    () => subtree.map((s) => s.sagaId),
-    [subtree],
-  );
+  const sagaIds = useMemo(() => subtree.map((s) => s.sagaId), [subtree]);
   const { data: allEvents } = useTreeEvents(expanded ? sagaIds : []);
 
   const { tracks, spans } = useMemo(
@@ -40,7 +37,7 @@ export function WaterfallSection({ sagaId, rootId }: WaterfallSectionProps) {
   return (
     <div className={styles.section}>
       <button className={styles.toggle} onClick={() => setExpanded(!expanded)}>
-        <span className={styles.chevron}>{expanded ? '▾' : '▸'}</span>
+        <span className={styles.chevron}>{expanded ? "▾" : "▸"}</span>
         Span Waterfall
         {spans.length > 0 && (
           <span className={styles.count}>{spans.length} spans</span>

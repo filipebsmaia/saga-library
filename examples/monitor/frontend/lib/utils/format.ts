@@ -2,7 +2,7 @@ export function formatRelativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const seconds = Math.floor(diff / 1000);
 
-  if (seconds < 5) return 'just now';
+  if (seconds < 5) return "just now";
   if (seconds < 60) return `${seconds}s ago`;
 
   const minutes = Math.floor(seconds / 60);
@@ -16,7 +16,7 @@ export function formatRelativeTime(iso: string): string {
 }
 
 export function formatDuration(ms: number): string {
-  if (ms < 0) return '0ms';
+  if (ms < 0) return "0ms";
   if (ms < 1000) return `${Math.round(ms)}ms`;
   if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`;
 
@@ -36,15 +36,15 @@ export function truncateId(id: string, chars: number = 8): string {
 
 export function formatTimestamp(iso: string): string {
   const date = new Date(iso);
-  return date.toLocaleTimeString('en-US', {
+  return date.toLocaleTimeString("en-US", {
     hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
     fractionalSecondDigits: 3,
   } as Intl.DateTimeFormatOptions);
 }
 
 export function cn(...classes: (string | undefined | false | null)[]): string {
-  return classes.filter(Boolean).join(' ');
+  return classes.filter(Boolean).join(" ");
 }

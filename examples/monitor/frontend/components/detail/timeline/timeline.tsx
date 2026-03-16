@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useMemo, useCallback } from 'react';
-import { SagaEventDto, EventHint, SagaPredictionsDto } from '@/lib/types/saga';
-import { StatusBadge } from '@/components/shared/status-badge/status-badge';
-import { HintBadge } from '@/components/shared/hint-badge/hint-badge';
-import { CopyButton } from '@/components/shared/copy-button/copy-button';
-import { formatTimestamp, cn } from '@/lib/utils/format';
-import { Skeleton } from '@/components/shared/skeleton/skeleton';
-import { EmptyState } from '@/components/shared/empty-state/empty-state';
-import styles from './timeline.module.scss';
+import { useState, useMemo, useCallback } from "react";
+import { SagaEventDto, EventHint, SagaPredictionsDto } from "@/lib/types/saga";
+import { StatusBadge } from "@/components/shared/status-badge/status-badge";
+import { HintBadge } from "@/components/shared/hint-badge/hint-badge";
+import { CopyButton } from "@/components/shared/copy-button/copy-button";
+import { formatTimestamp, cn } from "@/lib/utils/format";
+import { Skeleton } from "@/components/shared/skeleton/skeleton";
+import { EmptyState } from "@/components/shared/empty-state/empty-state";
+import styles from "./timeline.module.scss";
 
 /** A node in the hierarchical timeline tree */
 interface TimelineNode {
@@ -33,7 +33,11 @@ function buildTimelineTree(events: SagaEventDto[]): TimelineNode[] {
   }
   // Sort each group chronologically
   for (const [, list] of bySaga) {
-    list.sort((a, b) => new Date(a.sagaPublishedAt).getTime() - new Date(b.sagaPublishedAt).getTime());
+    list.sort(
+      (a, b) =>
+        new Date(a.sagaPublishedAt).getTime() -
+        new Date(b.sagaPublishedAt).getTime(),
+    );
   }
 
   // Build parent→children saga map
@@ -55,7 +59,7 @@ function buildTimelineTree(events: SagaEventDto[]): TimelineNode[] {
       break;
     }
   }
-  if (!rootSagaId) rootSagaId = events[0]?.sagaId ?? '';
+  if (!rootSagaId) rootSagaId = events[0]?.sagaId ?? "";
 
   // Track which child sagas have been placed under a fork
   const placedSagas = new Set<string>();
@@ -64,7 +68,11 @@ function buildTimelineTree(events: SagaEventDto[]): TimelineNode[] {
    * Build nodes for a saga. If isChildSaga is true, the first event becomes a
    * header node and the remaining events are nested as its children (indented).
    */
-  function buildNodes(sagaId: string, depth: number, isChildSaga = false): TimelineNode[] {
+  function buildNodes(
+    sagaId: string,
+    depth: number,
+    isChildSaga = false,
+  ): TimelineNode[] {
     const sagaEvents = bySaga.get(sagaId) ?? [];
     const children = childSagaIds.get(sagaId) ?? new Set<string>();
 
@@ -138,9 +146,15 @@ interface TimelineProps {
   predictions?: SagaPredictionsDto;
 }
 
-export function Timeline({ events, recentEventIds, selectedEventId, onSelectEvent, predictions }: TimelineProps) {
-  const [hintFilter, setHintFilter] = useState<EventHint | ''>('');
-  const [stepFilter, setStepFilter] = useState('');
+export function Timeline({
+  events,
+  recentEventIds,
+  selectedEventId,
+  onSelectEvent,
+  predictions,
+}: TimelineProps) {
+  const [hintFilter, setHintFilter] = useState<EventHint | "">("");
+  const [stepFilter, setStepFilter] = useState("");
   const [collapsedForks, setCollapsedForks] = useState<Set<string>>(new Set());
 
   const tree = useMemo(() => buildTimelineTree(events), [events]);
@@ -157,7 +171,8 @@ export function Timeline({ events, recentEventIds, selectedEventId, onSelectEven
   // Flatten tree respecting collapsed state and filters
   // Each item includes connector info for tree rendering
   const flatList = useMemo(() => {
-    const result: { node: TimelineNode; isLast: boolean; guides: boolean[] }[] = [];
+    const result: { node: TimelineNode; isLast: boolean; guides: boolean[] }[] =
+      [];
 
     function walk(nodes: TimelineNode[], guides: boolean[]) {
       for (let i = 0; i < nodes.length; i++) {
@@ -166,8 +181,15 @@ export function Timeline({ events, recentEventIds, selectedEventId, onSelectEven
 
         // Apply filters
         let matchesFilter = true;
-        if (hintFilter && node.event.sagaEventHint !== hintFilter) matchesFilter = false;
-        if (stepFilter && !node.event.sagaStepName.toLowerCase().includes(stepFilter.toLowerCase())) matchesFilter = false;
+        if (hintFilter && node.event.sagaEventHint !== hintFilter)
+          matchesFilter = false;
+        if (
+          stepFilter &&
+          !node.event.sagaStepName
+            .toLowerCase()
+            .includes(stepFilter.toLowerCase())
+        )
+          matchesFilter = false;
 
         if (matchesFilter) result.push({ node, isLast, guides: [...guides] });
 
@@ -191,7 +213,7 @@ export function Timeline({ events, recentEventIds, selectedEventId, onSelectEven
         <select
           className={styles.filterSelect}
           value={hintFilter}
-          onChange={(e) => setHintFilter(e.target.value as EventHint | '')}
+          onChange={(e) => setHintFilter(e.target.value as EventHint | "")}
         >
           <option value="">All hints</option>
           <option value="step">step</option>
@@ -215,7 +237,8 @@ export function Timeline({ events, recentEventIds, selectedEventId, onSelectEven
           const isSelected = selectedEventId === event.sagaEventId;
           const hasForkChildren = node.children.length > 0;
           const isCollapsed = collapsedForks.has(event.sagaEventId);
-          const isLastReal = isLast && (!predictions || predictions.expectedChain.length === 0);
+          const isLastReal =
+            isLast && (!predictions || predictions.expectedChain.length === 0);
 
           return (
             <TimelineEventRow
@@ -228,46 +251,106 @@ export function Timeline({ events, recentEventIds, selectedEventId, onSelectEven
               isSelected={isSelected}
               hasForkChildren={hasForkChildren}
               isCollapsed={isCollapsed}
-              onToggleFork={hasForkChildren ? () => toggleFork(event.sagaEventId) : undefined}
+              onToggleFork={
+                hasForkChildren
+                  ? () => toggleFork(event.sagaEventId)
+                  : undefined
+              }
               onClick={() => onSelectEvent?.(event.sagaEventId)}
             />
           );
         })}
 
-        {predictions && (predictions.nextPossible.length > 0 || predictions.expectedChain.length > 0) && (
-          <>
-            <div className={styles.predictedDivider}>
-              <span className={styles.predictedDividerLabel}>Predicted next steps</span>
-              <span className={styles.predictedDividerMeta}>
-                based on {predictions.sampleSize} completed saga{predictions.sampleSize !== 1 ? 's' : ''}
-              </span>
-            </div>
+        {predictions &&
+          (predictions.nextPossible.length > 0 ||
+            predictions.expectedChain.length > 0) && (
+            <>
+              <div className={styles.predictedDivider}>
+                <span className={styles.predictedDividerLabel}>
+                  Predicted next steps
+                </span>
+                <span className={styles.predictedDividerMeta}>
+                  based on {predictions.sampleSize} completed saga
+                  {predictions.sampleSize !== 1 ? "s" : ""}
+                </span>
+              </div>
 
-            {/* All possible next events (immediate alternatives) */}
-            {predictions.nextPossible.map((predicted, i) => {
-              const isOnlySection = predictions.expectedChain.length <= 1;
-              const isLast = isOnlySection && i === predictions.nextPossible.length - 1;
-              return (
+              {/* All possible next events (immediate alternatives) */}
+              {predictions.nextPossible.map((predicted, i) => {
+                const isOnlySection = predictions.expectedChain.length <= 1;
+                const isLast =
+                  isOnlySection && i === predictions.nextPossible.length - 1;
+                return (
+                  <div
+                    key={`next-${i}`}
+                    className={cn(styles.event, styles.predicted)}
+                  >
+                    <div className={styles.treePrefix}>
+                      <span
+                        className={cn(
+                          styles.connectorSegment,
+                          styles.connectorDashed,
+                          isLast && styles.connectorLast,
+                        )}
+                      />
+                    </div>
+                    <div className={styles.eventContent}>
+                      <div className={styles.eventHeader}>
+                        <span
+                          className={styles.eventDotInline}
+                          data-hint="expected"
+                        />
+                        <span className={styles.eventStep}>
+                          {predicted.stepName}
+                        </span>
+                        {predicted.eventHint && (
+                          <HintBadge hint={predicted.eventHint as EventHint} />
+                        )}
+                        {predicted.topic && (
+                          <span className={styles.eventTopic}>
+                            {predicted.topic}
+                          </span>
+                        )}
+                        <span className={styles.predictedProbability}>
+                          {Math.round(predicted.probability * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Most probable path (remaining steps after the first) */}
+              {predictions.expectedChain.slice(1).map((predicted, i, arr) => (
                 <div
-                  key={`next-${i}`}
+                  key={`chain-${i}`}
                   className={cn(styles.event, styles.predicted)}
                 >
                   <div className={styles.treePrefix}>
-                    <span className={cn(
-                      styles.connectorSegment,
-                      styles.connectorDashed,
-                      isLast && styles.connectorLast,
-                    )} />
+                    <span
+                      className={cn(
+                        styles.connectorSegment,
+                        styles.connectorDashed,
+                        i === arr.length - 1 && styles.connectorLast,
+                      )}
+                    />
                   </div>
                   <div className={styles.eventContent}>
                     <div className={styles.eventHeader}>
-                      <span className={styles.eventDotInline} data-hint="expected" />
-                      <span className={styles.eventStep}>{predicted.stepName}</span>
+                      <span
+                        className={styles.eventDotInline}
+                        data-hint="expected"
+                      />
+                      <span className={styles.eventStep}>
+                        {predicted.stepName}
+                      </span>
                       {predicted.eventHint && (
                         <HintBadge hint={predicted.eventHint as EventHint} />
                       )}
                       {predicted.topic && (
-                        <span className={styles.eventTopic}>{predicted.topic}</span>
+                        <span className={styles.eventTopic}>
+                          {predicted.topic}
+                        </span>
                       )}
                       <span className={styles.predictedProbability}>
                         {Math.round(predicted.probability * 100)}%
@@ -275,41 +358,9 @@ export function Timeline({ events, recentEventIds, selectedEventId, onSelectEven
                     </div>
                   </div>
                 </div>
-              );
-            })}
-
-            {/* Most probable path (remaining steps after the first) */}
-            {predictions.expectedChain.slice(1).map((predicted, i, arr) => (
-              <div
-                key={`chain-${i}`}
-                className={cn(styles.event, styles.predicted)}
-              >
-                <div className={styles.treePrefix}>
-                  <span className={cn(
-                    styles.connectorSegment,
-                    styles.connectorDashed,
-                    i === arr.length - 1 && styles.connectorLast,
-                  )} />
-                </div>
-                <div className={styles.eventContent}>
-                  <div className={styles.eventHeader}>
-                    <span className={styles.eventDotInline} data-hint="expected" />
-                    <span className={styles.eventStep}>{predicted.stepName}</span>
-                    {predicted.eventHint && (
-                      <HintBadge hint={predicted.eventHint as EventHint} />
-                    )}
-                    {predicted.topic && (
-                      <span className={styles.eventTopic}>{predicted.topic}</span>
-                    )}
-                    <span className={styles.predictedProbability}>
-                      {Math.round(predicted.probability * 100)}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </>
-        )}
+              ))}
+            </>
+          )}
       </div>
     </div>
   );
@@ -329,8 +380,16 @@ interface TimelineEventRowProps {
 }
 
 function TimelineEventRow({
-  event, depth, isLast, guides, isRecent, isSelected,
-  hasForkChildren, isCollapsed, onToggleFork, onClick,
+  event,
+  depth,
+  isLast,
+  guides,
+  isRecent,
+  isSelected,
+  hasForkChildren,
+  isCollapsed,
+  onToggleFork,
+  onClick,
 }: TimelineEventRowProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -345,9 +404,17 @@ function TimelineEventRow({
     >
       <div className={styles.treePrefix}>
         {guides.map((active, i) => (
-          <span key={i} className={cn(styles.guideSegment, active && styles.guideActive)} />
+          <span
+            key={i}
+            className={cn(styles.guideSegment, active && styles.guideActive)}
+          />
         ))}
-        <span className={cn(styles.connectorSegment, isLast && styles.connectorLast)} />
+        <span
+          className={cn(
+            styles.connectorSegment,
+            isLast && styles.connectorLast,
+          )}
+        />
       </div>
 
       <div className={styles.eventContent}>
@@ -355,13 +422,19 @@ function TimelineEventRow({
           {hasForkChildren && (
             <button
               className={styles.forkToggle}
-              onClick={(e) => { e.stopPropagation(); onToggleFork?.(); }}
-              title={isCollapsed ? 'Expand fork' : 'Collapse fork'}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFork?.();
+              }}
+              title={isCollapsed ? "Expand fork" : "Collapse fork"}
             >
-              {isCollapsed ? '▸' : '▾'}
+              {isCollapsed ? "▸" : "▾"}
             </button>
           )}
-          <span className={styles.eventDotInline} data-hint={event.sagaEventHint ?? 'step'} />
+          <span
+            className={styles.eventDotInline}
+            data-hint={event.sagaEventHint ?? "step"}
+          />
           <span className={styles.eventTime}>
             {formatTimestamp(event.sagaPublishedAt)}
           </span>
@@ -373,13 +446,15 @@ function TimelineEventRow({
           {depth > 0 && event.sagaName && (
             <span className={styles.sagaLabel}>{event.sagaName}</span>
           )}
-          {event.statusBefore && event.statusAfter && event.statusBefore !== event.statusAfter && (
-            <span className={styles.transition}>
-              <StatusBadge status={event.statusBefore} size="sm" />
-              <span className={styles.arrow}>→</span>
-              <StatusBadge status={event.statusAfter} size="sm" />
-            </span>
-          )}
+          {event.statusBefore &&
+            event.statusAfter &&
+            event.statusBefore !== event.statusAfter && (
+              <span className={styles.transition}>
+                <StatusBadge status={event.statusBefore} size="sm" />
+                <span className={styles.arrow}>→</span>
+                <StatusBadge status={event.statusAfter} size="sm" />
+              </span>
+            )}
           {hasForkChildren && isCollapsed && (
             <span className={styles.collapsedCount}>
               ({countDescendants(event)} collapsed)
@@ -393,9 +468,12 @@ function TimelineEventRow({
 
         <button
           className={styles.expandBtn}
-          onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded(!expanded);
+          }}
         >
-          {expanded ? '▾ Hide details' : '▸ Details'}
+          {expanded ? "▾ Hide details" : "▸ Details"}
         </button>
 
         {expanded && (
@@ -407,13 +485,17 @@ function TimelineEventRow({
             {event.sagaStepDescription && (
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Description</span>
-                <span className={styles.detailValue}>{event.sagaStepDescription}</span>
+                <span className={styles.detailValue}>
+                  {event.sagaStepDescription}
+                </span>
               </div>
             )}
             {event.sagaEventHint && (
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Hint</span>
-                <span className={styles.detailValue}>{event.sagaEventHint}</span>
+                <span className={styles.detailValue}>
+                  {event.sagaEventHint}
+                </span>
               </div>
             )}
             {event.sagaName && (
@@ -432,15 +514,23 @@ function TimelineEventRow({
             </div>
             <div className={styles.detailRow}>
               <span className={styles.detailLabel}>Published At</span>
-              <span className={styles.detailValue}>{event.sagaPublishedAt}</span>
+              <span className={styles.detailValue}>
+                {event.sagaPublishedAt}
+              </span>
             </div>
             <div className={styles.detailRow}>
               <span className={styles.detailLabel}>Event ID</span>
-              <CopyButton text={event.sagaEventId} displayText={event.sagaEventId} />
+              <CopyButton
+                text={event.sagaEventId}
+                displayText={event.sagaEventId}
+              />
             </div>
             <div className={styles.detailRow}>
               <span className={styles.detailLabel}>Causation ID</span>
-              <CopyButton text={event.sagaCausationId} displayText={event.sagaCausationId} />
+              <CopyButton
+                text={event.sagaCausationId}
+                displayText={event.sagaCausationId}
+              />
             </div>
             <div className={styles.detailRow}>
               <span className={styles.detailLabel}>Saga ID</span>
@@ -448,12 +538,18 @@ function TimelineEventRow({
             </div>
             <div className={styles.detailRow}>
               <span className={styles.detailLabel}>Root ID</span>
-              <CopyButton text={event.sagaRootId} displayText={event.sagaRootId} />
+              <CopyButton
+                text={event.sagaRootId}
+                displayText={event.sagaRootId}
+              />
             </div>
             {event.sagaParentId && event.sagaParentId !== event.sagaId && (
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Parent ID</span>
-                <CopyButton text={event.sagaParentId} displayText={event.sagaParentId} />
+                <CopyButton
+                  text={event.sagaParentId}
+                  displayText={event.sagaParentId}
+                />
               </div>
             )}
             <div className={styles.detailRow}>
@@ -477,7 +573,7 @@ function TimelineEventRow({
 
 /** Placeholder for collapsed count — we don't have the tree here, so return empty string for now */
 function countDescendants(_event: SagaEventDto): string {
-  return '...';
+  return "...";
 }
 
 export function TimelineLoading() {
@@ -485,12 +581,27 @@ export function TimelineLoading() {
     <div className={styles.container}>
       <div className={styles.timeline}>
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className={styles.event} style={{ opacity: 1 - i * 0.1 }}>
+          <div
+            key={i}
+            className={styles.event}
+            style={{ opacity: 1 - i * 0.1 }}
+          >
             <div className={styles.treePrefix}>
-              <span className={cn(styles.connectorSegment, i === 5 && styles.connectorLast)} />
+              <span
+                className={cn(
+                  styles.connectorSegment,
+                  i === 5 && styles.connectorLast,
+                )}
+              />
             </div>
             <div className={styles.eventContent}>
-              <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "var(--space-2)",
+                  alignItems: "center",
+                }}
+              >
                 <Skeleton variant="line" width="70px" height="14px" />
                 <Skeleton variant="badge" width="50px" />
                 <Skeleton variant="line" width="120px" height="14px" />
@@ -504,5 +615,10 @@ export function TimelineLoading() {
 }
 
 export function TimelineEmpty() {
-  return <EmptyState title="No events" description="No events have been recorded for this saga yet." />;
+  return (
+    <EmptyState
+      title="No events"
+      description="No events have been recorded for this saga yet."
+    />
+  );
 }

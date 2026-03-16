@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
-import styles from './sparkline.module.scss';
+import { useMemo, useState } from "react";
+import styles from "./sparkline.module.scss";
 
 interface SparklineProps {
   data: number[];
@@ -16,14 +16,14 @@ export function Sparkline({
   data,
   width = 120,
   height = 32,
-  color = 'var(--color-accent)',
+  color = "var(--color-accent)",
   fillOpacity = 0.1,
   className,
 }: SparklineProps) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
   const { points, fillPoints, max } = useMemo(() => {
-    if (data.length === 0) return { points: '', fillPoints: '', max: 0 };
+    if (data.length === 0) return { points: "", fillPoints: "", max: 0 };
 
     const max = Math.max(...data, 1);
     const padY = 2;
@@ -36,7 +36,7 @@ export function Sparkline({
       return `${x},${y}`;
     });
 
-    const line = pts.join(' ');
+    const line = pts.join(" ");
     const fill = `0,${height} ${line} ${width},${height}`;
 
     return { points: line, fillPoints: fill, max };
@@ -50,7 +50,7 @@ export function Sparkline({
 
   return (
     <div
-      className={`${styles.wrapper} ${className ?? ''}`}
+      className={`${styles.wrapper} ${className ?? ""}`}
       style={{ width, height }}
     >
       <svg
@@ -77,7 +77,11 @@ export function Sparkline({
         {hoverIdx !== null && (
           <circle
             cx={hoverIdx * stepX}
-            cy={2 + (height - 4) - (data[hoverIdx] / Math.max(max, 1)) * (height - 4)}
+            cy={
+              2 +
+              (height - 4) -
+              (data[hoverIdx] / Math.max(max, 1)) * (height - 4)
+            }
             r={3}
             fill={color}
           />

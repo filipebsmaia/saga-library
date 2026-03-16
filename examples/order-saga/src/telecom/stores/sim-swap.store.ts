@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
-export type SimSwapStatus = 'PENDING' | 'VALIDATING' | 'COMPLETED';
+export type SimSwapStatus = "PENDING" | "VALIDATING" | "COMPLETED";
 
 export interface SimSwapRecord {
   swapId: string;
@@ -29,7 +29,7 @@ export class SimSwapStore {
       swapId,
       sagaId,
       ...data,
-      status: 'PENDING',
+      status: "PENDING",
       createdAt: now,
       updatedAt: now,
     };
@@ -43,13 +43,16 @@ export class SimSwapStore {
     const record = this.records.get(swapId);
     if (record) {
       record.validationSagaId = validationSagaId;
-      record.status = 'VALIDATING';
+      record.status = "VALIDATING";
       record.updatedAt = new Date().toISOString();
       this.bySagaId.set(validationSagaId, swapId);
     }
   }
 
-  updateStatus(swapId: string, status: SimSwapStatus): SimSwapRecord | undefined {
+  updateStatus(
+    swapId: string,
+    status: SimSwapStatus,
+  ): SimSwapRecord | undefined {
     const record = this.records.get(swapId);
     if (record) {
       record.status = status;

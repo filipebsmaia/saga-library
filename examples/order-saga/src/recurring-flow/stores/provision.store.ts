@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
-export type ProvisionStatus = 'PENDING' | 'COMPLETED' | 'FAILED';
+export type ProvisionStatus = "PENDING" | "COMPLETED" | "FAILED";
 
 export interface ProvisionRecord {
   provisionId: string;
@@ -29,12 +29,14 @@ export class RFProvisionStore {
       provisionId,
       sagaId,
       ...data,
-      status: 'PENDING',
+      status: "PENDING",
       createdAt: now,
       updatedAt: now,
     };
     this.records.set(provisionId, record);
-    this.logger.log(`Provision ${provisionId} created for product ${data.productId}`);
+    this.logger.log(
+      `Provision ${provisionId} created for product ${data.productId}`,
+    );
     return record;
   }
 

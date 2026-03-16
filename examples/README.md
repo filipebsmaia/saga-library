@@ -92,13 +92,13 @@ POST /recurrings?paymentFail=true
 
 #### Simulation Flags
 
-| Endpoint | Description |
-|----------|-------------|
-| `POST /recurrings` | Happy path |
-| `POST /recurrings?paymentFail=true` | Payment rejected → compensation chain |
-| `POST /recurrings?transient=true` | Transient error → retry exhausted → compensation |
-| `POST /sim-swaps` | SIM swap with sub-saga fork + emitToParent |
-| `POST /bulk-activations?lines=N` | Fan-out N sub-sagas (1-10) |
+| Endpoint                            | Description                                      |
+| ----------------------------------- | ------------------------------------------------ |
+| `POST /recurrings`                  | Happy path                                       |
+| `POST /recurrings?paymentFail=true` | Payment rejected → compensation chain            |
+| `POST /recurrings?transient=true`   | Transient error → retry exhausted → compensation |
+| `POST /sim-swaps`                   | SIM swap with sub-saga fork + emitToParent       |
+| `POST /bulk-activations?lines=N`    | Fan-out N sub-sagas (1-10)                       |
 
 ---
 
@@ -109,6 +109,7 @@ Real-time saga observability dashboard with a NestJS backend and Next.js fronten
 **Tech stack**: NestJS + Prisma + PostgreSQL + Redis (backend) | Next.js 14 + TanStack Query + SSE (frontend)
 
 **Features**:
+
 - Consumes all Kafka topics and builds a read-model of saga state
 - Dashboard with metrics, filters, and real-time saga table
 - Detail view with timeline, dependency tree, waterfall, and flamegraph visualizations

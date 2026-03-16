@@ -19,8 +19,8 @@ pnpm dev
 
 ### Environment
 
-| Variable | Default | Description |
-|----------|---------|-------------|
+| Variable      | Default                 | Description          |
+| ------------- | ----------------------- | -------------------- |
 | `BACKEND_URL` | `http://localhost:3100` | Backend API base URL |
 
 ## Architecture
@@ -47,17 +47,18 @@ Pages (Server Components) → initial data fetch
 ### Component Organization
 
 Each major component provides:
+
 - `Component` — main rendering
 - `ComponentLoading` — skeleton/loading state
 - `ComponentEmpty` — empty state (when applicable)
 
 ### Views
 
-| Route | Description |
-|-------|-------------|
-| `/` | Dashboard: metrics cards, filters, saga table with real-time highlights |
+| Route             | Description                                                                       |
+| ----------------- | --------------------------------------------------------------------------------- |
+| `/`               | Dashboard: metrics cards, filters, saga table with real-time highlights           |
 | `/sagas/[sagaId]` | Saga detail: header, timeline, causal chain, metrics, tree, waterfall, flamegraph |
-| `/roots/[rootId]` | Root tree: hierarchical view of saga tree + table |
+| `/roots/[rootId]` | Root tree: hierarchical view of saga tree + table                                 |
 
 ### Visualization Heuristics
 
@@ -71,16 +72,16 @@ The frontend proxies all `/api/v1/*` requests to the NestJS backend via Next.js 
 
 ### API Endpoints (from backend)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/v1/sagas` | List sagas (cursor pagination, filters: status, sagaName, sagaRootId) |
-| GET | `/v1/sagas/:sagaId` | Saga detail |
-| GET | `/v1/sagas/:sagaId/events` | Saga events (cursor pagination) |
-| GET | `/v1/sagas/:sagaId/metrics` | Saga metrics (elapsed, stuck, forks, etc.) |
-| GET | `/v1/sagas/root/:rootId` | Saga tree by root ID |
-| SSE | `/v1/stream/sagas` | Global saga updates stream |
-| SSE | `/v1/stream/sagas/:sagaId` | Per-saga updates stream |
-| SSE | `/v1/stream/sagas/root/:rootId` | Per-root tree updates stream |
+| Method | Path                            | Description                                                           |
+| ------ | ------------------------------- | --------------------------------------------------------------------- |
+| GET    | `/v1/sagas`                     | List sagas (cursor pagination, filters: status, sagaName, sagaRootId) |
+| GET    | `/v1/sagas/:sagaId`             | Saga detail                                                           |
+| GET    | `/v1/sagas/:sagaId/events`      | Saga events (cursor pagination)                                       |
+| GET    | `/v1/sagas/:sagaId/metrics`     | Saga metrics (elapsed, stuck, forks, etc.)                            |
+| GET    | `/v1/sagas/root/:rootId`        | Saga tree by root ID                                                  |
+| SSE    | `/v1/stream/sagas`              | Global saga updates stream                                            |
+| SSE    | `/v1/stream/sagas/:sagaId`      | Per-saga updates stream                                               |
+| SSE    | `/v1/stream/sagas/root/:rootId` | Per-root tree updates stream                                          |
 
 ### Mock Data (for testing)
 

@@ -3,8 +3,8 @@ import type {
   InboundMessage,
   OutboundMessage,
   TransportSubscribeOptions,
-} from '../../src/transport/transport.interface';
-import { SagaTransportNotConnectedError } from '../../src/errors/saga-transport-not-connected.error';
+} from "../../src/transport/transport.interface";
+import { SagaTransportNotConnectedError } from "../../src/errors/saga-transport-not-connected.error";
 
 type MessageHandler = (message: InboundMessage) => Promise<void>;
 

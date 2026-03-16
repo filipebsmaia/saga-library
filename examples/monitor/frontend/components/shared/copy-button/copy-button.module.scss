@@ -1,4 +1,4 @@
-@use '../../../styles/mixins' as *;
+@use "../../../styles/mixins" as *;
 
 .button {
   display: inline-flex;
@@ -8,7 +8,9 @@
   border-radius: var(--radius-sm);
   @include mono-text;
   color: var(--color-text-secondary);
-  transition: color var(--transition-fast), background var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
   cursor: pointer;
   max-width: 100%;
   min-width: 0;

@@ -1,4 +1,4 @@
-import { SagaError } from './saga.error';
+import { SagaError } from "./saga.error";
 
 export class SagaRetryableError extends SagaError {
   constructor(
@@ -6,6 +6,6 @@ export class SagaRetryableError extends SagaError {
     readonly maxRetries = 3,
   ) {
     super(message);
-    this.name = 'SagaRetryableError';
+    this.name = "SagaRetryableError";
   }
 }

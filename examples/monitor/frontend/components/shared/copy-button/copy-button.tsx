@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import styles from './copy-button.module.scss';
-import { cn } from '@/lib/utils/format';
+import { useState, useCallback } from "react";
+import styles from "./copy-button.module.scss";
+import { cn } from "@/lib/utils/format";
 
 interface CopyButtonProps {
   text: string;
@@ -26,7 +26,7 @@ export function CopyButton({ text, displayText, className }: CopyButtonProps) {
       title={`Copy: ${text}`}
     >
       <span className={styles.text}>{displayText ?? text}</span>
-      <span className={styles.icon}>{copied ? '✓' : '⎘'}</span>
+      <span className={styles.icon}>{copied ? "✓" : "⎘"}</span>
     </button>
   );
 }

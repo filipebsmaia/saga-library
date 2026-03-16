@@ -1,12 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
 export type RecurringStatus =
-  | 'SCHEDULED'
-  | 'PROCESSING'
-  | 'COMPLETED'
-  | 'CAPTURE_FAILED'
-  | 'FAILED'
-  | 'CANCELLED';
+  | "SCHEDULED"
+  | "PROCESSING"
+  | "COMPLETED"
+  | "CAPTURE_FAILED"
+  | "FAILED"
+  | "CANCELLED";
 
 export interface RecurringRecord {
   recurringId: string;
@@ -45,7 +45,7 @@ export class RFRecurringStore {
       recurringId,
       sagaId,
       ...data,
-      status: 'SCHEDULED',
+      status: "SCHEDULED",
       totalAttempts: 0,
       createdAt: now,
       updatedAt: now,
@@ -55,7 +55,10 @@ export class RFRecurringStore {
     return record;
   }
 
-  updateStatus(recurringId: string, status: RecurringStatus): RecurringRecord | undefined {
+  updateStatus(
+    recurringId: string,
+    status: RecurringStatus,
+  ): RecurringRecord | undefined {
     const record = this.records.get(recurringId);
     if (record) {
       record.status = status;
@@ -69,7 +72,7 @@ export class RFRecurringStore {
     const record = this.records.get(recurringId);
     if (record) {
       record.totalAttempts++;
-      record.status = 'PROCESSING';
+      record.status = "PROCESSING";
       record.updatedAt = new Date().toISOString();
       this.logger.log(
         `Recurring ${recurringId} attempt ${record.totalAttempts}/${record.maxAttempts}`,

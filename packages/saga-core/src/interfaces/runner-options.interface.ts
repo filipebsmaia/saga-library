@@ -1,5 +1,5 @@
 export interface RunnerOptions {
-  serviceName: string;
+  groupId: string;
   fromBeginning?: boolean;
   /** Prefix prepended to eventType to form Kafka topic names. Default: '' (no prefix). */
   topicPrefix?: string;

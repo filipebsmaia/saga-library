@@ -23,11 +23,11 @@ A distributed transaction pattern where participants react to events and emit ne
 
 Type: `'compensation' | 'final' | 'fork'`
 
-| Hint | Meaning | When Applied |
-|------|---------|-------------|
-| `compensation` | Marks the event as a rollback/undo step | Manually set by the developer via `hint: 'compensation'` in emit params |
-| `final` | Marks the event as the last step of a saga or sub-saga | Auto-added by the framework when handler has `{ final: true }` option |
-| `fork` | Marks the event as the start of a new sub-saga | Auto-added by the framework when handler has `{ fork: true }` option |
+| Hint           | Meaning                                                | When Applied                                                            |
+| -------------- | ------------------------------------------------------ | ----------------------------------------------------------------------- |
+| `compensation` | Marks the event as a rollback/undo step                | Manually set by the developer via `hint: 'compensation'` in emit params |
+| `final`        | Marks the event as the last step of a saga or sub-saga | Auto-added by the framework when handler has `{ final: true }` option   |
+| `fork`         | Marks the event as the start of a new sub-saga         | Auto-added by the framework when handler has `{ fork: true }` option    |
 
 ## Context Propagation (AsyncLocalStorage)
 

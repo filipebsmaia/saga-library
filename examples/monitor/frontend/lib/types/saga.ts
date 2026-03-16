@@ -1,10 +1,10 @@
 export enum SagaStatus {
-  RUNNING = 'RUNNING',
-  COMPENSATING = 'COMPENSATING',
-  COMPLETED = 'COMPLETED',
+  RUNNING = "RUNNING",
+  COMPENSATING = "COMPENSATING",
+  COMPLETED = "COMPLETED",
 }
 
-export type EventHint = 'step' | 'compensation' | 'final' | 'fork';
+export type EventHint = "step" | "compensation" | "final" | "fork";
 
 export interface SagaStateDto {
   sagaId: string;
@@ -72,7 +72,7 @@ export interface DashboardStatsDto {
   eventsPerMinute: number;
 }
 
-export type AttentionReason = 'stuck' | 'compensating' | 'many_children';
+export type AttentionReason = "stuck" | "compensating" | "many_children";
 
 export interface AttentionItemDto {
   sagaId: string;

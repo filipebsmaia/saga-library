@@ -1,6 +1,9 @@
-import { SAGA_HANDLER_METADATA, SAGA_HANDLER_OPTIONS_METADATA } from '../constants';
+import {
+  SAGA_HANDLER_METADATA,
+  SAGA_HANDLER_OPTIONS_METADATA,
+} from "../constants";
 
-import type { ForkConfig } from '@fbsm/saga-core';
+import type { ForkConfig } from "@fbsm/saga-core";
 
 export interface SagaHandlerOptions {
   final?: boolean;
@@ -14,7 +17,7 @@ export function SagaHandler(
   let options: SagaHandlerOptions = {};
 
   const lastArg = args[args.length - 1];
-  if (typeof lastArg === 'object' && lastArg !== null) {
+  if (typeof lastArg === "object" && lastArg !== null) {
     options = lastArg as SagaHandlerOptions;
     eventTypes = args.slice(0, -1) as string[];
   } else {
@@ -23,9 +26,11 @@ export function SagaHandler(
 
   return (target, propertyKey) => {
     const existingMap: Map<string, string | symbol> =
-      Reflect.getMetadata(SAGA_HANDLER_METADATA, target.constructor) ?? new Map();
+      Reflect.getMetadata(SAGA_HANDLER_METADATA, target.constructor) ??
+      new Map();
     const existingOptions: Map<string, SagaHandlerOptions> =
-      Reflect.getMetadata(SAGA_HANDLER_OPTIONS_METADATA, target.constructor) ?? new Map();
+      Reflect.getMetadata(SAGA_HANDLER_OPTIONS_METADATA, target.constructor) ??
+      new Map();
 
     for (const eventType of eventTypes) {
       existingMap.set(eventType, propertyKey);
@@ -34,7 +39,15 @@ export function SagaHandler(
       }
     }
 
-    Reflect.defineMetadata(SAGA_HANDLER_METADATA, existingMap, target.constructor);
-    Reflect.defineMetadata(SAGA_HANDLER_OPTIONS_METADATA, existingOptions, target.constructor);
+    Reflect.defineMetadata(
+      SAGA_HANDLER_METADATA,
+      existingMap,
+      target.constructor,
+    );
+    Reflect.defineMetadata(
+      SAGA_HANDLER_OPTIONS_METADATA,
+      existingOptions,
+      target.constructor,
+    );
   };
 }

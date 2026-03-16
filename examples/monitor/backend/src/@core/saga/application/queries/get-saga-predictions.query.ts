@@ -112,7 +112,12 @@ export class GetSagaPredictionsQuery {
     return `${step}:${hint ?? ''}`;
   }
 
-  private emptyResult(sagaId: string, sagaName: string, currentStep: string, currentHint: string | null): SagaPredictionsDto {
+  private emptyResult(
+    sagaId: string,
+    sagaName: string,
+    currentStep: string,
+    currentHint: string | null,
+  ): SagaPredictionsDto {
     return {
       sagaId,
       sagaName,

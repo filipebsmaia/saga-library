@@ -74,5 +74,4 @@ describe('deriveStatus', () => {
       expect(deriveStatus('final', SagaStatus.COMPLETED)).toBe(SagaStatus.COMPLETED);
     });
   });
-
 });

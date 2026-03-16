@@ -1,27 +1,27 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import { SagaStateDto } from '@/lib/types/saga';
-import { useSagaTree } from '@/lib/hooks/use-saga-tree';
-import { StatusBadge } from '@/components/shared/status-badge/status-badge';
-import { formatDuration, cn } from '@/lib/utils/format';
-import { Skeleton } from '@/components/shared/skeleton/skeleton';
-import { EmptyState } from '@/components/shared/empty-state/empty-state';
-import Link from 'next/link';
-import styles from './tree-view.module.scss';
+import { useMemo } from "react";
+import { SagaStateDto } from "@/lib/types/saga";
+import { useSagaTree } from "@/lib/hooks/use-saga-tree";
+import { StatusBadge } from "@/components/shared/status-badge/status-badge";
+import { formatDuration, cn } from "@/lib/utils/format";
+import { Skeleton } from "@/components/shared/skeleton/skeleton";
+import { EmptyState } from "@/components/shared/empty-state/empty-state";
+import Link from "next/link";
+import styles from "./tree-view.module.scss";
 
-type NodeType = 'root' | 'child' | 'fork';
+type NodeType = "root" | "child" | "fork";
 
 const NODE_TYPE_LABELS: Record<NodeType, string> = {
-  root: 'root',
-  child: 'child',
-  fork: 'fork',
+  root: "root",
+  child: "child",
+  fork: "fork",
 };
 
 const NODE_TYPE_COLORS: Record<NodeType, string> = {
-  root: 'var(--color-text-secondary)',
-  child: 'var(--color-status-running)',
-  fork: 'var(--color-hint-fork)',
+  root: "var(--color-text-secondary)",
+  child: "var(--color-status-running)",
+  fork: "var(--color-hint-fork)",
 };
 
 interface TreeNode {
@@ -46,10 +46,10 @@ function buildTree(sagas: SagaStateDto[]): TreeNode | null {
   }
 
   function deriveNodeType(saga: SagaStateDto): NodeType {
-    if (saga.sagaId === root.sagaId) return 'root';
+    if (saga.sagaId === root.sagaId) return "root";
     const parent = saga.sagaParentId ? sagaMap.get(saga.sagaParentId) : null;
-    if (parent?.lastEventHint === 'fork') return 'fork';
-    return 'child';
+    if (parent?.lastEventHint === "fork") return "fork";
+    return "child";
   }
 
   function build(saga: SagaStateDto): TreeNode {
@@ -80,7 +80,11 @@ export function TreeView({ rootId, currentSagaId }: TreeViewProps) {
     <div className={styles.panel}>
       <h3 className={styles.title}>Saga Tree</h3>
       <div className={styles.tree}>
-        <TreeNodeComponent node={tree} currentSagaId={currentSagaId} depth={0} />
+        <TreeNodeComponent
+          node={tree}
+          currentSagaId={currentSagaId}
+          depth={0}
+        />
       </div>
     </div>
   );
@@ -92,7 +96,11 @@ interface TreeNodeComponentProps {
   depth: number;
 }
 
-function TreeNodeComponent({ node, currentSagaId, depth }: TreeNodeComponentProps) {
+function TreeNodeComponent({
+  node,
+  currentSagaId,
+  depth,
+}: TreeNodeComponentProps) {
   const { saga } = node;
   const isCurrent = saga.sagaId === currentSagaId;
   const elapsed = saga.endedAt
@@ -113,7 +121,9 @@ function TreeNodeComponent({ node, currentSagaId, depth }: TreeNodeComponentProp
         >
           {NODE_TYPE_LABELS[node.nodeType]}
         </span>
-        <span className={styles.nodeName}>{saga.sagaName ?? saga.sagaId.slice(0, 8)}</span>
+        <span className={styles.nodeName}>
+          {saga.sagaName ?? saga.sagaId.slice(0, 8)}
+        </span>
         <span className={styles.nodeStep}>{saga.currentStepName}</span>
         <span className={styles.nodeDuration}>{formatDuration(elapsed)}</span>
       </Link>
@@ -135,8 +145,15 @@ export function TreeViewLoading() {
       <Skeleton variant="line" width="80px" height="16px" />
       <div className={styles.tree}>
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} style={{ paddingLeft: i * 20, padding: 'var(--space-2)' }}>
-            <Skeleton variant="line" width={`${180 - i * 30}px`} height="14px" />
+          <div
+            key={i}
+            style={{ paddingLeft: i * 20, padding: "var(--space-2)" }}
+          >
+            <Skeleton
+              variant="line"
+              width={`${180 - i * 30}px`}
+              height="14px"
+            />
           </div>
         ))}
       </div>
@@ -147,7 +164,10 @@ export function TreeViewLoading() {
 export function TreeViewEmpty() {
   return (
     <div className={styles.panel}>
-      <EmptyState title="No tree data" description="This saga has no related sagas in the tree." />
+      <EmptyState
+        title="No tree data"
+        description="This saga has no related sagas in the tree."
+      />
     </div>
   );
 }

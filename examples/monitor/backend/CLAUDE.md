@@ -30,6 +30,7 @@ This is a **read-model / observer**: it only reads Kafka, never writes to the sa
 ### KafkaProjector
 
 Consumes **all topics** using a wildcard/regex subscription. For each message:
+
 1. Checks for `saga-id` header — skips non-saga messages
 2. Deduplicates by `saga-event-id` (idempotent)
 3. **Upserts** `saga_state` (snapshot, one row per saga)
@@ -38,11 +39,11 @@ Consumes **all topics** using a wildcard/regex subscription. For each message:
 
 **Status derivation** from `saga-event-hint`:
 
-| hint | status |
-|------|--------|
-| `step` / `fork` | RUNNING |
-| `compensation` | COMPENSATING (sticky — stays until `final`) |
-| `final` | COMPLETED |
+| hint            | status                                      |
+| --------------- | ------------------------------------------- |
+| `step` / `fork` | RUNNING                                     |
+| `compensation`  | COMPENSATING (sticky — stays until `final`) |
+| `final`         | COMPLETED                                   |
 
 COMPENSATING is sticky: once set, only `final` can transition it to COMPLETED.
 
@@ -54,19 +55,20 @@ COMPENSATING is sticky: once set, only `final` can transition it to COMPLETED.
 
 ### Redis key layout
 
-| Key | Type | Purpose |
-|-----|------|---------|
-| `obs:saga:all` | Pub/Sub | Global SSE stream |
-| `obs:saga:id:{id}` | Pub/Sub | Per-saga SSE |
-| `obs:saga:root:{rootId}` | Pub/Sub | Per-root SSE |
-| `obs:dash:global:counters` | HASH | Dashboard counters |
-| `obs:recent:sagas` | ZSET | Recently active sagas |
-| `obs:recent:events` | ZSET | Recent events |
-| `obs:recent:failed` | ZSET | Sagas in COMPENSATING |
+| Key                        | Type    | Purpose               |
+| -------------------------- | ------- | --------------------- |
+| `obs:saga:all`             | Pub/Sub | Global SSE stream     |
+| `obs:saga:id:{id}`         | Pub/Sub | Per-saga SSE          |
+| `obs:saga:root:{rootId}`   | Pub/Sub | Per-root SSE          |
+| `obs:dash:global:counters` | HASH    | Dashboard counters    |
+| `obs:recent:sagas`         | ZSET    | Recently active sagas |
+| `obs:recent:events`        | ZSET    | Recent events         |
+| `obs:recent:failed`        | ZSET    | Sagas in COMPENSATING |
 
 ### REST endpoints
 
 All under `/v1/sagas`:
+
 - `GET /` — list with cursor pagination, filters: `status`, `sagaName`, `sagaRootId`, `rootsOnly`, `activeOnly`
 - `GET /:sagaId` — saga detail
 - `GET /:sagaId/events` — timeline (cursor pagination)

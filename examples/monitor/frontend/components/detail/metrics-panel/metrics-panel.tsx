@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useSagaMetrics } from '@/lib/hooks/use-saga-metrics';
-import { SagaStatus } from '@/lib/types/saga';
-import { formatDuration, cn } from '@/lib/utils/format';
-import { Skeleton } from '@/components/shared/skeleton/skeleton';
-import styles from './metrics-panel.module.scss';
+import { useSagaMetrics } from "@/lib/hooks/use-saga-metrics";
+import { SagaStatus } from "@/lib/types/saga";
+import { formatDuration, cn } from "@/lib/utils/format";
+import { Skeleton } from "@/components/shared/skeleton/skeleton";
+import styles from "./metrics-panel.module.scss";
 
 interface MetricsPanelProps {
   sagaId: string;
@@ -16,16 +16,28 @@ export function MetricsPanel({ sagaId }: MetricsPanelProps) {
   if (isLoading || !metrics) return <MetricsPanelLoading />;
 
   const items = [
-    { label: 'Elapsed', value: formatDuration(metrics.elapsedMs) },
-    { label: 'Total Duration', value: metrics.totalDurationMs ? formatDuration(metrics.totalDurationMs) : '—' },
-    { label: 'Last Update', value: formatDuration(metrics.lastUpdateAgoMs) + ' ago' },
-    { label: 'Total Events', value: String(metrics.totalEvents) },
-    { label: 'Compensations', value: String(metrics.compensationCount), highlight: metrics.compensationCount > 0 },
-    { label: 'Forks', value: String(metrics.forkCount) },
-    { label: 'Child Sagas', value: String(metrics.childSagaCount) },
+    { label: "Elapsed", value: formatDuration(metrics.elapsedMs) },
     {
-      label: 'Stuck',
-      value: metrics.isStuck ? 'YES' : 'No',
+      label: "Total Duration",
+      value: metrics.totalDurationMs
+        ? formatDuration(metrics.totalDurationMs)
+        : "—",
+    },
+    {
+      label: "Last Update",
+      value: formatDuration(metrics.lastUpdateAgoMs) + " ago",
+    },
+    { label: "Total Events", value: String(metrics.totalEvents) },
+    {
+      label: "Compensations",
+      value: String(metrics.compensationCount),
+      highlight: metrics.compensationCount > 0,
+    },
+    { label: "Forks", value: String(metrics.forkCount) },
+    { label: "Child Sagas", value: String(metrics.childSagaCount) },
+    {
+      label: "Stuck",
+      value: metrics.isStuck ? "YES" : "No",
       highlight: metrics.isStuck,
       danger: metrics.isStuck,
     },

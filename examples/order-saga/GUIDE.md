@@ -779,7 +779,7 @@ Cada visualização suporta o toggle **Grouped/Individual**:
 ```typescript
 // app.module.ts
 SagaModule.forRoot({
-  serviceName: 'saga',
+  groupId: 'saga-group',
   transport: new KafkaTransport({
     brokers: ['localhost:9092'],
     clientId: 'saga',

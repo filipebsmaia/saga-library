@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useTopTypes } from '@/lib/hooks/use-top-types';
-import { Skeleton } from '@/components/shared/skeleton/skeleton';
-import { formatDuration } from '@/lib/utils/format';
-import styles from './top-types-panel.module.scss';
+import { useTopTypes } from "@/lib/hooks/use-top-types";
+import { Skeleton } from "@/components/shared/skeleton/skeleton";
+import { formatDuration } from "@/lib/utils/format";
+import styles from "./top-types-panel.module.scss";
 
 interface TopTypesPanelProps {
   onTypeClick?: (sagaName: string) => void;
@@ -37,7 +37,9 @@ export function TopTypesPanel({ onTypeClick }: TopTypesPanelProps) {
                 <div className={styles.ratioBar}>
                   <div
                     className={styles.ratioFill}
-                    style={{ width: `${Math.min(type.compensationRatio * 100, 100)}%` }}
+                    style={{
+                      width: `${Math.min(type.compensationRatio * 100, 100)}%`,
+                    }}
                   />
                   <span className={styles.ratioLabel}>
                     {Math.round(type.compensationRatio * 100)}% comp

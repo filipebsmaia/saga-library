@@ -13,17 +13,17 @@ npm install @fbsm/saga-transport-kafka kafkajs
 ### With NestJS (`@fbsm/saga-nestjs`)
 
 ```typescript
-import { Module } from '@nestjs/common';
-import { SagaModule } from '@fbsm/saga-nestjs';
-import { KafkaTransport } from '@fbsm/saga-transport-kafka';
+import { Module } from "@nestjs/common";
+import { SagaModule } from "@fbsm/saga-nestjs";
+import { KafkaTransport } from "@fbsm/saga-transport-kafka";
 
 @Module({
   imports: [
     SagaModule.forRoot({
-      serviceName: 'my-service',
+      groupId: "my-service-group",
       transport: new KafkaTransport({
-        brokers: ['localhost:9092'],
-        clientId: 'my-service',
+        brokers: ["localhost:9092"],
+        clientId: "my-service",
         autoCreateTopics: true,
       }),
     }),
@@ -35,12 +35,18 @@ export class AppModule {}
 ### Standalone (without NestJS)
 
 ```typescript
-import { SagaPublisher, SagaRunner, SagaRegistry, SagaParser, createOtelContext } from '@fbsm/saga-core';
-import { KafkaTransport } from '@fbsm/saga-transport-kafka';
+import {
+  SagaPublisher,
+  SagaRunner,
+  SagaRegistry,
+  SagaParser,
+  createOtelContext,
+} from "@fbsm/saga-core";
+import { KafkaTransport } from "@fbsm/saga-transport-kafka";
 
 const transport = new KafkaTransport({
-  brokers: ['localhost:9092'],
-  clientId: 'my-service',
+  brokers: ["localhost:9092"],
+  clientId: "my-service",
 });
 
 const otelCtx = createOtelContext();
@@ -48,7 +54,7 @@ const registry = new SagaRegistry();
 const parser = new SagaParser();
 const publisher = new SagaPublisher(transport, otelCtx);
 const runner = new SagaRunner(registry, transport, publisher, parser, {
-  serviceName: 'my-service',
+  groupId: "my-service-group",
 });
 
 // Register participants...
@@ -62,16 +68,16 @@ await runner.start();
 ### `KafkaTransport`
 
 ```typescript
-import { KafkaTransport } from '@fbsm/saga-transport-kafka';
+import { KafkaTransport } from "@fbsm/saga-transport-kafka";
 
 const transport = new KafkaTransport({
-  brokers: ['localhost:9092'],
-  clientId: 'my-service',
+  brokers: ["localhost:9092"],
+  clientId: "my-service",
   ssl: true,
   sasl: {
-    mechanism: 'scram-sha-256',
-    username: 'user',
-    password: 'pass',
+    mechanism: "scram-sha-256",
+    username: "user",
+    password: "pass",
   },
   partitionsConsumedConcurrently: 3,
   autoCreateTopics: true,
@@ -80,22 +86,22 @@ const transport = new KafkaTransport({
 
 ### `KafkaTransportOptions`
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `brokers` | `string[]` | — | Kafka broker addresses (**required**) |
-| `clientId` | `string` | `'saga-client'` | Client identifier |
-| `ssl` | `tls.ConnectionOptions \| boolean` | — | TLS/SSL config. Pass `true` for default TLS |
-| `sasl` | `SASLOptions` | — | SASL auth (PLAIN, SCRAM-SHA-256, SCRAM-SHA-512, OAUTHBEARER, AWS) |
-| `connectionTimeout` | `number` | `1000` | Connection timeout (ms) |
-| `authenticationTimeout` | `number` | — | Authentication timeout (ms) |
-| `requestTimeout` | `number` | — | Request timeout (ms) |
-| `retry` | `RetryOptions` | `{ initialRetryTime: 300, retries: 10 }` | KafkaJS client retry policy |
-| `logLevel` | `logLevel` | `WARN` | KafkaJS log level |
-| `socketFactory` | `ISocketFactory` | — | Custom socket factory (e.g., SOCKS proxy) |
-| `partitionsConsumedConcurrently` | `number` | `3` | Partitions consumed concurrently |
-| `enableOtelInstrumentation` | `boolean` | — | Register KafkaJS OTel instrumentation |
-| `autoCreateTopics` | `boolean` | `false` | Auto-create missing topics via admin client |
-| `logger` | `SagaLogger` | `ConsoleSagaLogger` | Custom logger |
+| Field                            | Type                               | Default                                  | Description                                                       |
+| -------------------------------- | ---------------------------------- | ---------------------------------------- | ----------------------------------------------------------------- |
+| `brokers`                        | `string[]`                         | —                                        | Kafka broker addresses (**required**)                             |
+| `clientId`                       | `string`                           | `'saga-client'`                          | Client identifier                                                 |
+| `ssl`                            | `tls.ConnectionOptions \| boolean` | —                                        | TLS/SSL config. Pass `true` for default TLS                       |
+| `sasl`                           | `SASLOptions`                      | —                                        | SASL auth (PLAIN, SCRAM-SHA-256, SCRAM-SHA-512, OAUTHBEARER, AWS) |
+| `connectionTimeout`              | `number`                           | `1000`                                   | Connection timeout (ms)                                           |
+| `authenticationTimeout`          | `number`                           | —                                        | Authentication timeout (ms)                                       |
+| `requestTimeout`                 | `number`                           | —                                        | Request timeout (ms)                                              |
+| `retry`                          | `RetryOptions`                     | `{ initialRetryTime: 300, retries: 10 }` | KafkaJS client retry policy                                       |
+| `logLevel`                       | `logLevel`                         | `WARN`                                   | KafkaJS log level                                                 |
+| `socketFactory`                  | `ISocketFactory`                   | —                                        | Custom socket factory (e.g., SOCKS proxy)                         |
+| `partitionsConsumedConcurrently` | `number`                           | `3`                                      | Partitions consumed concurrently                                  |
+| `enableOtelInstrumentation`      | `boolean`                          | —                                        | Register KafkaJS OTel instrumentation                             |
+| `autoCreateTopics`               | `boolean`                          | `false`                                  | Auto-create missing topics via admin client                       |
+| `logger`                         | `SagaLogger`                       | `ConsoleSagaLogger`                      | Custom logger                                                     |
 
 ## Features
 
@@ -121,6 +127,7 @@ topic = topicPrefix + eventType
 ```
 
 Example with `topicPrefix: 'prod.'`:
+
 - `order.created` → topic `prod.order.created`
 - `payment.completed` → topic `prod.payment.completed`
 

@@ -13,9 +13,7 @@ const PRIORITY: Record<AttentionReason, number> = {
 };
 
 export class GetAttentionItemsQuery {
-  constructor(
-    private readonly sagaStateRepo: SagaStateRepository,
-  ) {}
+  constructor(private readonly sagaStateRepo: SagaStateRepository) {}
 
   async execute(): Promise<AttentionResponseDto> {
     const activeSagas = await this.sagaStateRepo.findActiveWithAttention(ATTENTION_LIMIT);
@@ -76,9 +74,7 @@ export class GetAttentionItemsQuery {
       });
     }
 
-    const sorted = [...items.values()]
-      .sort((a, b) => PRIORITY[a.reason] - PRIORITY[b.reason])
-      .slice(0, RESULT_LIMIT);
+    const sorted = [...items.values()].sort((a, b) => PRIORITY[a.reason] - PRIORITY[b.reason]).slice(0, RESULT_LIMIT);
 
     return { items: sorted };
   }

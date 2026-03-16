@@ -1,7 +1,10 @@
-import type { SagaParticipant, HandlerConfig } from '../interfaces/saga-participant.interface';
-import type { EventHandler } from '../interfaces/event-handler.type';
-import { SagaDuplicateHandlerError } from '../errors/saga-duplicate-handler.error';
-import { SagaInvalidHandlerConfigError } from '../errors/saga-invalid-handler-config.error';
+import type {
+  SagaParticipant,
+  HandlerConfig,
+} from "../interfaces/saga-participant.interface";
+import type { EventHandler } from "../interfaces/event-handler.type";
+import { SagaDuplicateHandlerError } from "../errors/saga-duplicate-handler.error";
+import { SagaInvalidHandlerConfigError } from "../errors/saga-invalid-handler-config.error";
 
 export interface RouteEntry {
   participant: SagaParticipant;
@@ -38,7 +41,7 @@ export class SagaRegistry {
           throw new SagaInvalidHandlerConfigError(
             eventType,
             participant.serviceId,
-            'cannot have both final and fork options',
+            "cannot have both final and fork options",
           );
         }
         map.set(eventType, { participant, handler, options });

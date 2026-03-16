@@ -1,5 +1,5 @@
-import { SagaEventDto, SagaStateDto, SagaStatus } from '@/lib/types/saga';
-import { WaterfallSpan, WaterfallTrack } from '@/lib/types/waterfall';
+import { SagaEventDto, SagaStateDto, SagaStatus } from "@/lib/types/saga";
+import { WaterfallSpan, WaterfallTrack } from "@/lib/types/waterfall";
 
 /**
  * Converts saga events and tree into waterfall spans.
@@ -27,7 +27,8 @@ export function eventsToWaterfallSpans(
 
   // Build saga depth map
   const depthMap = new Map<string, number>();
-  const rootSaga = sortedSagas.find((s) => s.sagaId === s.sagaRootId) ?? sortedSagas[0];
+  const rootSaga =
+    sortedSagas.find((s) => s.sagaId === s.sagaRootId) ?? sortedSagas[0];
   function computeDepth(sagaId: string, depth: number) {
     depthMap.set(sagaId, depth);
     for (const s of sortedSagas) {
@@ -51,7 +52,11 @@ export function eventsToWaterfallSpans(
 
   // Sort events within each saga by publishedAt
   for (const [, events] of eventsBySaga) {
-    events.sort((a, b) => new Date(a.sagaPublishedAt).getTime() - new Date(b.sagaPublishedAt).getTime());
+    events.sort(
+      (a, b) =>
+        new Date(a.sagaPublishedAt).getTime() -
+        new Date(b.sagaPublishedAt).getTime(),
+    );
   }
 
   // Build tracks (ordered by depth then start time)

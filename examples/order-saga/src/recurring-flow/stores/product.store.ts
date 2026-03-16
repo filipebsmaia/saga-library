@@ -1,6 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
-export type ProductStatus = 'ACKNOWLEDGED' | 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'TERMINATED';
+export type ProductStatus =
+  | "ACKNOWLEDGED"
+  | "PENDING"
+  | "ACTIVE"
+  | "SUSPENDED"
+  | "TERMINATED";
 
 export interface ProductRecord {
   productId: string;
@@ -28,7 +33,7 @@ export class RFProductStore {
       productId,
       sagaId,
       ...data,
-      status: 'ACKNOWLEDGED',
+      status: "ACKNOWLEDGED",
       createdAt: now,
       updatedAt: now,
     };
@@ -37,7 +42,10 @@ export class RFProductStore {
     return record;
   }
 
-  updateStatus(productId: string, status: ProductStatus): ProductRecord | undefined {
+  updateStatus(
+    productId: string,
+    status: ProductStatus,
+  ): ProductRecord | undefined {
     const record = this.records.get(productId);
     if (record) {
       record.status = status;

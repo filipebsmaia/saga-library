@@ -1,4 +1,4 @@
-@use '../../../styles/mixins' as *;
+@use "../../../styles/mixins" as *;
 
 .section {
   @include card;
@@ -36,7 +36,9 @@
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   cursor: pointer;
-  transition: color var(--transition-fast), background var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
 
   &:hover {
     color: var(--color-text-primary);
@@ -74,8 +76,9 @@
   text-decoration: none;
   color: inherit;
   font-size: var(--text-sm);
-  transition: background var(--transition-fast) var(--ease-out),
-              border-color var(--transition-fast) var(--ease-out);
+  transition:
+    background var(--transition-fast) var(--ease-out),
+    border-color var(--transition-fast) var(--ease-out);
 
   &:hover {
     background: var(--color-accent-glow);
@@ -122,6 +125,10 @@
 }
 
 @keyframes flash {
-  0% { background-color: var(--color-accent-glow); }
-  100% { background-color: transparent; }
+  0% {
+    background-color: var(--color-accent-glow);
+  }
+  100% {
+    background-color: transparent;
+  }
 }

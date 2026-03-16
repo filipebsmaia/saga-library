@@ -1,4 +1,4 @@
-import type { SagaTransport, RunnerOptions, SagaLogger } from '@fbsm/saga-core';
+import type { SagaTransport, RunnerOptions, SagaLogger } from "@fbsm/saga-core";
 
 export interface SagaModuleOptions extends RunnerOptions {
   transport: SagaTransport;
@@ -10,7 +10,9 @@ export interface SagaModuleOptions extends RunnerOptions {
 }
 
 export interface SagaModuleAsyncOptions {
-  useFactory: (...args: any[]) => Promise<SagaModuleOptions> | SagaModuleOptions;
+  useFactory: (
+    ...args: any[]
+  ) => Promise<SagaModuleOptions> | SagaModuleOptions;
   inject?: any[];
   imports?: any[];
 }

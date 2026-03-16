@@ -11,6 +11,7 @@ pnpm typecheck   # tsc --noEmit (no separate lint step)
 ```
 
 Tests are run from the **monorepo root**:
+
 ```bash
 # From repo root:
 pnpm vitest run packages/saga-core          # all tests in this package
@@ -40,6 +41,7 @@ SagaRunner ──► SagaParser (parse inbound) ──► handler dispatch
 ### Context propagation
 
 `SagaContext` (AsyncLocalStorage) is set in two places:
+
 1. **`SagaRunner`** — wraps every handler call in `SagaContext.run()` using the parsed inbound context.
 2. **`SagaPublisher.start()` / `startChild()` / `emitToParent()`** — wraps the user callback with a newly generated context.
 
@@ -48,6 +50,7 @@ This means `emit()` inside any handler or `start()` callback can read `SagaConte
 ### Handler execution pipeline (SagaRunner)
 
 For each inbound message, `SagaRunner`:
+
 1. Parses via `SagaParser`
 2. Looks up handler in registry route map (`eventType → { participant, handler, options }`)
 3. If `{ fork: true }`: wraps `emit` so each call gets a new `sagaId`, `parentSagaId`, and `hint: 'fork'`
@@ -65,6 +68,7 @@ For each inbound message, `SagaRunner`:
 ### OTel integration
 
 `createOtelContext()` auto-detects whether `@opentelemetry/api` is installed:
+
 - **Available** → returns `W3cOtelContext` (injects/extracts W3C trace context + baggage, creates spans)
 - **Missing** → returns `NoopOtelContext` (no-op)
 
@@ -73,6 +77,7 @@ OTel context is an optional constructor parameter of both `SagaPublisher` and `S
 ### Transport interface
 
 `SagaTransport` is the only external dependency of the core. The interface (`src/transport/transport.interface.ts`) requires:
+
 - `connect() / disconnect()`
 - `publish(OutboundMessage)`
 - `subscribe(topics[], handler, options?)`

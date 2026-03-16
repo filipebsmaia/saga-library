@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useCallback, useSyncExternalStore } from 'react';
-import { useSseStore } from '@/lib/sse/sse-provider';
-import { SagaSseMessage } from '@/lib/types/sse';
+import { useEffect, useRef, useCallback, useSyncExternalStore } from "react";
+import { useSseStore } from "@/lib/sse/sse-provider";
+import { SagaSseMessage } from "@/lib/types/sse";
 
 const MAX_EVENTS = 100;
 const FLUSH_INTERVAL = 2_000;
@@ -33,7 +33,10 @@ export function useEventBuffer(): SagaSseMessage[] {
       if (pendingRef.current.length === 0) return;
       const pending = pendingRef.current;
       pendingRef.current = [];
-      bufferRef.current = [...pending.reverse(), ...bufferRef.current].slice(0, MAX_EVENTS);
+      bufferRef.current = [...pending.reverse(), ...bufferRef.current].slice(
+        0,
+        MAX_EVENTS,
+      );
       subsRef.current.forEach((fn) => fn());
     }, FLUSH_INTERVAL);
 
@@ -45,7 +48,9 @@ export function useEventBuffer(): SagaSseMessage[] {
 
   const subscribe = useCallback((cb: () => void) => {
     subsRef.current.add(cb);
-    return () => { subsRef.current.delete(cb); };
+    return () => {
+      subsRef.current.delete(cb);
+    };
   }, []);
 
   const getSnapshot = useCallback(() => bufferRef.current, []);

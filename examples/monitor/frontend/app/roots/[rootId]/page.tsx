@@ -1,9 +1,15 @@
-'use client';
+"use client";
 
-import { useSagaTree } from '@/lib/hooks/use-saga-tree';
-import { TreeView, TreeViewLoading } from '@/components/detail/tree-view/tree-view';
-import { SagaTable, SagaTableLoading } from '@/components/dashboard/saga-table/saga-table';
-import styles from './page.module.scss';
+import { useSagaTree } from "@/lib/hooks/use-saga-tree";
+import {
+  TreeView,
+  TreeViewLoading,
+} from "@/components/detail/tree-view/tree-view";
+import {
+  SagaTable,
+  SagaTableLoading,
+} from "@/components/dashboard/saga-table/saga-table";
+import styles from "./page.module.scss";
 
 interface Props {
   params: { rootId: string };
@@ -23,7 +29,11 @@ export default function RootTreePage({ params }: Props) {
         </div>
         <div className={styles.tableSection}>
           <h2 className={styles.sectionTitle}>All Sagas in Tree</h2>
-          {isLoading ? <SagaTableLoading /> : sagas ? <SagaTable sagas={sagas} /> : null}
+          {isLoading ? (
+            <SagaTableLoading />
+          ) : sagas ? (
+            <SagaTable sagas={sagas} />
+          ) : null}
         </div>
       </div>
     </div>

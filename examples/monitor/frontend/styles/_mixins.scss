@@ -38,8 +38,9 @@
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
-  transition: box-shadow var(--transition-normal) var(--ease-out),
-              border-color var(--transition-normal) var(--ease-out);
+  transition:
+    box-shadow var(--transition-normal) var(--ease-out),
+    border-color var(--transition-normal) var(--ease-out);
 }
 
 @mixin card-hover {
@@ -67,17 +68,25 @@ $breakpoint-lg: 1024px;
 $breakpoint-xl: 1280px;
 
 @mixin media-sm {
-  @media (min-width: $breakpoint-sm) { @content; }
+  @media (min-width: $breakpoint-sm) {
+    @content;
+  }
 }
 
 @mixin media-md {
-  @media (min-width: $breakpoint-md) { @content; }
+  @media (min-width: $breakpoint-md) {
+    @content;
+  }
 }
 
 @mixin media-lg {
-  @media (min-width: $breakpoint-lg) { @content; }
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
 }
 
 @mixin media-xl {
-  @media (min-width: $breakpoint-xl) { @content; }
+  @media (min-width: $breakpoint-xl) {
+    @content;
+  }
 }

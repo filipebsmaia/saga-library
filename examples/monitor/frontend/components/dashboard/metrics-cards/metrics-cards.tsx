@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useDashboardStats } from '@/lib/hooks/use-dashboard-stats';
-import { cn } from '@/lib/utils/format';
-import styles from './metrics-cards.module.scss';
+import { useDashboardStats } from "@/lib/hooks/use-dashboard-stats";
+import { cn } from "@/lib/utils/format";
+import styles from "./metrics-cards.module.scss";
 
 export function MetricsCards() {
   const { data: stats, isLoading } = useDashboardStats();
@@ -19,7 +19,13 @@ export function MetricsCards() {
         <span className={styles.value}>{stats.compensatingRecent}</span>
         <span className={styles.label}>Compensating (5m)</span>
       </div>
-      <div className={cn(styles.card, styles.stuck, stats.stuck > 0 && styles.stuckActive)}>
+      <div
+        className={cn(
+          styles.card,
+          styles.stuck,
+          stats.stuck > 0 && styles.stuckActive,
+        )}
+      >
         <span className={styles.value}>{stats.stuck}</span>
         <span className={styles.label}>Stuck</span>
       </div>

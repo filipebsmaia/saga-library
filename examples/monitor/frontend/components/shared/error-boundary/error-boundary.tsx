@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Component, ReactNode } from 'react';
-import styles from './error-boundary.module.scss';
+import { Component, ReactNode } from "react";
+import styles from "./error-boundary.module.scss";
 
 interface Props {
   children: ReactNode;

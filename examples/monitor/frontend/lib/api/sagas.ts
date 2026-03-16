@@ -1,12 +1,26 @@
-import { SagaStateDto, SagaEventDto, SagaMetricsDto, DashboardStatsDto, AttentionResponseDto, SagaPredictionsDto } from '@/lib/types/saga';
-import { TopStepDto, TopSagaTypeDto } from '@/lib/types/trends';
-import { CursorPaginationResult, ListSagasParams, ListSagaEventsParams } from '@/lib/types/api';
-import { apiFetch } from './client';
+import {
+  SagaStateDto,
+  SagaEventDto,
+  SagaMetricsDto,
+  DashboardStatsDto,
+  AttentionResponseDto,
+  SagaPredictionsDto,
+} from "@/lib/types/saga";
+import { TopStepDto, TopSagaTypeDto } from "@/lib/types/trends";
+import {
+  CursorPaginationResult,
+  ListSagasParams,
+  ListSagaEventsParams,
+} from "@/lib/types/api";
+import { apiFetch } from "./client";
 
 export function fetchSagas(
   params: ListSagasParams = {},
 ): Promise<CursorPaginationResult<SagaStateDto>> {
-  return apiFetch('/sagas', params as Record<string, string | number | boolean | undefined>);
+  return apiFetch(
+    "/sagas",
+    params as Record<string, string | number | boolean | undefined>,
+  );
 }
 
 export function fetchSagaDetail(sagaId: string): Promise<SagaStateDto> {
@@ -17,7 +31,10 @@ export function fetchSagaEvents(
   sagaId: string,
   params: ListSagaEventsParams = {},
 ): Promise<CursorPaginationResult<SagaEventDto>> {
-  return apiFetch(`/sagas/${sagaId}/events`, params as Record<string, string | number | boolean | undefined>);
+  return apiFetch(
+    `/sagas/${sagaId}/events`,
+    params as Record<string, string | number | boolean | undefined>,
+  );
 }
 
 export function fetchSagaMetrics(sagaId: string): Promise<SagaMetricsDto> {
@@ -29,21 +46,23 @@ export function fetchSagaTree(rootId: string): Promise<SagaStateDto[]> {
 }
 
 export function fetchDashboardStats(): Promise<DashboardStatsDto> {
-  return apiFetch('/sagas/stats');
+  return apiFetch("/sagas/stats");
 }
 
 export function fetchAttentionItems(): Promise<AttentionResponseDto> {
-  return apiFetch('/sagas/attention');
+  return apiFetch("/sagas/attention");
 }
 
 export function fetchTopSteps(): Promise<TopStepDto[]> {
-  return apiFetch('/sagas/top-steps');
+  return apiFetch("/sagas/top-steps");
 }
 
 export function fetchTopTypes(): Promise<TopSagaTypeDto[]> {
-  return apiFetch('/sagas/top-types');
+  return apiFetch("/sagas/top-types");
 }
 
-export function fetchSagaPredictions(sagaId: string): Promise<SagaPredictionsDto> {
+export function fetchSagaPredictions(
+  sagaId: string,
+): Promise<SagaPredictionsDto> {
   return apiFetch(`/sagas/${sagaId}/predictions`);
 }

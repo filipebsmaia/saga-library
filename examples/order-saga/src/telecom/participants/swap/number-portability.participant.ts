@@ -1,20 +1,23 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
   SagaHandler,
-} from '@fbsm/saga-nestjs';
-import type { IncomingEvent, Emit } from '@fbsm/saga-nestjs';
-import { randomDelay } from '../../delay';
+} from "@fbsm/saga-nestjs";
+import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
+import { randomDelay } from "../../delay";
 
 @Injectable()
 @SagaParticipant()
 export class NumberPortabilityParticipant extends SagaParticipantBase {
-  readonly serviceId = 'number-portability';
+  readonly serviceId = "number-portability";
   private readonly logger = new Logger(NumberPortabilityParticipant.name);
 
-  @SagaHandler('portability.validation.requested', { final: true })
-  async handleValidationRequested(event: IncomingEvent, emit: Emit): Promise<void> {
+  @SagaHandler("portability.validation.requested", { final: true })
+  async handleValidationRequested(
+    event: IncomingEvent,
+    emit: Emit,
+  ): Promise<void> {
     const { swapId, msisdn, newIccid } = event.payload as {
       swapId: string;
       msisdn: string;
@@ -23,12 +26,20 @@ export class NumberPortabilityParticipant extends SagaParticipantBase {
 
     await randomDelay();
 
-    this.logger.log(`Validating portability for MSISDN ${msisdn} (swap: ${swapId})`);
+    this.logger.log(
+      `Validating portability for MSISDN ${msisdn} (swap: ${swapId})`,
+    );
 
     await emit({
-      eventType: 'portability.validated',
-      stepName: 'validate-portability',
-      payload: { swapId, msisdn, newIccid, valid: true, validatedAt: new Date().toISOString() },
+      eventType: "portability.validated",
+      stepName: "validate-portability",
+      payload: {
+        swapId,
+        msisdn,
+        newIccid,
+        valid: true,
+        validatedAt: new Date().toISOString(),
+      },
     });
 
     this.logger.log(`Portability validated for MSISDN ${msisdn}`);

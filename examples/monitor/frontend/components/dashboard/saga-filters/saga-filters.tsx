@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { SagaStatus } from '@/lib/types/saga';
-import { cn } from '@/lib/utils/format';
-import styles from './saga-filters.module.scss';
+import { useState, useCallback } from "react";
+import { SagaStatus } from "@/lib/types/saga";
+import { cn } from "@/lib/utils/format";
+import styles from "./saga-filters.module.scss";
 
 export interface QuickFilterValues {
   stuck?: boolean;
@@ -25,23 +25,26 @@ export interface SagaFilterValues {
 }
 
 const PERIOD_OPTIONS = [
-  { label: 'Any time', value: '' },
-  { label: 'Last 5 min', value: '5m' },
-  { label: 'Last 15 min', value: '15m' },
-  { label: 'Last 1 hour', value: '1h' },
-  { label: 'Last 24 hours', value: '24h' },
+  { label: "Any time", value: "" },
+  { label: "Last 5 min", value: "5m" },
+  { label: "Last 15 min", value: "15m" },
+  { label: "Last 1 hour", value: "1h" },
+  { label: "Last 24 hours", value: "24h" },
 ];
 
-function periodToDateRange(period: string): { startDate?: string; endDate?: string } {
+function periodToDateRange(period: string): {
+  startDate?: string;
+  endDate?: string;
+} {
   if (!period) {
     return {};
   }
   const now = new Date();
   const ms: Record<string, number> = {
-    '5m': 5 * 60_000,
-    '15m': 15 * 60_000,
-    '1h': 60 * 60_000,
-    '24h': 24 * 60 * 60_000,
+    "5m": 5 * 60_000,
+    "15m": 15 * 60_000,
+    "1h": 60 * 60_000,
+    "24h": 24 * 60 * 60_000,
   };
   const offset = ms[period];
   if (!offset) {
@@ -50,12 +53,37 @@ function periodToDateRange(period: string): { startDate?: string; endDate?: stri
   return { startDate: new Date(now.getTime() - offset).toISOString() };
 }
 
-const QUICK_FILTERS: { key: keyof QuickFilterValues; label: string; tooltip: string }[] = [
-  { key: 'stuck', label: 'Stuck', tooltip: 'Show sagas with no updates for 5+ minutes — may indicate a problem' },
-  { key: 'compensating', label: 'Compensating', tooltip: 'Show sagas currently running compensation steps' },
-  { key: 'activeOnly', label: 'Active', tooltip: 'Show only non-completed sagas (running or compensating)' },
-  { key: 'rootsOnly', label: 'Roots only', tooltip: 'Show only root sagas, hiding child/forked sagas' },
-  { key: 'recentOnly', label: 'Recent (<1m)', tooltip: 'Show sagas updated in the last 60 seconds' },
+const QUICK_FILTERS: {
+  key: keyof QuickFilterValues;
+  label: string;
+  tooltip: string;
+}[] = [
+  {
+    key: "stuck",
+    label: "Stuck",
+    tooltip:
+      "Show sagas with no updates for 5+ minutes — may indicate a problem",
+  },
+  {
+    key: "compensating",
+    label: "Compensating",
+    tooltip: "Show sagas currently running compensation steps",
+  },
+  {
+    key: "activeOnly",
+    label: "Active",
+    tooltip: "Show only non-completed sagas (running or compensating)",
+  },
+  {
+    key: "rootsOnly",
+    label: "Roots only",
+    tooltip: "Show only root sagas, hiding child/forked sagas",
+  },
+  {
+    key: "recentOnly",
+    label: "Recent (<1m)",
+    tooltip: "Show sagas updated in the last 60 seconds",
+  },
 ];
 
 interface SagaFiltersProps {
@@ -64,8 +92,8 @@ interface SagaFiltersProps {
 }
 
 export function SagaFilters({ values, onChange }: SagaFiltersProps) {
-  const [nameInput, setNameInput] = useState(values.sagaName ?? '');
-  const [idInput, setIdInput] = useState(values.searchId ?? '');
+  const [nameInput, setNameInput] = useState(values.sagaName ?? "");
+  const [idInput, setIdInput] = useState(values.searchId ?? "");
 
   const quickFilters = values.quickFilters ?? {};
 
@@ -75,7 +103,7 @@ export function SagaFilters({ values, onChange }: SagaFiltersProps) {
       const next = { ...current, [key]: !current[key] };
 
       // If incident mode is being toggled ON, also activate activeOnly
-      if (key === 'incidentMode' && !current.incidentMode) {
+      if (key === "incidentMode" && !current.incidentMode) {
         next.activeOnly = true;
       }
 
@@ -86,7 +114,10 @@ export function SagaFilters({ values, onChange }: SagaFiltersProps) {
 
   const handleStatusChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
-      const status = event.target.value === '' ? undefined : (event.target.value as SagaStatus);
+      const status =
+        event.target.value === ""
+          ? undefined
+          : (event.target.value as SagaStatus);
       onChange({ ...values, status });
     },
     [values, onChange],
@@ -96,14 +127,19 @@ export function SagaFilters({ values, onChange }: SagaFiltersProps) {
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const period = event.target.value || undefined;
       const range = periodToDateRange(event.target.value);
-      onChange({ ...values, period, startDate: range.startDate, endDate: range.endDate });
+      onChange({
+        ...values,
+        period,
+        startDate: range.startDate,
+        endDate: range.endDate,
+      });
     },
     [values, onChange],
   );
 
   const handleNameKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
-      if (event.key === 'Enter') {
+      if (event.key === "Enter") {
         onChange({ ...values, sagaName: nameInput || undefined });
       }
     },
@@ -112,7 +148,7 @@ export function SagaFilters({ values, onChange }: SagaFiltersProps) {
 
   const handleIdKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
-      if (event.key === 'Enter') {
+      if (event.key === "Enter") {
         onChange({ ...values, searchId: idInput || undefined });
       }
     },
@@ -120,13 +156,18 @@ export function SagaFilters({ values, onChange }: SagaFiltersProps) {
   );
 
   const handleClear = useCallback(() => {
-    setNameInput('');
-    setIdInput('');
+    setNameInput("");
+    setIdInput("");
     onChange({});
   }, [onChange]);
 
   const hasQuickFilters = Object.values(quickFilters).some(Boolean);
-  const hasActiveFilters = values.status || values.sagaName || values.searchId || values.period || hasQuickFilters;
+  const hasActiveFilters =
+    values.status ||
+    values.sagaName ||
+    values.searchId ||
+    values.period ||
+    hasQuickFilters;
 
   return (
     <div className={styles.container}>
@@ -142,8 +183,12 @@ export function SagaFilters({ values, onChange }: SagaFiltersProps) {
           </button>
         ))}
         <button
-          className={cn(styles.toggleBtn, styles.incidentToggle, quickFilters.incidentMode && styles.incidentActive)}
-          onClick={() => toggleQuickFilter('incidentMode')}
+          className={cn(
+            styles.toggleBtn,
+            styles.incidentToggle,
+            quickFilters.incidentMode && styles.incidentActive,
+          )}
+          onClick={() => toggleQuickFilter("incidentMode")}
           title="Priority view: stuck first, then compensating. Auto-enables Active filter"
         >
           Incident Mode
@@ -153,7 +198,7 @@ export function SagaFilters({ values, onChange }: SagaFiltersProps) {
       <div className={styles.filters}>
         <select
           className={styles.select}
-          value={values.status ?? ''}
+          value={values.status ?? ""}
           onChange={handleStatusChange}
         >
           <option value="">All Statuses</option>
@@ -169,7 +214,9 @@ export function SagaFilters({ values, onChange }: SagaFiltersProps) {
           value={nameInput}
           onChange={(event) => setNameInput(event.target.value)}
           onKeyDown={handleNameKeyDown}
-          onBlur={() => onChange({ ...values, sagaName: nameInput || undefined })}
+          onBlur={() =>
+            onChange({ ...values, sagaName: nameInput || undefined })
+          }
         />
 
         <input
@@ -184,11 +231,13 @@ export function SagaFilters({ values, onChange }: SagaFiltersProps) {
 
         <select
           className={styles.select}
-          value={values.period ?? ''}
+          value={values.period ?? ""}
           onChange={handlePeriodChange}
         >
           {PERIOD_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>{option.label}</option>
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
           ))}
         </select>
 

@@ -1,4 +1,4 @@
-@use '../../../styles/mixins' as *;
+@use "../../../styles/mixins" as *;
 
 .container {
   @include card;
@@ -89,7 +89,7 @@ $tree-line-offset: 10px;
   width: $tree-indent;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     left: $tree-line-offset;
     top: 0;
@@ -110,7 +110,7 @@ $tree-line-offset: 10px;
 
   // Vertical line (top to bottom for ├, top to center for └)
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     left: $tree-line-offset;
     top: 0;
@@ -121,7 +121,7 @@ $tree-line-offset: 10px;
 
   // Horizontal arm
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     left: $tree-line-offset;
     top: 50%;
@@ -144,11 +144,21 @@ $tree-line-offset: 10px;
   background: var(--color-border);
   flex-shrink: 0;
 
-  &[data-hint="step"] { background: var(--color-hint-step); }
-  &[data-hint="compensation"] { background: var(--color-hint-compensation); }
-  &[data-hint="final"] { background: var(--color-hint-final); }
-  &[data-hint="fork"] { background: var(--color-hint-fork); }
-  &[data-hint="expected"] { background: rgb(94, 234, 212); }
+  &[data-hint="step"] {
+    background: var(--color-hint-step);
+  }
+  &[data-hint="compensation"] {
+    background: var(--color-hint-compensation);
+  }
+  &[data-hint="final"] {
+    background: var(--color-hint-final);
+  }
+  &[data-hint="fork"] {
+    background: var(--color-hint-fork);
+  }
+  &[data-hint="expected"] {
+    background: rgb(94, 234, 212);
+  }
 }
 
 .forkToggle {
@@ -317,6 +327,10 @@ $tree-line-offset: 10px;
 }
 
 @keyframes slideHighlight {
-  0% { background-color: rgba(99, 102, 241, 0.15); }
-  100% { background-color: transparent; }
+  0% {
+    background-color: rgba(99, 102, 241, 0.15);
+  }
+  100% {
+    background-color: transparent;
+  }
 }

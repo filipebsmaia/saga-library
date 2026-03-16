@@ -3,9 +3,9 @@ services:
   postgres:
     image: postgres:18-alpine
     container_name: saga-monitor-postgres-clean
-    shm_size: "256mb"
+    shm_size: '256mb'
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       POSTGRES_DB: saga_monitor
       POSTGRES_USER: monitor
@@ -29,7 +29,7 @@ services:
       - -c
       - wal_writer_delay=200ms
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U monitor -d saga_monitor"]
+      test: ['CMD-SHELL', 'pg_isready -U monitor -d saga_monitor']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -40,9 +40,9 @@ services:
     image: redis:7-alpine
     container_name: saga-monitor-redis-clean
     ports:
-      - "6379:6379"
+      - '6379:6379'
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -53,7 +53,7 @@ services:
     image: apache/kafka:3.9.0
     container_name: saga-monitor-kafka-clean
     ports:
-      - "9092:9092"
+      - '9092:9092'
     environment:
       # KRaft mode (no Zookeeper)
       KAFKA_NODE_ID: 0
@@ -66,7 +66,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       # Auto-create topics
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_NUM_PARTITIONS: 3
       # Single-node: internal topics must have replication factor 1
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -87,7 +87,7 @@ services:
     image: provectuslabs/kafka-ui:latest
     container_name: saga-monitor-kafka-ui-clean
     ports:
-      - "8080:8080"
+      - '8080:8080'
     environment:
       KAFKA_CLUSTERS_0_NAME: saga-monitor
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9094
@@ -101,10 +101,10 @@ services:
     image: jaegertracing/jaeger:latest
     container_name: saga-monitor-jaeger-clean
     ports:
-      - "16686:16686"
-      - "4318:4318"
+      - '16686:16686'
+      - '4318:4318'
     environment:
-      COLLECTOR_OTLP_ENABLED: "true"
+      COLLECTOR_OTLP_ENABLED: 'true'
     networks:
       - saga-monitor
 
@@ -112,9 +112,9 @@ services:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: saga-monitor-otel-collector-clean
     ports:
-      - "4317:4317"
-      - "4319:4318"
-      - "8888:8888"
+      - '4317:4317'
+      - '4319:4318'
+      - '8888:8888'
     volumes:
       - ./otel-collector-config.yml:/etc/otelcol-contrib/config.yaml
     networks:
@@ -124,7 +124,7 @@ services:
     image: prom/prometheus:latest
     container_name: saga-monitor-prometheus-clean
     ports:
-      - "9090:9090"
+      - '9090:9090'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     depends_on:
@@ -136,10 +136,10 @@ services:
     image: grafana/grafana:latest
     container_name: saga-monitor-grafana-clean
     ports:
-      - "9091:3000"
+      - '9091:3000'
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: 'true'
       GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning

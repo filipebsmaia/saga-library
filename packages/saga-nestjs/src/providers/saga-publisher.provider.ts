@@ -1,16 +1,29 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { Emit, EmitParams, ParentSagaContext, SagaStartOptions } from '@fbsm/saga-core';
-import { SagaPublisher } from '@fbsm/saga-core';
+import { Inject, Injectable } from "@nestjs/common";
+import type {
+  Emit,
+  EmitParams,
+  ParentSagaContext,
+  SagaStartOptions,
+} from "@fbsm/saga-core";
+import { SagaPublisher } from "@fbsm/saga-core";
 
 @Injectable()
 export class SagaPublisherProvider {
-  constructor(@Inject(SagaPublisher) private readonly publisher: SagaPublisher) {}
+  constructor(
+    @Inject(SagaPublisher) private readonly publisher: SagaPublisher,
+  ) {}
 
-  start<R>(fn: () => R | Promise<R>, opts?: SagaStartOptions): Promise<{ sagaId: string; result: Awaited<R> }> {
+  start<R>(
+    fn: () => R | Promise<R>,
+    opts?: SagaStartOptions,
+  ): Promise<{ sagaId: string; result: Awaited<R> }> {
     return this.publisher.start(fn, opts);
   }
 
-  startChild<R>(fn: () => R | Promise<R>, opts?: SagaStartOptions): Promise<{ sagaId: string; result: Awaited<R> }> {
+  startChild<R>(
+    fn: () => R | Promise<R>,
+    opts?: SagaStartOptions,
+  ): Promise<{ sagaId: string; result: Awaited<R> }> {
     return this.publisher.startChild(fn, opts);
   }
 
@@ -18,11 +31,17 @@ export class SagaPublisherProvider {
     return this.publisher.emit(params);
   }
 
-  emitToParent<T extends object>(paramsOrFn: EmitParams<T> | (() => void | Promise<void>)): Promise<void> {
+  emitToParent<T extends object>(
+    paramsOrFn: EmitParams<T> | (() => void | Promise<void>),
+  ): Promise<void> {
     return this.publisher.emitToParent(paramsOrFn);
   }
 
-  forSaga(sagaId: string, parentCtx?: ParentSagaContext, causationId?: string): Emit {
+  forSaga(
+    sagaId: string,
+    parentCtx?: ParentSagaContext,
+    causationId?: string,
+  ): Emit {
     return this.publisher.forSaga(sagaId, parentCtx, causationId);
   }
 }

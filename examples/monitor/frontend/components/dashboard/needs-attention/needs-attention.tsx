@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useAttentionItems } from '@/lib/hooks/use-attention-items';
-import { AttentionItemDto, AttentionReason } from '@/lib/types/saga';
-import { StatusBadge } from '@/components/shared/status-badge/status-badge';
-import { truncateId, formatRelativeTime, cn } from '@/lib/utils/format';
-import { Skeleton } from '@/components/shared/skeleton/skeleton';
-import styles from './needs-attention.module.scss';
+import { useState } from "react";
+import Link from "next/link";
+import { useAttentionItems } from "@/lib/hooks/use-attention-items";
+import { AttentionItemDto, AttentionReason } from "@/lib/types/saga";
+import { StatusBadge } from "@/components/shared/status-badge/status-badge";
+import { truncateId, formatRelativeTime, cn } from "@/lib/utils/format";
+import { Skeleton } from "@/components/shared/skeleton/skeleton";
+import styles from "./needs-attention.module.scss";
 
 const COLLAPSED_LIMIT = 5;
 
 const REASON_LABELS: Record<AttentionReason, string> = {
-  stuck: 'Stuck',
-  compensating: 'Compensating',
-  many_children: 'Many Children',
+  stuck: "Stuck",
+  compensating: "Compensating",
+  many_children: "Many Children",
 };
 
 export function NeedsAttention() {
@@ -36,8 +36,11 @@ export function NeedsAttention() {
         ))}
       </ul>
       {hasMore && (
-        <button className={styles.showAll} onClick={() => setExpanded(!expanded)}>
-          {expanded ? 'Show less' : `Show all (${data.items.length})`}
+        <button
+          className={styles.showAll}
+          onClick={() => setExpanded(!expanded)}
+        >
+          {expanded ? "Show less" : `Show all (${data.items.length})`}
         </button>
       )}
     </section>
@@ -49,11 +52,17 @@ function AttentionRow({ item }: { item: AttentionItemDto }) {
     <li className={styles.row}>
       <Link href={`/sagas/${item.sagaId}`} className={styles.rowLink}>
         <StatusBadge status={item.status} size="sm" />
-        <span className={styles.name}>{item.sagaName ?? truncateId(item.sagaId)}</span>
+        <span className={styles.name}>
+          {item.sagaName ?? truncateId(item.sagaId)}
+        </span>
         <span className={styles.step}>{item.currentStepName}</span>
-        <span className={cn(styles.reason, styles[item.reason])}>{REASON_LABELS[item.reason]}</span>
+        <span className={cn(styles.reason, styles[item.reason])}>
+          {REASON_LABELS[item.reason]}
+        </span>
         <span className={styles.detail}>{item.detail}</span>
-        <span className={styles.time}>{formatRelativeTime(item.updatedAt)}</span>
+        <span className={styles.time}>
+          {formatRelativeTime(item.updatedAt)}
+        </span>
       </Link>
     </li>
   );

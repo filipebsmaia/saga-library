@@ -5,7 +5,12 @@ Implement the `SagaTransport` interface to use any message broker (RabbitMQ, Red
 ## SagaTransport Interface
 
 ```typescript
-import type { SagaTransport, OutboundMessage, InboundMessage, TransportSubscribeOptions } from '@fbsm/saga-core';
+import type {
+  SagaTransport,
+  OutboundMessage,
+  InboundMessage,
+  TransportSubscribeOptions,
+} from "@fbsm/saga-core";
 ```
 
 ```typescript
@@ -25,10 +30,10 @@ interface SagaTransport {
 
 ```typescript
 interface OutboundMessage {
-  topic: string;           // Event type (with optional prefix)
-  key: string;             // Partition/routing key (default: rootSagaId)
-  value: string;           // JSON payload
-  headers: Record<string, string>;  // Saga metadata headers
+  topic: string; // Event type (with optional prefix)
+  key: string; // Partition/routing key (default: rootSagaId)
+  value: string; // JSON payload
+  headers: Record<string, string>; // Saga metadata headers
 }
 
 interface InboundMessage {
@@ -54,7 +59,12 @@ interface TransportSubscribeOptions {
 ## Example Skeleton
 
 ```typescript
-import type { SagaTransport, OutboundMessage, InboundMessage, TransportSubscribeOptions } from '@fbsm/saga-core';
+import type {
+  SagaTransport,
+  OutboundMessage,
+  InboundMessage,
+  TransportSubscribeOptions,
+} from "@fbsm/saga-core";
 
 export class RedisStreamsTransport implements SagaTransport {
   constructor(private redisUrl: string) {}

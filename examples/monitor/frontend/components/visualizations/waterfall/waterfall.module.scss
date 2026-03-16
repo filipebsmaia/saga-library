@@ -1,4 +1,4 @@
-@use '../../../styles/mixins' as *;
+@use "../../../styles/mixins" as *;
 
 .container {
   @include card;
@@ -29,7 +29,9 @@
   color: var(--color-text-muted);
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  transition: color var(--transition-fast), background var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
 
   &:hover {
     color: var(--color-text-primary);
@@ -99,6 +101,10 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

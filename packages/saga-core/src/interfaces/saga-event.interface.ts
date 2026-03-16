@@ -1,4 +1,4 @@
-import type { EventHint } from './emit.type';
+import type { EventHint } from "./emit.type";
 
 export interface SagaEvent<TPayload = Record<string, unknown>> {
   eventId: string;

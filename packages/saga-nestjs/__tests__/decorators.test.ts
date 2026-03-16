@@ -1,23 +1,29 @@
-import 'reflect-metadata';
-import { describe, it, expect } from 'vitest';
-import { SagaParticipant } from '../src/decorators/saga-participant.decorator';
-import { SagaHandler } from '../src/decorators/saga-handler.decorator';
-import { SAGA_PARTICIPANT_METADATA, SAGA_HANDLER_METADATA } from '../src/constants';
+import "reflect-metadata";
+import { describe, it, expect } from "vitest";
+import { SagaParticipant } from "../src/decorators/saga-participant.decorator";
+import { SagaHandler } from "../src/decorators/saga-handler.decorator";
+import {
+  SAGA_PARTICIPANT_METADATA,
+  SAGA_HANDLER_METADATA,
+} from "../src/constants";
 
-describe('@SagaParticipant()', () => {
-  it('should set SAGA_PARTICIPANT_METADATA on the class', () => {
+describe("@SagaParticipant()", () => {
+  it("should set SAGA_PARTICIPANT_METADATA on the class", () => {
     @SagaParticipant()
     class TestParticipant {}
 
-    const metadata = Reflect.getMetadata(SAGA_PARTICIPANT_METADATA, TestParticipant);
+    const metadata = Reflect.getMetadata(
+      SAGA_PARTICIPANT_METADATA,
+      TestParticipant,
+    );
     expect(metadata).toBe(true);
   });
 });
 
-describe('@SagaHandler()', () => {
-  it('should map a single event type to the method', () => {
+describe("@SagaHandler()", () => {
+  it("should map a single event type to the method", () => {
     class TestParticipant {
-      @SagaHandler('order.created')
+      @SagaHandler("order.created")
       async process() {}
     }
 
@@ -27,12 +33,12 @@ describe('@SagaHandler()', () => {
     );
 
     expect(map).toBeInstanceOf(Map);
-    expect(map.get('order.created')).toBe('process');
+    expect(map.get("order.created")).toBe("process");
   });
 
-  it('should map multiple event types to the same method', () => {
+  it("should map multiple event types to the same method", () => {
     class TestParticipant {
-      @SagaHandler('inventory.failed', 'inventory.compensated')
+      @SagaHandler("inventory.failed", "inventory.compensated")
       async compensate() {}
     }
 
@@ -41,16 +47,16 @@ describe('@SagaHandler()', () => {
       TestParticipant,
     );
 
-    expect(map.get('inventory.failed')).toBe('compensate');
-    expect(map.get('inventory.compensated')).toBe('compensate');
+    expect(map.get("inventory.failed")).toBe("compensate");
+    expect(map.get("inventory.compensated")).toBe("compensate");
   });
 
-  it('should accumulate handlers from multiple methods on the same class', () => {
+  it("should accumulate handlers from multiple methods on the same class", () => {
     class TestParticipant {
-      @SagaHandler('order.created')
+      @SagaHandler("order.created")
       async process() {}
 
-      @SagaHandler('order.cancelled')
+      @SagaHandler("order.cancelled")
       async compensate() {}
     }
 
@@ -60,7 +66,7 @@ describe('@SagaHandler()', () => {
     );
 
     expect(map.size).toBe(2);
-    expect(map.get('order.created')).toBe('process');
-    expect(map.get('order.cancelled')).toBe('compensate');
+    expect(map.get("order.created")).toBe("process");
+    expect(map.get("order.cancelled")).toBe("compensate");
   });
 });

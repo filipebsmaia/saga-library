@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
-export type ProductStatus = 'PENDING' | 'PROVISIONED' | 'ACTIVE';
+export type ProductStatus = "PENDING" | "PROVISIONED" | "ACTIVE";
 
 export interface ProductRecord {
   productId: string;
@@ -22,23 +22,33 @@ export class ProductStore {
   create(
     productId: string,
     sagaId: string,
-    data: { recurringId: string; customerId: string; planId: string; msisdn: string },
+    data: {
+      recurringId: string;
+      customerId: string;
+      planId: string;
+      msisdn: string;
+    },
   ): ProductRecord {
     const now = new Date().toISOString();
     const record: ProductRecord = {
       productId,
       sagaId,
       ...data,
-      status: 'PENDING',
+      status: "PENDING",
       createdAt: now,
       updatedAt: now,
     };
     this.records.set(productId, record);
-    this.logger.log(`Product ${productId} created as PENDING (saga: ${sagaId})`);
+    this.logger.log(
+      `Product ${productId} created as PENDING (saga: ${sagaId})`,
+    );
     return record;
   }
 
-  updateStatus(productId: string, status: ProductStatus): ProductRecord | undefined {
+  updateStatus(
+    productId: string,
+    status: ProductStatus,
+  ): ProductRecord | undefined {
     const record = this.records.get(productId);
     if (record) {
       record.status = status;

@@ -1,12 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
 export type UpgradeStatus =
-  | 'REQUESTED'
-  | 'ELIGIBLE'
-  | 'APPROVED'
-  | 'MIGRATING'
-  | 'COMPLETED'
-  | 'ROLLED_BACK';
+  | "REQUESTED"
+  | "ELIGIBLE"
+  | "APPROVED"
+  | "MIGRATING"
+  | "COMPLETED"
+  | "ROLLED_BACK";
 
 export interface UpgradeRecord {
   upgradeId: string;
@@ -35,7 +35,7 @@ export class UpgradeStore {
       upgradeId,
       sagaId,
       ...data,
-      status: 'REQUESTED',
+      status: "REQUESTED",
       createdAt: now,
       updatedAt: now,
     };
@@ -44,7 +44,10 @@ export class UpgradeStore {
     return record;
   }
 
-  updateStatus(upgradeId: string, status: UpgradeStatus): UpgradeRecord | undefined {
+  updateStatus(
+    upgradeId: string,
+    status: UpgradeStatus,
+  ): UpgradeRecord | undefined {
     const record = this.records.get(upgradeId);
     if (record) {
       record.status = status;

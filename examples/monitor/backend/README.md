@@ -66,21 +66,21 @@ curl -X POST http://localhost:3000/recurrings
 
 ### REST (`/v1/sagas`)
 
-| Método | Path | Descrição |
-|--------|------|-----------|
-| GET | `/v1/sagas` | Lista sagas (filtros: status, sagaName, sagaRootId; cursor pagination) |
-| GET | `/v1/sagas/:sagaId` | Detalhe da saga |
-| GET | `/v1/sagas/:sagaId/events` | Timeline de eventos (cursor pagination) |
-| GET | `/v1/sagas/root/:rootId` | Árvore de sagas por root ID |
-| GET | `/v1/sagas/:sagaId/metrics` | Métricas da execução |
+| Método | Path                        | Descrição                                                              |
+| ------ | --------------------------- | ---------------------------------------------------------------------- |
+| GET    | `/v1/sagas`                 | Lista sagas (filtros: status, sagaName, sagaRootId; cursor pagination) |
+| GET    | `/v1/sagas/:sagaId`         | Detalhe da saga                                                        |
+| GET    | `/v1/sagas/:sagaId/events`  | Timeline de eventos (cursor pagination)                                |
+| GET    | `/v1/sagas/root/:rootId`    | Árvore de sagas por root ID                                            |
+| GET    | `/v1/sagas/:sagaId/metrics` | Métricas da execução                                                   |
 
 ### SSE (`/v1/stream/sagas`)
 
-| Path | Descrição |
-|------|-----------|
-| `/v1/stream/sagas` | Stream global de updates |
-| `/v1/stream/sagas/:sagaId` | Updates de uma saga específica |
-| `/v1/stream/sagas/root/:rootId` | Updates da árvore raiz |
+| Path                            | Descrição                      |
+| ------------------------------- | ------------------------------ |
+| `/v1/stream/sagas`              | Stream global de updates       |
+| `/v1/stream/sagas/:sagaId`      | Updates de uma saga específica |
+| `/v1/stream/sagas/root/:rootId` | Updates da árvore raiz         |
 
 ## Modelo de Dados
 
@@ -94,12 +94,12 @@ Campos principais: `saga_event_id` (PK), `saga_id`, `saga_step_name`, `saga_even
 
 ## Derivação de Status
 
-| `saga-event-hint` | Status resultante |
-|-------------------|------------------|
-| `step` | RUNNING |
-| `fork` | RUNNING |
-| `compensation` | COMPENSATING (sticky) |
-| `final` | COMPLETED |
+| `saga-event-hint` | Status resultante     |
+| ----------------- | --------------------- |
+| `step`            | RUNNING               |
+| `fork`            | RUNNING               |
+| `compensation`    | COMPENSATING (sticky) |
+| `final`           | COMPLETED             |
 
 COMPENSATING é "sticky" — uma vez compensando, permanece compensando até receber `final`.
 
@@ -115,15 +115,15 @@ COMPENSATING é "sticky" — uma vez compensando, permanece compensando até rec
 
 ## Redis Keys
 
-| Key | Tipo | Uso |
-|-----|------|-----|
-| `obs:saga:all` | Pub/Sub | Stream global SSE |
-| `obs:saga:id:{id}` | Pub/Sub | Stream por saga |
-| `obs:saga:root:{rootId}` | Pub/Sub | Stream por raiz |
-| `obs:dash:global:counters` | HASH | Contadores do dashboard |
-| `obs:recent:sagas` | ZSET | Sagas recentes |
-| `obs:recent:events` | ZSET | Eventos recentes |
-| `obs:recent:failed` | ZSET | Sagas compensando |
+| Key                        | Tipo    | Uso                     |
+| -------------------------- | ------- | ----------------------- |
+| `obs:saga:all`             | Pub/Sub | Stream global SSE       |
+| `obs:saga:id:{id}`         | Pub/Sub | Stream por saga         |
+| `obs:saga:root:{rootId}`   | Pub/Sub | Stream por raiz         |
+| `obs:dash:global:counters` | HASH    | Contadores do dashboard |
+| `obs:recent:sagas`         | ZSET    | Sagas recentes          |
+| `obs:recent:events`        | ZSET    | Eventos recentes        |
+| `obs:recent:failed`        | ZSET    | Sagas compensando       |
 
 ## Testes
 
@@ -133,6 +133,7 @@ pnpm test:watch  # Watch mode
 ```
 
 Testes unitários cobrem:
+
 - Derivação de status (todas as combinações hint × status)
 - Extração de headers Kafka (Buffer/string, campos opcionais, validação de hints)
 

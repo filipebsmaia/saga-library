@@ -32,8 +32,7 @@ export class GetSagaMetricsQuery {
     const totalDurationMs =
       state.status === SagaStatus.COMPLETED && state.endedAt ? state.endedAt.getTime() - startedAtMs : null;
 
-    const isStuck =
-      state.status !== SagaStatus.COMPLETED && lastUpdateAgoMs > STUCK_THRESHOLD_MS;
+    const isStuck = state.status !== SagaStatus.COMPLETED && lastUpdateAgoMs > STUCK_THRESHOLD_MS;
 
     return {
       sagaId: state.sagaId,

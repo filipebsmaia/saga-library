@@ -1,18 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
   SagaHandler,
   SagaPublisherProvider,
-} from '@fbsm/saga-nestjs';
-import type { IncomingEvent, Emit } from '@fbsm/saga-nestjs';
-import { randomDelay } from '../../delay';
-import { SimSwapStore } from '../../stores/sim-swap.store';
+} from "@fbsm/saga-nestjs";
+import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
+import { randomDelay } from "../../delay";
+import { SimSwapStore } from "../../stores/sim-swap.store";
 
 @Injectable()
 @SagaParticipant()
 export class SimSwapOrchestrationParticipant extends SagaParticipantBase {
-  readonly serviceId = 'sim-swap-orchestration';
+  readonly serviceId = "sim-swap-orchestration";
   private readonly logger = new Logger(SimSwapOrchestrationParticipant.name);
 
   constructor(
@@ -22,8 +22,11 @@ export class SimSwapOrchestrationParticipant extends SagaParticipantBase {
     super();
   }
 
-  @SagaHandler('sim-swap.requested', { fork: true })
-  async handleSimSwapRequested(event: IncomingEvent, emit: Emit): Promise<void> {
+  @SagaHandler("sim-swap.requested", { fork: true })
+  async handleSimSwapRequested(
+    event: IncomingEvent,
+    emit: Emit,
+  ): Promise<void> {
     const { swapId, msisdn, newIccid } = event.payload as {
       swapId: string;
       msisdn: string;
@@ -32,16 +35,18 @@ export class SimSwapOrchestrationParticipant extends SagaParticipantBase {
 
     await randomDelay();
 
-    this.logger.log(`SIM swap ${swapId} — forking portability validation sub-saga`);
+    this.logger.log(
+      `SIM swap ${swapId} — forking portability validation sub-saga`,
+    );
 
     await emit({
-      eventType: 'portability.validation.requested',
-      stepName: 'request-portability-validation',
+      eventType: "portability.validation.requested",
+      stepName: "request-portability-validation",
       payload: { swapId, msisdn, newIccid },
     });
   }
 
-  @SagaHandler('portability.validated')
+  @SagaHandler("portability.validated")
   async handlePortabilityValidated(event: IncomingEvent): Promise<void> {
     const { swapId, msisdn, newIccid, valid } = event.payload as {
       swapId: string;
@@ -53,14 +58,19 @@ export class SimSwapOrchestrationParticipant extends SagaParticipantBase {
     await randomDelay();
 
     if (valid) {
-      this.simSwapStore.updateStatus(swapId, 'COMPLETED');
+      this.simSwapStore.updateStatus(swapId, "COMPLETED");
       this.logger.log(`SIM swap ${swapId} completed — portability validated`);
 
       await this.sagaPublisher.emitToParent({
-        eventType: 'sim-swap.completed',
-        stepName: 'complete-sim-swap',
-        payload: { swapId, msisdn, newIccid, completedAt: new Date().toISOString() },
-        hint: 'final',
+        eventType: "sim-swap.completed",
+        stepName: "complete-sim-swap",
+        payload: {
+          swapId,
+          msisdn,
+          newIccid,
+          completedAt: new Date().toISOString(),
+        },
+        hint: "final",
       });
     }
   }

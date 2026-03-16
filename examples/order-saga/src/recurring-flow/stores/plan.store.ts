@@ -1,6 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
-export type PlanStatus = 'PENDING_ACTIVATION' | 'ACTIVE' | 'SUSPENDED' | 'CANCELLED';
+export type PlanStatus =
+  | "PENDING_ACTIVATION"
+  | "ACTIVE"
+  | "SUSPENDED"
+  | "CANCELLED";
 
 export interface PlanRecord {
   planId: string;
@@ -25,7 +29,7 @@ export class RFPlanStore {
     const record: PlanRecord = {
       planId,
       ...data,
-      status: 'ACTIVE',
+      status: "ACTIVE",
       hasPendingChanges: data.hasPendingChanges ?? false,
       createdAt: now,
       updatedAt: now,

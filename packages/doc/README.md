@@ -1,4 +1,4 @@
-# @fbsm/saga-* Documentation
+# @fbsm/saga-\* Documentation
 
 Central documentation hub for the saga choreography library.
 

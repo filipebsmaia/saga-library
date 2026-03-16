@@ -1,18 +1,21 @@
-import type { SagaTransport, InboundMessage } from '../transport/transport.interface';
-import type { IncomingEvent } from '../interfaces/incoming-event.interface';
-import type { Emit } from '../interfaces/emit.type';
-import type { EventHandler } from '../interfaces/event-handler.type';
-import type { SagaParticipant } from '../interfaces/saga-participant.interface';
-import type { RunnerOptions } from '../interfaces/runner-options.interface';
-import { SagaRetryableError } from '../errors/saga-retryable.error';
-import { SagaRegistry, type RouteEntry } from '../registry/saga-registry';
-import { SagaPublisher } from '../publisher/saga-publisher';
-import { SagaParser } from '../parser/saga-parser';
-import type { OtelContext } from '../otel/otel-context';
-import type { SagaLogger } from '../logger/saga-logger';
-import { ConsoleSagaLogger } from '../logger/saga-logger';
-import { SagaContext } from '../context/saga-context';
-import { v7 as uuidv7 } from 'uuid';
+import type {
+  SagaTransport,
+  InboundMessage,
+} from "../transport/transport.interface";
+import type { IncomingEvent } from "../interfaces/incoming-event.interface";
+import type { Emit } from "../interfaces/emit.type";
+import type { EventHandler } from "../interfaces/event-handler.type";
+import type { SagaParticipant } from "../interfaces/saga-participant.interface";
+import type { RunnerOptions } from "../interfaces/runner-options.interface";
+import { SagaRetryableError } from "../errors/saga-retryable.error";
+import { SagaRegistry, type RouteEntry } from "../registry/saga-registry";
+import { SagaPublisher } from "../publisher/saga-publisher";
+import { SagaParser } from "../parser/saga-parser";
+import type { OtelContext } from "../otel/otel-context";
+import type { SagaLogger } from "../logger/saga-logger";
+import { ConsoleSagaLogger } from "../logger/saga-logger";
+import { SagaContext } from "../context/saga-context";
+import { v7 as uuidv7 } from "uuid";
 
 export class SagaRunner {
   private routeMap!: Map<string, RouteEntry>;
@@ -30,24 +33,30 @@ export class SagaRunner {
   async start(): Promise<void> {
     this.routeMap = this.registry.buildRouteMap();
 
-    const prefix = this.options.topicPrefix ?? '';
-    const topics = Array.from(this.routeMap.keys()).map((et) => `${prefix}${et}`);
+    const prefix = this.options.topicPrefix ?? "";
+    const topics = Array.from(this.routeMap.keys()).map(
+      (et) => `${prefix}${et}`,
+    );
 
     await this.transport.connect();
 
     if (topics.length > 0) {
-      this.logger.info(`[SagaRunner] Subscribing to ${topics.length} topic(s): [${topics.join(', ')}]`);
+      this.logger.info(
+        `[SagaRunner] Subscribing to ${topics.length} topic(s): [${topics.join(", ")}]`,
+      );
       await this.transport.subscribe(
         topics,
         (message) => this.handleMessage(message),
         {
           fromBeginning: this.options.fromBeginning,
-          groupId: `${this.options.serviceName}-group`,
+          groupId: this.options.groupId,
         },
       );
-      this.logger.info('[SagaRunner] Consumer running');
+      this.logger.info("[SagaRunner] Consumer running");
     } else {
-      this.logger.warn('[SagaRunner] No handlers registered — nothing to subscribe');
+      this.logger.warn(
+        "[SagaRunner] No handlers registered — nothing to subscribe",
+      );
     }
   }
 
@@ -80,15 +89,20 @@ export class SagaRunner {
       sagaDescription: event.sagaDescription,
     };
 
-    const emit = this.publisher.forSaga(event.sagaId, {
-      parentSagaId: event.parentSagaId,
-      rootSagaId: event.rootSagaId,
-    }, event.eventId, event.key);
+    const emit = this.publisher.forSaga(
+      event.sagaId,
+      {
+        parentSagaId: event.parentSagaId,
+        rootSagaId: event.rootSagaId,
+      },
+      event.eventId,
+      event.key,
+    );
 
     // Wrap emit: if handler is final, auto-add hint
     const wrappedEmit: Emit = async (params) => {
       const finalParams = isFinalHandler
-        ? { ...params, hint: 'final' as const }
+        ? { ...params, hint: "final" as const }
         : params;
       return emit(finalParams);
     };
@@ -99,12 +113,17 @@ export class SagaRunner {
       ? async (params) => {
           const subSagaId = uuidv7();
 
-          const subEmit = this.publisher.forSaga(subSagaId, {
-            parentSagaId: event.sagaId,
-            rootSagaId: event.rootSagaId,
-          }, event.eventId, event.key);
+          const subEmit = this.publisher.forSaga(
+            subSagaId,
+            {
+              parentSagaId: event.sagaId,
+              rootSagaId: event.rootSagaId,
+            },
+            event.eventId,
+            event.key,
+          );
 
-          const forkMeta = typeof forkConfig === 'object' ? forkConfig : {};
+          const forkMeta = typeof forkConfig === "object" ? forkConfig : {};
           const forkCtx = {
             sagaId: subSagaId,
             rootSagaId: event.rootSagaId,
@@ -114,22 +133,26 @@ export class SagaRunner {
             sagaName: forkMeta.sagaName,
             sagaDescription: forkMeta.sagaDescription,
           };
-          await SagaContext.run(forkCtx, () => subEmit({ ...params, hint: 'fork' }));
+          await SagaContext.run(forkCtx, () =>
+            subEmit({ ...params, hint: "fork" }),
+          );
         }
       : wrappedEmit;
 
     const spanAttrs: Record<string, string> = {
-      'saga.id': event.sagaId,
-      'saga.event.type': event.eventType,
-      'saga.step.name': event.stepName,
-      'saga.event.id': event.eventId,
-      'saga.root.id': event.rootSagaId,
-      'saga.handler.service': route.participant.serviceId,
+      "saga.id": event.sagaId,
+      "saga.event.type": event.eventType,
+      "saga.step.name": event.stepName,
+      "saga.event.id": event.eventId,
+      "saga.root.id": event.rootSagaId,
+      "saga.handler.service": route.participant.serviceId,
     };
-    if (event.sagaName) spanAttrs['saga.name'] = event.sagaName;
-    if (event.sagaDescription) spanAttrs['saga.description'] = event.sagaDescription;
-    if (event.stepDescription) spanAttrs['saga.step.description'] = event.stepDescription;
-    if (event.parentSagaId) spanAttrs['saga.parent.id'] = event.parentSagaId;
+    if (event.sagaName) spanAttrs["saga.name"] = event.sagaName;
+    if (event.sagaDescription)
+      spanAttrs["saga.description"] = event.sagaDescription;
+    if (event.stepDescription)
+      spanAttrs["saga.step.description"] = event.stepDescription;
+    if (event.parentSagaId) spanAttrs["saga.parent.id"] = event.parentSagaId;
 
     const sagaCtxData = {
       sagaId: event.sagaId,
@@ -143,11 +166,21 @@ export class SagaRunner {
 
     const runHandler = () =>
       SagaContext.run(sagaCtxData, () =>
-        this.runWithRetry(route.handler, route.participant, incoming, finalEmit),
+        this.runWithRetry(
+          route.handler,
+          route.participant,
+          incoming,
+          finalEmit,
+        ),
       );
 
     if (this.otelCtx) {
-      await this.otelCtx.withExtractedSpan(`saga.handle ${event.eventType}`, spanAttrs, message.headers, runHandler);
+      await this.otelCtx.withExtractedSpan(
+        `saga.handle ${event.eventType}`,
+        spanAttrs,
+        message.headers,
+        runHandler,
+      );
     } else {
       await runHandler();
     }

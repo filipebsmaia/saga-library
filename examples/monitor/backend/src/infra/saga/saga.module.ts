@@ -151,7 +151,15 @@ import { SagaStreamController } from './controllers/saga-stream.controller';
         publishUpdates: PublishUpdatesCommand,
       ) =>
         new KafkaProjectorService(
-          config, logger, observers, parseBatch, dedupeEvents, lookupStates, deriveChanges, persistBatch, publishUpdates,
+          config,
+          logger,
+          observers,
+          parseBatch,
+          dedupeEvents,
+          lookupStates,
+          deriveChanges,
+          persistBatch,
+          publishUpdates,
         ),
       inject: [
         ConfigService,
@@ -174,14 +182,12 @@ import { SagaStreamController } from './controllers/saga-stream.controller';
     },
     {
       provide: GetDashboardStatsQuery,
-      useFactory: (dashboard: SagaDashboardService, cache: CacheService) =>
-        new GetDashboardStatsQuery(dashboard, cache),
+      useFactory: (dashboard: SagaDashboardService, cache: CacheService) => new GetDashboardStatsQuery(dashboard, cache),
       inject: [SagaDashboardService, CacheService],
     },
     {
       provide: GetAttentionItemsQuery,
-      useFactory: (repo: SagaStateRepository) =>
-        new GetAttentionItemsQuery(repo),
+      useFactory: (repo: SagaStateRepository) => new GetAttentionItemsQuery(repo),
       inject: [SagaStateRepository],
     },
     {

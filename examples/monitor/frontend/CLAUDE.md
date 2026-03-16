@@ -30,6 +30,7 @@ Server Components (`app/page.tsx`, `app/sagas/[sagaId]/page.tsx`) call the backe
 ### Real-time strategy
 
 SSE is implemented with native `EventSource` (no library). The lifecycle:
+
 1. `EventSource` connects to `/api/v1/stream/sagas[/...]`
 2. On message: debounce 300ms, then `queryClient.invalidateQueries()`
 3. On error: exponential backoff reconnect (1s → 30s cap)
@@ -47,11 +48,11 @@ SSE is implemented with native `EventSource` (no library). The lifecycle:
 
 ### Routes
 
-| Route | Description |
-|-------|-------------|
-| `/` | Metrics cards + filterable saga table |
+| Route             | Description                                                          |
+| ----------------- | -------------------------------------------------------------------- |
+| `/`               | Metrics cards + filterable saga table                                |
 | `/sagas/[sagaId]` | Header, timeline, causal chain, metrics, tree, waterfall, flamegraph |
-| `/roots/[rootId]` | Hierarchical saga tree + table |
+| `/roots/[rootId]` | Hierarchical saga tree + table                                       |
 
 ### Visualizations
 
@@ -66,6 +67,7 @@ Both are wrapped in `React.lazy` — they don't load until the user expands the 
 ### Component conventions
 
 Each significant UI section follows this pattern:
+
 - `Component` — main rendering
 - `ComponentLoading` — skeleton state
 - `ComponentEmpty` — empty/no-data state (where applicable)

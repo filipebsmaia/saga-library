@@ -3,8 +3,8 @@ import type {
   EventHandler,
   IncomingEvent,
   Emit,
-} from '@fbsm/saga-core';
-import { SagaRetryableError } from '@fbsm/saga-core';
+} from "@fbsm/saga-core";
+import { SagaRetryableError } from "@fbsm/saga-core";
 
 export abstract class SagaParticipantBase implements SagaParticipant {
   abstract readonly serviceId: string;

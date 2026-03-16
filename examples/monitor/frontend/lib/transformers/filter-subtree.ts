@@ -1,4 +1,4 @@
-import { SagaStateDto } from '@/lib/types/saga';
+import { SagaStateDto } from "@/lib/types/saga";
 
 /**
  * Filters a flat list of sagas to only include the given sagaId
@@ -20,7 +20,11 @@ export function filterSubtree(
   while (added) {
     added = false;
     for (const s of sagas) {
-      if (s.sagaParentId && included.has(s.sagaParentId) && !included.has(s.sagaId)) {
+      if (
+        s.sagaParentId &&
+        included.has(s.sagaParentId) &&
+        !included.has(s.sagaId)
+      ) {
         included.add(s.sagaId);
         added = true;
       }
@@ -29,6 +33,8 @@ export function filterSubtree(
 
   // Target saga first, then descendants
   const result = sagas.filter((s) => included.has(s.sagaId));
-  result.sort((a, b) => (a.sagaId === sagaId ? -1 : b.sagaId === sagaId ? 1 : 0));
+  result.sort((a, b) =>
+    a.sagaId === sagaId ? -1 : b.sagaId === sagaId ? 1 : 0,
+  );
   return result;
 }

@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { SagaStateDto } from '@/lib/types/saga';
-import { StatusBadge } from '@/components/shared/status-badge/status-badge';
-import { CopyButton } from '@/components/shared/copy-button/copy-button';
-import { HintBadge } from '@/components/shared/hint-badge/hint-badge';
-import { TimestampCell } from '@/components/shared/timestamp-cell/timestamp-cell';
-import { formatDuration } from '@/lib/utils/format';
-import { Skeleton } from '@/components/shared/skeleton/skeleton';
-import { useSsePause } from '@/lib/sse/sse-provider';
-import Link from 'next/link';
-import styles from './header-panel.module.scss';
+import { SagaStateDto } from "@/lib/types/saga";
+import { StatusBadge } from "@/components/shared/status-badge/status-badge";
+import { CopyButton } from "@/components/shared/copy-button/copy-button";
+import { HintBadge } from "@/components/shared/hint-badge/hint-badge";
+import { TimestampCell } from "@/components/shared/timestamp-cell/timestamp-cell";
+import { formatDuration } from "@/lib/utils/format";
+import { Skeleton } from "@/components/shared/skeleton/skeleton";
+import { useSsePause } from "@/lib/sse/sse-provider";
+import Link from "next/link";
+import styles from "./header-panel.module.scss";
 
 interface HeaderPanelProps {
   saga: SagaStateDto;
@@ -27,7 +27,7 @@ export function HeaderPanel({ saga }: HeaderPanelProps) {
       <div className={styles.top}>
         <div className={styles.titleRow}>
           <StatusBadge status={saga.status} />
-          <h1 className={styles.name}>{saga.sagaName ?? 'Unnamed Saga'}</h1>
+          <h1 className={styles.name}>{saga.sagaName ?? "Unnamed Saga"}</h1>
           {saga.sagaDescription && (
             <span className={styles.description}>{saga.sagaDescription}</span>
           )}
@@ -37,15 +37,21 @@ export function HeaderPanel({ saga }: HeaderPanelProps) {
             className={styles.actionBtn}
             onClick={() => setPaused(!paused)}
           >
-            {paused ? 'Resume Stream' : 'Pause Stream'}
+            {paused ? "Resume Stream" : "Pause Stream"}
           </button>
           {saga.sagaRootId !== saga.sagaId && (
-            <Link href={`/roots/${saga.sagaRootId}`} className={styles.actionBtn}>
+            <Link
+              href={`/roots/${saga.sagaRootId}`}
+              className={styles.actionBtn}
+            >
               View Root Tree
             </Link>
           )}
           {saga.sagaRootId === saga.sagaId && (
-            <Link href={`/roots/${saga.sagaRootId}`} className={styles.actionBtn}>
+            <Link
+              href={`/roots/${saga.sagaRootId}`}
+              className={styles.actionBtn}
+            >
               Tree View
             </Link>
           )}
@@ -65,7 +71,10 @@ export function HeaderPanel({ saga }: HeaderPanelProps) {
           <div className={styles.field}>
             <span className={styles.label}>Parent ID</span>
             <Link href={`/sagas/${saga.sagaParentId}`} className={styles.link}>
-              <CopyButton text={saga.sagaParentId} displayText={saga.sagaParentId} />
+              <CopyButton
+                text={saga.sagaParentId}
+                displayText={saga.sagaParentId}
+              />
             </Link>
           </div>
         )}

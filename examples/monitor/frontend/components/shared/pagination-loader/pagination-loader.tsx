@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-import styles from './pagination-loader.module.scss';
+import { useEffect, useRef } from "react";
+import styles from "./pagination-loader.module.scss";
 
 interface PaginationLoaderProps {
   onLoadMore: () => void;
@@ -9,7 +9,11 @@ interface PaginationLoaderProps {
   isLoading: boolean;
 }
 
-export function PaginationLoader({ onLoadMore, hasMore, isLoading }: PaginationLoaderProps) {
+export function PaginationLoader({
+  onLoadMore,
+  hasMore,
+  isLoading,
+}: PaginationLoaderProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -19,12 +23,14 @@ export function PaginationLoader({ onLoadMore, hasMore, isLoading }: PaginationL
       ([entry]) => {
         if (entry.isIntersecting) onLoadMore();
       },
-      { rootMargin: '200px' },
+      { rootMargin: "200px" },
     );
 
     const el = ref.current;
     if (el) observer.observe(el);
-    return () => { if (el) observer.unobserve(el); };
+    return () => {
+      if (el) observer.unobserve(el);
+    };
   }, [hasMore, isLoading, onLoadMore]);
 
   if (!hasMore) return null;

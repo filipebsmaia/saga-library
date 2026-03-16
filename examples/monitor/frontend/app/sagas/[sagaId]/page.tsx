@@ -1,4 +1,4 @@
-import { LiveDetail } from '@/components/detail/live-detail/live-detail';
+import { LiveDetail } from "@/components/detail/live-detail/live-detail";
 
 interface Props {
   params: { sagaId: string };

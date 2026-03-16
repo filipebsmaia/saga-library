@@ -1,4 +1,4 @@
-@use '../../../styles/mixins' as *;
+@use "../../../styles/mixins" as *;
 
 .panel {
   @include card;
@@ -45,7 +45,9 @@
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
   text-decoration: none;
-  transition: color var(--transition-fast), background var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
 
   &:hover {
     color: var(--color-text-primary);

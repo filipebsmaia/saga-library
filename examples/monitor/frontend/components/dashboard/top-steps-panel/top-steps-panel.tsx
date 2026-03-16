@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useTopSteps } from '@/lib/hooks/use-top-steps';
-import { Skeleton } from '@/components/shared/skeleton/skeleton';
-import { formatDuration } from '@/lib/utils/format';
-import styles from './top-steps-panel.module.scss';
+import { useTopSteps } from "@/lib/hooks/use-top-steps";
+import { Skeleton } from "@/components/shared/skeleton/skeleton";
+import { formatDuration } from "@/lib/utils/format";
+import styles from "./top-steps-panel.module.scss";
 
 interface TopStepsPanelProps {
   onStepClick?: (stepName: string) => void;

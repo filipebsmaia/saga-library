@@ -1,4 +1,4 @@
-@use '../../../styles/mixins' as *;
+@use "../../../styles/mixins" as *;
 
 .refreshBanner {
   display: flex;
@@ -14,7 +14,9 @@
   font-size: var(--text-sm);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
 
   &:hover {
     background: rgba(99, 102, 241, 0.25);
