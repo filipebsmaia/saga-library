@@ -27,3 +27,18 @@ export interface TransportSubscribeOptions {
   fromBeginning?: boolean;
   groupId?: string;
 }
+
+export interface TransportHealthResult {
+  status: "up" | "down";
+  details?: Record<string, unknown>;
+}
+
+export interface HealthCheckable {
+  healthCheck(): Promise<TransportHealthResult>;
+}
+
+export function isHealthCheckable(
+  transport: SagaTransport,
+): transport is SagaTransport & HealthCheckable {
+  return typeof (transport as any).healthCheck === "function";
+}

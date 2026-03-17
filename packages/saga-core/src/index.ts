@@ -35,7 +35,10 @@ export type {
   OutboundMessage,
   InboundMessage,
   TransportSubscribeOptions,
+  TransportHealthResult,
+  HealthCheckable,
 } from "./transport/transport.interface";
+export { isHealthCheckable } from "./transport/transport.interface";
 
 // Domain interfaces
 export type { SagaEvent } from "./interfaces/saga-event.interface";

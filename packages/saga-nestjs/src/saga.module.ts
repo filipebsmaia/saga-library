@@ -14,6 +14,7 @@ import type {
 } from "./saga-module-options.interface";
 import { SagaRunnerProvider } from "./providers/saga-runner.provider";
 import { SagaPublisherProvider } from "./providers/saga-publisher.provider";
+import { SagaHealthIndicator } from "./providers/saga-health-indicator";
 
 @Module({})
 export class SagaModule {
@@ -49,8 +50,14 @@ export class SagaModule {
         { provide: SagaRunner, useValue: runner },
         SagaRunnerProvider,
         SagaPublisherProvider,
+        SagaHealthIndicator,
       ],
-      exports: [SagaPublisherProvider, SagaPublisher, SAGA_OPTIONS_TOKEN],
+      exports: [
+        SagaPublisherProvider,
+        SagaPublisher,
+        SagaHealthIndicator,
+        SAGA_OPTIONS_TOKEN,
+      ],
     };
   }
 
@@ -113,8 +120,18 @@ export class SagaModule {
       module: SagaModule,
       imports: [...(options.imports ?? []), DiscoveryModule],
       global: true,
-      providers: [...asyncProviders, SagaRunnerProvider, SagaPublisherProvider],
-      exports: [SagaPublisherProvider, SagaPublisher, SAGA_OPTIONS_TOKEN],
+      providers: [
+        ...asyncProviders,
+        SagaRunnerProvider,
+        SagaPublisherProvider,
+        SagaHealthIndicator,
+      ],
+      exports: [
+        SagaPublisherProvider,
+        SagaPublisher,
+        SagaHealthIndicator,
+        SAGA_OPTIONS_TOKEN,
+      ],
     };
   }
 }

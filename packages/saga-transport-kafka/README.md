@@ -103,6 +103,19 @@ const transport = new KafkaTransport({
 | `autoCreateTopics`               | `boolean`                          | `false`                                  | Auto-create missing topics via admin client                       |
 | `logger`                         | `SagaLogger`                       | `ConsoleSagaLogger`                      | Custom logger                                                     |
 
+## Health Check
+
+`KafkaTransport` implements the `HealthCheckable` interface. Call `healthCheck()` to check the consumer group state via `describeGroup()`.
+
+```typescript
+const health = await transport.healthCheck();
+// { status: 'up', details: { consumerGroupState: 'Stable', groupId: '...', memberCount: 1 } }
+```
+
+Healthy states: `Stable`, `CompletingRebalance`, `PreparingRebalance`. Returns `down` for `Dead`, `Empty`, `Unknown`, or when the consumer is not initialized.
+
+In NestJS, use `SagaHealthIndicator` from `@fbsm/saga-nestjs` instead of calling this directly.
+
 ## Features
 
 ### eachBatch with Key-Based Grouping

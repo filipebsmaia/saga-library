@@ -12,6 +12,8 @@ import type {
   InboundMessage,
   OutboundMessage,
   TransportSubscribeOptions,
+  TransportHealthResult,
+  HealthCheckable,
   SagaLogger,
 } from "@fbsm/saga-core";
 import { ConsoleSagaLogger } from "@fbsm/saga-core";
@@ -30,7 +32,12 @@ export function getKafkaHeartbeat(): (() => Promise<void>) | undefined {
   return kafkaHeartbeatStore.getStore();
 }
 
-export class KafkaTransport implements SagaTransport {
+export class KafkaTransport implements SagaTransport, HealthCheckable {
+  private static readonly HEALTHY_STATES = new Set([
+    "Stable",
+    "CompletingRebalance",
+    "PreparingRebalance",
+  ]);
   private kafka: Kafka;
   private producer: Producer;
   private consumer: Consumer | null = null;
@@ -54,6 +61,37 @@ export class KafkaTransport implements SagaTransport {
       socketFactory: options.socketFactory,
     });
     this.producer = this.kafka.producer();
+  }
+
+  async healthCheck(): Promise<TransportHealthResult> {
+    if (!this.consumer) {
+      return {
+        status: "down",
+        details: { reason: "Consumer not initialized" },
+      };
+    }
+
+    try {
+      const group = await this.consumer.describeGroup();
+      const isHealthy = KafkaTransport.HEALTHY_STATES.has(group.state);
+
+      return {
+        status: isHealthy ? "up" : "down",
+        details: {
+          consumerGroupState: group.state,
+          groupId: group.groupId,
+          memberCount: group.members.length,
+        },
+      };
+    } catch (error) {
+      return {
+        status: "down",
+        details: {
+          reason: "Failed to describe consumer group",
+          error: (error as Error).message,
+        },
+      };
+    }
   }
 
   async connect(): Promise<void> {

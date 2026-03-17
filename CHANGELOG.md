@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-beta.3
+
+### Features
+
+- **`SagaHealthIndicator`** — New injectable NestJS health check service that validates Kafka consumer connectivity via `consumer.describeGroup()`. Healthy states: `Stable`, `CompletingRebalance`, `PreparingRebalance`. Works with any health check framework (no `@nestjs/terminus` dependency).
+- **`HealthCheckable` interface** — New optional interface for transports that support health checks. `KafkaTransport` implements it. Use `isHealthCheckable()` type guard for runtime detection.
+- **`SagaRunner.healthCheck()`** — Delegates to the transport's health check if available.
+
 ## 0.1.0-beta.2
 
 ### Breaking Changes

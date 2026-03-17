@@ -110,6 +110,48 @@ Injectable service to initiate sagas or emit events. See [Core Functions](../doc
 | `emitToParent(params \| fn)`                | Emit to the parent saga                          |
 | `forSaga(sagaId, parentCtx?, causationId?)` | Get a bound `Emit` function for manual use       |
 
+### `SagaHealthIndicator`
+
+Injectable health check service. Returns `TransportHealthResult` (`{ status: 'up' | 'down', details? }`). Does **not** depend on `@nestjs/terminus` — works with any health check framework or custom controller.
+
+```typescript
+import { Controller, Get } from "@nestjs/common";
+import { SagaHealthIndicator } from "@fbsm/saga-nestjs";
+
+@Controller("health")
+export class HealthController {
+  constructor(private readonly sagaHealth: SagaHealthIndicator) {}
+
+  @Get()
+  async check() {
+    return this.sagaHealth.check();
+  }
+}
+```
+
+**With `@nestjs/terminus`:**
+
+```typescript
+import { Injectable } from "@nestjs/common";
+import { HealthIndicator, HealthCheckError } from "@nestjs/terminus";
+import { SagaHealthIndicator } from "@fbsm/saga-nestjs";
+
+@Injectable()
+export class SagaTerminusIndicator extends HealthIndicator {
+  constructor(private readonly sagaHealth: SagaHealthIndicator) {
+    super();
+  }
+
+  async isHealthy(key: string) {
+    const result = await this.sagaHealth.check();
+    if (result.status === "down") {
+      throw new HealthCheckError(key, result.details);
+    }
+    return this.getStatus(key, true, result.details);
+  }
+}
+```
+
 ### Types
 
 ```typescript

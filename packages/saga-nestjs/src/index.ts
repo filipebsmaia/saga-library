@@ -1,8 +1,9 @@
 // Module
 export { SagaModule } from "./saga.module";
 
-// Provider
+// Providers
 export { SagaPublisherProvider } from "./providers/saga-publisher.provider";
+export { SagaHealthIndicator } from "./providers/saga-health-indicator";
 
 // Decorators
 export { SagaHandler } from "./decorators/saga-handler.decorator";
@@ -39,4 +40,7 @@ export type {
   ParentSagaContext,
   HandlerConfig,
   SagaTransport,
+  TransportHealthResult,
+  HealthCheckable,
 } from "@fbsm/saga-core";
+export { isHealthCheckable } from "@fbsm/saga-core";

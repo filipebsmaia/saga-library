@@ -99,6 +99,10 @@ const runner = new SagaRunner(
 
 await runner.start(); // Subscribe and begin consuming
 await runner.stop(); // Disconnect
+
+// Health check (delegates to transport if it implements HealthCheckable)
+const health = await runner.healthCheck();
+// { status: 'up' | 'down', details?: { consumerGroupState, groupId, memberCount } }
 ```
 
 **`RunnerOptions`**:
@@ -208,6 +212,27 @@ interface SagaTransport {
   ): Promise<void>;
 }
 ```
+
+## Health Checks
+
+Transports can optionally implement the `HealthCheckable` interface to support health checks.
+
+```typescript
+import { isHealthCheckable } from "@fbsm/saga-core";
+import type { HealthCheckable, TransportHealthResult } from "@fbsm/saga-core";
+
+// Check if a transport supports health checks
+if (isHealthCheckable(transport)) {
+  const result: TransportHealthResult = await transport.healthCheck();
+  // result.status: 'up' | 'down'
+  // result.details: transport-specific details
+}
+
+// Or use SagaRunner.healthCheck() which delegates automatically
+const health = await runner.healthCheck();
+```
+
+`KafkaTransport` from `@fbsm/saga-transport-kafka` implements `HealthCheckable` using `consumer.describeGroup()`. Healthy states: `Stable`, `CompletingRebalance`, `PreparingRebalance`.
 
 ## SagaLogger
 

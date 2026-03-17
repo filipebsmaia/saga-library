@@ -1,7 +1,9 @@
 import type {
   SagaTransport,
   InboundMessage,
+  TransportHealthResult,
 } from "../transport/transport.interface";
+import { isHealthCheckable } from "../transport/transport.interface";
 import type { IncomingEvent } from "../interfaces/incoming-event.interface";
 import type { Emit } from "../interfaces/emit.type";
 import type { EventHandler } from "../interfaces/event-handler.type";
@@ -62,6 +64,16 @@ export class SagaRunner {
 
   async stop(): Promise<void> {
     await this.transport.disconnect();
+  }
+
+  async healthCheck(): Promise<TransportHealthResult> {
+    if (isHealthCheckable(this.transport)) {
+      return this.transport.healthCheck();
+    }
+    return {
+      status: "up",
+      details: { reason: "Transport does not support health checks" },
+    };
   }
 
   private async handleMessage(message: InboundMessage): Promise<void> {
