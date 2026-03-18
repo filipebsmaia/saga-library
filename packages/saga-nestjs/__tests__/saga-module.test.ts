@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { SagaModule } from "../src/saga.module";
 import { SagaPublisherProvider } from "../src/providers/saga-publisher.provider";
 import { SAGA_OPTIONS_TOKEN } from "../src/constants";
+import { SagaRunner } from "@fbsm/saga-core";
 import type { SagaTransport } from "@fbsm/saga-core";
 
 function createMockTransport(): SagaTransport {
@@ -99,6 +100,84 @@ describe("SagaModule", () => {
 
       expect(optionsProvider).toBeDefined();
       expect(optionsProvider.inject).toContain(CONFIG_TOKEN);
+    });
+  });
+
+  describe("runnerFactory", () => {
+    it("forRoot should use default SagaRunner when no runnerFactory is provided", () => {
+      const transport = createMockTransport();
+      const result = SagaModule.forRoot({
+        groupId: "test-group",
+        transport,
+      });
+
+      const runnerProvider = (result.providers as any[]).find(
+        (p: any) => p.provide === SagaRunner,
+      );
+
+      expect(runnerProvider).toBeDefined();
+      expect(runnerProvider.useValue).toBeInstanceOf(SagaRunner);
+    });
+
+    it("forRoot should use runnerFactory when provided", () => {
+      const transport = createMockTransport();
+      const customRunner = { custom: true } as any;
+      const runnerFactory = vi.fn().mockReturnValue(customRunner);
+
+      const result = SagaModule.forRoot({
+        groupId: "test-group",
+        transport,
+        runnerFactory,
+      });
+
+      const runnerProvider = (result.providers as any[]).find(
+        (p: any) => p.provide === SagaRunner,
+      );
+
+      expect(runnerFactory).toHaveBeenCalledOnce();
+      expect(runnerProvider.useValue).toBe(customRunner);
+    });
+
+    it("forRoot runnerFactory should receive correct arguments", () => {
+      const transport = createMockTransport();
+      const runnerFactory = vi.fn().mockReturnValue({} as any);
+
+      SagaModule.forRoot({
+        groupId: "test-group",
+        transport,
+        runnerFactory,
+      });
+
+      const [registry, factoryTransport, publisher, parser, options, otelCtx] =
+        runnerFactory.mock.calls[0];
+
+      expect(registry).toBeDefined();
+      expect(factoryTransport).toBe(transport);
+      expect(publisher).toBeDefined();
+      expect(parser).toBeDefined();
+      expect(options.groupId).toBe("test-group");
+      expect(otelCtx).toBeDefined();
+    });
+
+    it("forRootAsync should use runnerFactory in the SagaRunner provider factory", () => {
+      const transport = createMockTransport();
+      const customRunner = { custom: true } as any;
+      const runnerFactory = vi.fn().mockReturnValue(customRunner);
+
+      const result = SagaModule.forRootAsync({
+        useFactory: () => ({
+          groupId: "test-group",
+          transport,
+          runnerFactory,
+        }),
+      });
+
+      const runnerProvider = (result.providers as any[]).find(
+        (p: any) => p.provide === SagaRunner,
+      );
+
+      expect(runnerProvider).toBeDefined();
+      expect(runnerProvider.useFactory).toBeTypeOf("function");
     });
   });
 });

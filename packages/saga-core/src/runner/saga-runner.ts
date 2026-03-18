@@ -81,10 +81,14 @@ export class SagaRunner {
 
   private async handleMessage(message: InboundMessage): Promise<void> {
     const event = this.parser.parse<Record<string, unknown>>(message);
-    if (!event) return;
+    if (!event) {
+      return;
+    }
 
     const route = this.routeMap.get(event.topic);
-    if (!route) return;
+    if (!route) {
+      return;
+    }
 
     const isFinalHandler = route.options?.final === true;
 

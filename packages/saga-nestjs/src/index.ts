@@ -20,6 +20,7 @@ export { SAGA_OPTIONS_TOKEN, SAGA_TRANSPORT_TOKEN } from "./constants";
 export type {
   SagaModuleOptions,
   SagaModuleAsyncOptions,
+  SagaRunnerFactory,
 } from "./saga-module-options.interface";
 
 // Re-exports from core for consumer convenience

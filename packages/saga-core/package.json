@@ -6,7 +6,7 @@
   "author": "fbsm",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fbsm/saga-library",
+    "url": "https://github.com/filipebsmaia/saga-library",
     "directory": "packages/saga-core"
   },
   "keywords": [

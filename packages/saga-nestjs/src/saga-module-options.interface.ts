@@ -1,4 +1,23 @@
-import type { SagaTransport, RunnerOptions, SagaLogger } from "@fbsm/saga-core";
+import type {
+  SagaTransport,
+  RunnerOptions,
+  SagaLogger,
+  SagaRunner,
+  SagaRegistry,
+  SagaPublisher,
+  SagaParser,
+  OtelContext,
+} from "@fbsm/saga-core";
+
+export type SagaRunnerFactory = (
+  registry: SagaRegistry,
+  transport: SagaTransport,
+  publisher: SagaPublisher,
+  parser: SagaParser,
+  options: RunnerOptions,
+  otelCtx?: OtelContext,
+  logger?: SagaLogger,
+) => SagaRunner;
 
 export interface SagaModuleOptions extends RunnerOptions {
   transport: SagaTransport;
@@ -7,6 +26,7 @@ export interface SagaModuleOptions extends RunnerOptions {
     exporterUrl?: string;
   };
   logger?: SagaLogger;
+  runnerFactory?: SagaRunnerFactory;
 }
 
 export interface SagaModuleAsyncOptions {

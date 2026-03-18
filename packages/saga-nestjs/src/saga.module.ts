@@ -27,15 +27,25 @@ export class SagaModule {
       otelCtx,
       options.topicPrefix,
     );
-    const runner = new SagaRunner(
-      registry,
-      options.transport,
-      publisher,
-      parser,
-      options,
-      otelCtx,
-      options.logger,
-    );
+    const runner = options.runnerFactory
+      ? options.runnerFactory(
+          registry,
+          options.transport,
+          publisher,
+          parser,
+          options,
+          otelCtx,
+          options.logger,
+        )
+      : new SagaRunner(
+          registry,
+          options.transport,
+          publisher,
+          parser,
+          options,
+          otelCtx,
+          options.logger,
+        );
 
     return {
       module: SagaModule,
@@ -102,6 +112,17 @@ export class SagaModule {
           opts: SagaModuleOptions,
         ) => {
           const otelCtx = createOtelContext(opts.otel?.enabled ?? false);
+          if (opts.runnerFactory) {
+            return opts.runnerFactory(
+              registry,
+              opts.transport,
+              publisher,
+              parser,
+              opts,
+              otelCtx,
+              opts.logger,
+            );
+          }
           return new SagaRunner(
             registry,
             opts.transport,
