@@ -49,7 +49,7 @@ export class RFMobileProductLifecycleParticipant extends SagaParticipantBase {
     );
 
     await emit({
-      eventType: "rf.product.updated.pending",
+      topic: "rf.product.updated.pending",
       stepName: "create-mobile-product",
       stepDescription:
         "mobile-product-lifecycle cria produto móvel como PENDING",
@@ -73,7 +73,7 @@ export class RFMobileProductLifecycleParticipant extends SagaParticipantBase {
     this.logger.log(`Product ${productId} ACTIVE (provision: ${provisionId})`);
 
     await emit({
-      eventType: "rf.product.activated",
+      topic: "rf.product.activated",
       stepName: "activate-mobile-product",
       stepDescription: "mobile-product-lifecycle ativa produto móvel",
       payload: { productId, provisionId },

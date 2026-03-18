@@ -38,7 +38,7 @@ export class TelecomController {
     const { sagaId } = await this.sagaPublisher.start(
       async () => {
         await this.sagaPublisher.emit({
-          eventType: "recurring.triggered",
+          topic: "recurring.triggered",
           stepName: "Trigger Recurring cycle",
           stepDescription: "Trigger recurring billing cycle",
           payload: {
@@ -96,7 +96,7 @@ export class TelecomController {
     const { sagaId } = await this.sagaPublisher.start(
       async () => {
         await this.sagaPublisher.emit({
-          eventType: "sim-swap.requested",
+          topic: "sim-swap.requested",
           stepName: "Request Sim Swap",
           stepDescription: "Request SIM card swap with portability validation",
           payload: { swapId, msisdn, newIccid },
@@ -130,7 +130,7 @@ export class TelecomController {
     const { sagaId } = await this.sagaPublisher.start(
       async () => {
         await this.sagaPublisher.emit({
-          eventType: "bulk-activation.requested",
+          topic: "bulk-activation.requested",
           stepName: "Request Bulk Activation",
           stepDescription: "Request bulk line activation batch",
           payload: { bulkId, lines },
@@ -168,7 +168,7 @@ export class TelecomController {
     const { sagaId } = await this.sagaPublisher.start(
       async () => {
         await this.sagaPublisher.emit({
-          eventType: "upgrade.requested",
+          topic: "upgrade.requested",
           stepName: "Request Plan Upgrade",
           stepDescription: "Customer requested a plan upgrade",
           payload: {
@@ -219,7 +219,7 @@ export class TelecomController {
     const { sagaId } = await this.sagaPublisher.start(
       async () => {
         await this.sagaPublisher.emit({
-          eventType: "device-provisioning.requested",
+          topic: "device-provisioning.requested",
           stepName: "Request Device Provisioning",
           stepDescription:
             "Start long-running device provisioning with manual heartbeat",

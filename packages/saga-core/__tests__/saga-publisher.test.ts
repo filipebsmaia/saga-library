@@ -68,7 +68,7 @@ describe("SagaPublisher", () => {
     it("should return an Emit that publishes with rootSagaId = sagaId", async () => {
       const emit = publisher.forSaga("saga-123");
       await emit({
-        eventType: "order.created",
+        topic: "order.created",
         stepName: "order",
         payload: { orderId: "456" },
       });
@@ -82,10 +82,10 @@ describe("SagaPublisher", () => {
       expect(msg.headers["saga-root-id"]).toBe("saga-123");
       expect(msg.headers["saga-parent-id"]).toBeUndefined();
       expect(msg.headers["saga-schema-version"]).toBe("1");
+      expect(msg.headers["saga-occurred-at"]).toBeDefined();
 
       const body = JSON.parse(msg.value);
-      expect(body.eventType).toBe("order.created");
-      expect(body.payload).toEqual({ orderId: "456" });
+      expect(body).toEqual({ orderId: "456" });
     });
   });
 
@@ -96,7 +96,7 @@ describe("SagaPublisher", () => {
         rootSagaId: "root-123",
       });
       await emit({
-        eventType: "payment.processed",
+        topic: "payment.processed",
         stepName: "payment",
         payload: { amount: 100 },
       });
@@ -112,7 +112,7 @@ describe("SagaPublisher", () => {
     it("should call otelCtx.injectBaggage and enrichSpan", async () => {
       const emit = publisher.forSaga("saga-123");
       await emit({
-        eventType: "order.created",
+        topic: "order.created",
         stepName: "order",
         payload: { orderId: "456" },
       });
@@ -125,7 +125,7 @@ describe("SagaPublisher", () => {
       expect(otel.enrichSpan).toHaveBeenCalledWith(
         expect.objectContaining({
           "saga.id": "saga-123",
-          "saga.event.type": "order.created",
+          "saga.topic": "order.created",
           "saga.step.name": "order",
           "saga.root.id": "saga-123",
         }),
@@ -135,7 +135,7 @@ describe("SagaPublisher", () => {
     it("should call transport.publish with OutboundMessage", async () => {
       const emit = publisher.forSaga("saga-123");
       await emit({
-        eventType: "order.created",
+        topic: "order.created",
         stepName: "order",
         payload: { orderId: "456" },
       });
@@ -155,7 +155,7 @@ describe("SagaPublisher", () => {
       const noopPublisher = new SagaPublisher(transport, new NoopOtelContext());
       const emit = noopPublisher.forSaga("saga-123");
       await emit({
-        eventType: "order.created",
+        topic: "order.created",
         stepName: "order",
         payload: { orderId: "456" },
       });

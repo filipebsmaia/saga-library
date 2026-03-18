@@ -49,7 +49,7 @@ export class RFPlanManagementParticipant extends SagaParticipantBase {
     );
 
     await emit({
-      eventType: "rf.plan.order.requested",
+      topic: "rf.plan.order.requested",
       stepName: "request-plan-order",
       stepDescription: `plan-management solicita ordem ${orderType}`,
       payload: {
@@ -79,7 +79,7 @@ export class RFPlanManagementParticipant extends SagaParticipantBase {
     this.planStore.updateStatus(planId, "SUSPENDED");
 
     await emit({
-      eventType: "rf.plan.suspended",
+      topic: "rf.plan.suspended",
       stepName: "suspend-plan",
       stepDescription: "plan-management suspende plano por inadimplência",
       payload: { planId, recurringId, reason: "PAYMENT_FAILURE" },

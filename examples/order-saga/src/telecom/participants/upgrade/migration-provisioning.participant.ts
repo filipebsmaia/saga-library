@@ -36,7 +36,7 @@ export class MigrationProvisioningParticipant extends SagaParticipantBase {
     );
 
     await emit({
-      eventType: "migration.provisioned",
+      topic: "migration.provisioned",
       stepName: "Provision New Plan",
       stepDescription: "New plan resources provisioned",
       payload: {

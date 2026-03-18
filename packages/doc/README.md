@@ -4,7 +4,7 @@ Central documentation hub for the saga choreography library.
 
 ## Guides
 
-- [Concepts](concepts.md) — sagaId, hint, eventType, and other domain concepts
+- [Concepts](concepts.md) — sagaId, hint, topic, and other domain concepts
 - [Core Functions](core-functions.md) — emit, emitToParent, start, startChild, forSaga
 - [Custom Transport](custom-transport.md) — implement your own message transport
 

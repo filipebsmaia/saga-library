@@ -46,7 +46,7 @@ export class PlanRecurringManagementParticipant extends SagaParticipantBase {
 
     // Final event on the CURRENT saga
     await emit({
-      eventType: "recurring.completed",
+      topic: "recurring.completed",
       stepName: "complete-recurring",
       payload: { recurringId, planId, customerId, cycle },
       hint: "final",
@@ -59,7 +59,7 @@ export class PlanRecurringManagementParticipant extends SagaParticipantBase {
     const { sagaId: newSagaId } = await this.sagaPublisher.startChild(
       async () => {
         await this.sagaPublisher.emit({
-          eventType: "recurring.created",
+          topic: "recurring.created",
           stepName: "create-recurring-cycle",
           payload: {
             recurringId: newRecurringId,
@@ -100,7 +100,7 @@ export class PlanRecurringManagementParticipant extends SagaParticipantBase {
     this.recurringStore.updateStatus(recurringId, "FAILED");
 
     await emit({
-      eventType: "recurring.failed",
+      topic: "recurring.failed",
       stepName: "fail-recurring",
       payload: { recurringId, reason },
       hint: "final",

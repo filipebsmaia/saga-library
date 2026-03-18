@@ -5,7 +5,7 @@ export function buildOutboundMessage<T>(
   event: SagaEvent<T>,
   topicPrefix = "",
 ): OutboundMessage {
-  const topic = `${topicPrefix}${event.eventType}`;
+  const topic = `${topicPrefix}${event.topic}`;
   const key = event.key ?? event.rootSagaId;
 
   const headers: Record<string, string> = {
@@ -42,11 +42,9 @@ export function buildOutboundMessage<T>(
     headers["saga-key"] = event.key;
   }
 
-  const value = JSON.stringify({
-    eventType: event.eventType,
-    occurredAt: event.occurredAt,
-    payload: event.payload,
-  });
+  headers["saga-occurred-at"] = event.occurredAt;
+
+  const value = JSON.stringify(event.payload);
 
   return { topic, key, value, headers };
 }

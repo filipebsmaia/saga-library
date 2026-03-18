@@ -50,7 +50,7 @@ The tracker operates per partition (keyed by `topic:partition`).
 
 ### Topic naming
 
-Topics are named `topicPrefix + eventType`. The prefix is set in `KafkaTransportOptions` and passed through from `RunnerOptions.topicPrefix`. Both the producer (publish) and consumer (subscribe) apply the same prefix.
+Topics are named `topicPrefix + topic`. The prefix is set in `KafkaTransportOptions` and passed through from `RunnerOptions.topicPrefix`. Both the producer (publish) and consumer (subscribe) apply the same prefix.
 
 ### Auto-create topics
 
@@ -58,7 +58,7 @@ When `autoCreateTopics: true`, `connect()` calls the Kafka admin client to creat
 
 ### Header serialization
 
-All saga metadata (`saga-id`, `saga-root-id`, etc.) is written as Kafka message headers with `Buffer.from(value)`. On the consumer side, header values are decoded from `Buffer | string` to plain strings before being passed to `SagaParser`.
+All saga metadata (`saga-id`, `saga-root-id`, `saga-occurred-at`, etc.) is written as Kafka message headers with `Buffer.from(value)`. The topic is derived from the Kafka message topic (`message.topic`), not from a header. The message body contains only the JSON-serialized user payload (no envelope). On the consumer side, header values are decoded from `Buffer | string` to plain strings before being passed to `SagaParser`.
 
 ### Heartbeat management
 

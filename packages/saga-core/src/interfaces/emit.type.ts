@@ -1,7 +1,7 @@
 export type EventHint = "compensation" | "final" | "fork";
 
 export interface EmitParams<T extends object = Record<string, unknown>> {
-  eventType: string;
+  topic: string;
   stepName: string;
   stepDescription?: string;
   payload: T;

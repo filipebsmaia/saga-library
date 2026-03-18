@@ -14,7 +14,7 @@ A distributed transaction pattern where participants react to events and emit ne
 
 ## Event Metadata
 
-- **`eventType`** (`string`) — Identifies the event and determines routing. Used as the Kafka topic name (with optional prefix). Each eventType maps to exactly one handler. Examples: `order.created`, `payment.completed`.
+- **`topic`** (`string`) — Identifies the event and determines routing. Used as the Kafka topic name (with optional prefix). Each topic maps to exactly one handler. Examples: `order.created`, `payment.completed`.
 - **`stepName`** (`string`) — Logical name for the current step, used for tracing and observability. Example: `process-payment`.
 - **`stepDescription`** (`string | undefined`) — Optional human-readable description of the step.
 - **`key`** (`string | undefined`) — Optional partition key for message ordering. Defaults to `rootSagaId`, ensuring all events in the same saga tree go to the same partition.
@@ -39,7 +39,7 @@ The library uses Node.js `AsyncLocalStorage` to propagate saga context (sagaId, 
 ┌─────────────────────────────────────────────────────────────┐
 │  Root Saga (sagaId: A, rootSagaId: A)                       │
 │                                                             │
-│  emit({eventType: 'order.created'})                         │
+│  emit({topic: 'order.created'})                             │
 │       │                                                     │
 │       ▼                                                     │
 │  Handler (causationId: eventId of 'order.created')          │
@@ -50,7 +50,7 @@ The library uses Node.js `AsyncLocalStorage` to propagate saga context (sagaId, 
 │  │  Sub-Saga (sagaId: B, rootSagaId: A,         │           │
 │  │           parentSagaId: A)                   │           │
 │  │                                              │           │
-│  │  emit({eventType: 'child.step'})             │           │
+│  │  emit({topic: 'child.step'})                 │           │
 │  │       │                                      │           │
 │  │       ▼                                      │           │
 │  │  Handler { final: true }                     │           │

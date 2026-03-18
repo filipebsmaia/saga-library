@@ -41,7 +41,7 @@ export class MobileProductProvisionParticipant extends SagaParticipantBase {
     const provisioningId = `prov-${Date.now()}`;
 
     await emit({
-      eventType: "product.provisioned",
+      topic: "product.provisioned",
       stepName: "provision-product",
       payload: { productId, provisioningId, customerId, msisdn },
     });

@@ -50,7 +50,7 @@ export class RFMobileProductProvisionParticipant extends SagaParticipantBase {
     this.logger.log(`Provision ${provisionId} COMPLETED`);
 
     await emit({
-      eventType: "rf.provision.completed",
+      topic: "rf.provision.completed",
       stepName: "provision-product",
       stepDescription:
         "mobile-product-provision provisiona no ZTE core (SPR/USPP)",

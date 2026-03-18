@@ -133,10 +133,10 @@ Offsets are committed using a watermark strategy: only the lowest unprocessed of
 
 ### Topic Naming
 
-Topics are derived from event types with an optional prefix:
+Topics are derived from the topic field with an optional prefix:
 
 ```
-topic = topicPrefix + eventType
+topic = topicPrefix + topic
 ```
 
 Example with `topicPrefix: 'prod.'`:
@@ -150,7 +150,7 @@ When `autoCreateTopics: true`, the transport uses the Kafka admin client to crea
 
 ### Header-Based Metadata
 
-All saga context metadata is propagated via Kafka headers. See [Kafka Headers](../saga-core/README.md#kafka-headers) for the full list.
+All saga context metadata is propagated via Kafka headers, including `saga-occurred-at` (ISO timestamp). The topic is derived from the Kafka message topic (`message.topic`), not from a header. The Kafka message body contains **only the user's payload** — no envelope wrapper. See [Kafka Headers](../saga-core/README.md#kafka-headers) for the full list.
 
 ---
 

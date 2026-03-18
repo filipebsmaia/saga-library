@@ -54,10 +54,10 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
 
       const on: Record<string, EventHandler<any>> = {};
 
-      for (const [eventType, methodName] of handlesMap.entries()) {
+      for (const [topic, methodName] of handlesMap.entries()) {
         const method = (instance as any)[methodName];
         if (typeof method === "function") {
-          on[eventType] = method.bind(instance);
+          on[topic] = method.bind(instance);
         }
       }
 
@@ -75,8 +75,8 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
 
       const handlerOptions: Record<string, HandlerConfig> = {};
       if (handlerOptionsMap) {
-        for (const [eventType, opts] of handlerOptionsMap.entries()) {
-          handlerOptions[eventType] = { final: opts.final, fork: !!opts.fork };
+        for (const [topic, opts] of handlerOptionsMap.entries()) {
+          handlerOptions[topic] = { final: opts.final, fork: !!opts.fork };
         }
       }
 

@@ -29,7 +29,7 @@ describe("Integration: Saga Flow", () => {
         .fn()
         .mockImplementation(async (event: IncomingEvent, emit: Emit) => {
           await emit({
-            eventType: "payment.processed",
+            topic: "payment.processed",
             stepName: "payment",
             payload: { orderId: event.payload.orderId, amount: 100 },
           });
@@ -39,7 +39,7 @@ describe("Integration: Saga Flow", () => {
         .fn()
         .mockImplementation(async (event: IncomingEvent, emit: Emit) => {
           await emit({
-            eventType: "inventory.reserved",
+            topic: "inventory.reserved",
             stepName: "inventory",
             payload: { orderId: (event.payload as any).orderId },
           });
@@ -64,7 +64,7 @@ describe("Integration: Saga Flow", () => {
       // Kick off the saga
       const emit = publisher.forSaga("saga-001");
       await emit({
-        eventType: "order.created",
+        topic: "order.created",
         stepName: "order",
         payload: { orderId: "ORD-123" },
       });
@@ -98,7 +98,7 @@ describe("Integration: Saga Flow", () => {
         .fn()
         .mockImplementation(async (_event: IncomingEvent, emit: Emit) => {
           await emit({
-            eventType: "payment.processed",
+            topic: "payment.processed",
             stepName: "payment",
             payload: { status: "ok" },
           });
@@ -112,7 +112,7 @@ describe("Integration: Saga Flow", () => {
         .fn()
         .mockImplementation(async (_event: IncomingEvent, emit: Emit) => {
           await emit({
-            eventType: "payment.refunded",
+            topic: "payment.refunded",
             stepName: "compensation",
             payload: { reason: "inventory_failed" },
           });
@@ -139,7 +139,7 @@ describe("Integration: Saga Flow", () => {
 
       const emit = publisher.forSaga("saga-002");
       await emit({
-        eventType: "order.created",
+        topic: "order.created",
         stepName: "order",
         payload: { orderId: "ORD-456" },
       });
@@ -150,7 +150,7 @@ describe("Integration: Saga Flow", () => {
 
       // Now trigger compensation manually
       await emit({
-        eventType: "payment.compensate",
+        topic: "payment.compensate",
         stepName: "compensation",
         payload: { reason: "inventory_failed" },
       });
@@ -182,7 +182,7 @@ describe("Integration: Saga Flow", () => {
             emit: Emit,
           ) => {
             await emit({
-              eventType: "order.failed",
+              topic: "order.failed",
               stepName: "order",
               payload: { reason: "retries_exhausted" },
             });
@@ -204,7 +204,7 @@ describe("Integration: Saga Flow", () => {
 
       const emit = publisher.forSaga("saga-003");
       const emitPromise = emit({
-        eventType: "order.created",
+        topic: "order.created",
         stepName: "order",
         payload: { orderId: "ORD-789" },
       });

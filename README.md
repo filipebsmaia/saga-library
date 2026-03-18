@@ -56,7 +56,7 @@ export class PaymentParticipant extends SagaParticipantBase {
       amount: number;
     };
     await emit({
-      eventType: "payment.completed",
+      topic: "payment.completed",
       stepName: "process-payment",
       payload: { orderId, transactionId: "...", amount },
     });
@@ -68,7 +68,7 @@ export class PaymentParticipant extends SagaParticipantBase {
 
 | Document                                             | Description                                     |
 | ---------------------------------------------------- | ----------------------------------------------- |
-| [Concepts](packages/doc/concepts.md)                 | sagaId, hint, eventType, and other domain terms |
+| [Concepts](packages/doc/concepts.md)                 | sagaId, hint, topic, and other domain terms     |
 | [Core Functions](packages/doc/core-functions.md)     | emit, emitToParent, start, startChild, forSaga  |
 | [Custom Transport](packages/doc/custom-transport.md) | Implement your own message transport            |
 | [Documentation Hub](packages/doc/README.md)          | Full documentation index                        |

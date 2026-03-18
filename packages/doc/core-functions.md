@@ -18,7 +18,7 @@ These functions are available via `SagaPublisherProvider` (NestJS) or `SagaPubli
 const { sagaId, result } = await sagaPublisher.start(
   async () => {
     await sagaPublisher.emit({
-      eventType: "order.created",
+      topic: "order.created",
       stepName: "create-order",
       payload: { orderId: "123", amount: 99.9 },
     });
@@ -40,7 +40,7 @@ const { sagaId, result } = await sagaPublisher.start(
 // Must be inside an existing saga context (handler or start callback)
 const { sagaId: childId } = await sagaPublisher.startChild(async () => {
   await sagaPublisher.emit({
-    eventType: "provisioning.started",
+    topic: "provisioning.started",
     stepName: "start-provisioning",
     payload: { productId: "abc" },
   });
@@ -57,7 +57,7 @@ const { sagaId: childId } = await sagaPublisher.startChild(async () => {
 
 ```typescript
 await sagaPublisher.emit({
-  eventType: "payment.completed",
+  topic: "payment.completed",
   stepName: "process-payment",
   payload: { orderId, transactionId },
   hint: "compensation", // optional
@@ -76,7 +76,7 @@ Two forms:
 
 ```typescript
 await sagaPublisher.emitToParent({
-  eventType: "sub-task.completed",
+  topic: "sub-task.completed",
   stepName: "complete-sub-task",
   payload: { result: "ok" },
   hint: "final",
@@ -88,7 +88,7 @@ await sagaPublisher.emitToParent({
 ```typescript
 await sagaPublisher.emitToParent(async () => {
   await sagaPublisher.emit({
-    eventType: "sub-task.completed",
+    topic: "sub-task.completed",
     stepName: "complete-sub-task",
     payload: { result: "ok" },
   });
@@ -108,7 +108,7 @@ import { v7 as uuidv7 } from "uuid";
 const sagaId = uuidv7();
 const emit = sagaPublisher.forSaga(sagaId);
 await emit({
-  eventType: "order.created",
+  topic: "order.created",
   stepName: "create-order",
   payload: { orderId: "123" },
 });
@@ -124,7 +124,7 @@ const childEmit = sagaPublisher.forSaga(
   causationEventId,
 );
 await childEmit({
-  eventType: "child.started",
+  topic: "child.started",
   stepName: "start-child",
   payload: {},
 });

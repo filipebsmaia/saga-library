@@ -40,7 +40,7 @@ export class MigrationRollbackParticipant extends SagaParticipantBase {
     this.upgradeStore.updateStatus(upgradeId, "ROLLED_BACK");
 
     await emit({
-      eventType: "migration.rolled-back",
+      topic: "migration.rolled-back",
       stepName: "Rollback Provisioning",
       stepDescription: "Provisioned resources rolled back",
       payload: {

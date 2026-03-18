@@ -44,7 +44,7 @@ export class BulkActivationOrchestrationParticipant extends SagaParticipantBase 
       const lineNumber = `+5511${Date.now().toString().slice(-8)}${i}`;
 
       await emit({
-        eventType: "line-activation.requested",
+        topic: "line-activation.requested",
         stepName: "request-line-activation",
         payload: { bulkId, lineIndex: i, lineNumber },
       });
@@ -77,7 +77,7 @@ export class BulkActivationOrchestrationParticipant extends SagaParticipantBase 
       );
 
       await this.sagaPublisher.emitToParent({
-        eventType: "bulk-activation.completed",
+        topic: "bulk-activation.completed",
         stepName: "complete-bulk-activation",
         payload: {
           bulkId,

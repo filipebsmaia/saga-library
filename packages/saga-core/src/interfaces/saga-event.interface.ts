@@ -2,7 +2,7 @@ import type { EventHint } from "./emit.type";
 
 export interface SagaEvent<TPayload = Record<string, unknown>> {
   eventId: string;
-  eventType: string;
+  topic: string;
   sagaId: string;
   causationId: string;
   stepName: string;

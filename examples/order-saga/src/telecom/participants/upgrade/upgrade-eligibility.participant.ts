@@ -40,7 +40,7 @@ export class UpgradeEligibilityParticipant extends SagaParticipantBase {
     this.upgradeStore.updateStatus(upgradeId, "ELIGIBLE");
 
     await emit({
-      eventType: "upgrade.eligible",
+      topic: "upgrade.eligible",
       stepName: "Validate Eligibility",
       stepDescription: "Customer eligibility validated for plan upgrade",
       payload: {

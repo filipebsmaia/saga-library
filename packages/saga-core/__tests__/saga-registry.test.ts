@@ -8,8 +8,8 @@ function makeParticipant(
   events: Record<string, () => Promise<void>>,
 ): SagaParticipant {
   const on: Record<string, any> = {};
-  for (const [eventType, fn] of Object.entries(events)) {
-    on[eventType] = fn;
+  for (const [topic, fn] of Object.entries(events)) {
+    on[topic] = fn;
   }
   return { serviceId, on };
 }
@@ -56,7 +56,7 @@ describe("SagaRegistry", () => {
     expect(routeMap.get("event.b")?.handler).toBe(handlerB);
   });
 
-  it("should handle participant with multiple event types", () => {
+  it("should handle participant with multiple topics", () => {
     const registry = new SagaRegistry();
     const handlerA = async () => {};
     const handlerB = async () => {};
@@ -71,7 +71,7 @@ describe("SagaRegistry", () => {
     expect(routeMap.get("event.b")?.handler).toBe(handlerB);
   });
 
-  it("should throw on duplicate event type across participants", () => {
+  it("should throw on duplicate topic across participants", () => {
     const registry = new SagaRegistry();
     registry.register(makeParticipant("svc-a", { "event.a": async () => {} }));
     registry.register(makeParticipant("svc-b", { "event.a": async () => {} }));

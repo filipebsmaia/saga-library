@@ -46,7 +46,7 @@ export class MobileProductLifecycleParticipant extends SagaParticipantBase {
     );
 
     await emit({
-      eventType: "product.activation.requested",
+      topic: "product.activation.requested",
       stepName: "create-pending-product",
       payload: { productId, recurringId, planId, customerId, msisdn },
     });
@@ -70,7 +70,7 @@ export class MobileProductLifecycleParticipant extends SagaParticipantBase {
     this.productStore.updateStatus(productId, "ACTIVE");
 
     await emit({
-      eventType: "product.activated",
+      topic: "product.activated",
       stepName: "activate-product",
       payload: {
         productId,

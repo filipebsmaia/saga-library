@@ -43,7 +43,7 @@ export class PlanOrderingManagementParticipant extends SagaParticipantBase {
     );
 
     await emit({
-      eventType: "order.requested",
+      topic: "order.requested",
       stepName: "bridge-to-ordering",
       payload: {
         recurringId,
@@ -76,7 +76,7 @@ export class PlanOrderingManagementParticipant extends SagaParticipantBase {
     );
 
     await emit({
-      eventType: "plan.order.completed",
+      topic: "plan.order.completed",
       stepName: "bridge-plan-order-completed",
       payload: { orderId, recurringId, planId, customerId, amount, cycle },
     });
@@ -97,7 +97,7 @@ export class PlanOrderingManagementParticipant extends SagaParticipantBase {
     );
 
     await emit({
-      eventType: "plan.order.failed",
+      topic: "plan.order.failed",
       stepName: "bridge-plan-order-failed",
       payload: { orderId, recurringId, reason },
       hint: "compensation",

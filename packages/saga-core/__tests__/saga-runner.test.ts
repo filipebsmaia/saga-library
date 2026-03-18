@@ -24,17 +24,13 @@ function createMockTransport(): SagaTransport {
 }
 
 function makeInboundMessage(
-  eventType: string,
+  topic: string,
   sagaId = "saga-123",
 ): InboundMessage {
   return {
-    topic: eventType,
+    topic,
     key: sagaId,
-    value: JSON.stringify({
-      eventType,
-      occurredAt: "2024-01-01T00:00:00.000Z",
-      payload: { orderId: "456" },
-    }),
+    value: JSON.stringify({ orderId: "456" }),
     headers: {
       "saga-id": sagaId,
       "saga-correlation-id": sagaId,
@@ -44,6 +40,7 @@ function makeInboundMessage(
       "saga-published-at": "2024-01-01T00:00:01.000Z",
       "saga-schema-version": "1",
       "saga-root-id": sagaId,
+      "saga-occurred-at": "2024-01-01T00:00:00.000Z",
     },
   };
 }
@@ -118,7 +115,7 @@ describe("SagaRunner", () => {
     expect(handler).toHaveBeenCalledWith(
       expect.objectContaining({
         sagaId: "saga-123",
-        eventType: "order.created",
+        topic: "order.created",
         payload: { orderId: "456" },
       }),
       expect.any(Function),

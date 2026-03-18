@@ -47,7 +47,7 @@ export class RFPlanRecurringManagementParticipant extends SagaParticipantBase {
     this.recurringStore.updateStatus(recurringId, "COMPLETED");
 
     await emit({
-      eventType: "rf.recurring.completed",
+      topic: "rf.recurring.completed",
       stepName: "complete-recurring",
       stepDescription:
         "plan-recurring-management marca recorrência como COMPLETED",
@@ -65,7 +65,7 @@ export class RFPlanRecurringManagementParticipant extends SagaParticipantBase {
     const { sagaId: newSagaId } = await this.sagaPublisher.startChild(
       async () => {
         await this.sagaPublisher.emit({
-          eventType: "rf.recurring.created",
+          topic: "rf.recurring.created",
           stepName: "create-recurring-cycle",
           stepDescription: "Nova recorrência criada para o próximo ciclo",
           payload: {
@@ -123,7 +123,7 @@ export class RFPlanRecurringManagementParticipant extends SagaParticipantBase {
       );
 
       await emit({
-        eventType: "rf.recurring.updated.failed",
+        topic: "rf.recurring.updated.failed",
         stepName: "fail-recurring",
         stepDescription:
           "plan-recurring-management marca recorrência como FAILED (max tentativas)",
@@ -138,7 +138,7 @@ export class RFPlanRecurringManagementParticipant extends SagaParticipantBase {
       );
 
       await emit({
-        eventType: "rf.recurring.updated.capture-failed",
+        topic: "rf.recurring.updated.capture-failed",
         stepName: "capture-failed-recurring",
         stepDescription:
           "plan-recurring-management marca recorrência como CAPTURE_FAILED",

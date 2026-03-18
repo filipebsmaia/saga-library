@@ -51,7 +51,7 @@ export class OrderingManagementParticipant extends SagaParticipantBase {
     this.logger.log(`Order ${orderId} created for recurring ${recurringId}`);
 
     await emit({
-      eventType: "order.created",
+      topic: "order.created",
       stepName: "create-order",
       payload: {
         orderId,
@@ -94,7 +94,7 @@ export class OrderingManagementParticipant extends SagaParticipantBase {
     this.orderStore.updateStatus(orderId, "COMPLETED");
 
     await emit({
-      eventType: "order.completed",
+      topic: "order.completed",
       stepName: "complete-order",
       payload: {
         orderId,
@@ -122,7 +122,7 @@ export class OrderingManagementParticipant extends SagaParticipantBase {
     this.orderStore.updateStatus(orderId, "FAILED");
 
     await emit({
-      eventType: "order.failed",
+      topic: "order.failed",
       stepName: "fail-order",
       payload: { orderId, recurringId, reason },
       hint: "compensation",

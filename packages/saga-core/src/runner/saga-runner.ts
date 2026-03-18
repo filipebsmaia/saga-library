@@ -33,12 +33,15 @@ export class SagaRunner {
   ) {}
 
   async start(): Promise<void> {
-    this.routeMap = this.registry.buildRouteMap();
-
+    const baseRouteMap = this.registry.buildRouteMap();
     const prefix = this.options.topicPrefix ?? "";
-    const topics = Array.from(this.routeMap.keys()).map(
-      (et) => `${prefix}${et}`,
-    );
+
+    this.routeMap = new Map();
+    for (const [topic, entry] of baseRouteMap) {
+      this.routeMap.set(`${prefix}${topic}`, entry);
+    }
+
+    const topics = Array.from(this.routeMap.keys());
 
     await this.transport.connect();
 
@@ -80,7 +83,7 @@ export class SagaRunner {
     const event = this.parser.parse<Record<string, unknown>>(message);
     if (!event) return;
 
-    const route = this.routeMap.get(event.eventType);
+    const route = this.routeMap.get(event.topic);
     if (!route) return;
 
     const isFinalHandler = route.options?.final === true;
@@ -89,7 +92,7 @@ export class SagaRunner {
       sagaId: event.sagaId,
       eventId: event.eventId,
       causationId: event.causationId,
-      eventType: event.eventType,
+      topic: event.topic,
       stepName: event.stepName,
       stepDescription: event.stepDescription,
       occurredAt: event.occurredAt,
@@ -153,7 +156,7 @@ export class SagaRunner {
 
     const spanAttrs: Record<string, string> = {
       "saga.id": event.sagaId,
-      "saga.event.type": event.eventType,
+      "saga.topic": event.topic,
       "saga.step.name": event.stepName,
       "saga.event.id": event.eventId,
       "saga.root.id": event.rootSagaId,
@@ -188,7 +191,7 @@ export class SagaRunner {
 
     if (this.otelCtx) {
       await this.otelCtx.withExtractedSpan(
-        `saga.handle ${event.eventType}`,
+        `saga.handle ${event.topic}`,
         spanAttrs,
         message.headers,
         runHandler,
@@ -224,7 +227,7 @@ export class SagaRunner {
           return;
         }
         this.logger.error(
-          `[SagaRunner] Non-retryable error in handler for ${event.eventType}:`,
+          `[SagaRunner] Non-retryable error in handler for ${event.topic}:`,
           error,
         );
         return;

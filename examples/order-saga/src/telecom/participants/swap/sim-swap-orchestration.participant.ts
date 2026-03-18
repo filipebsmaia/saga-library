@@ -40,7 +40,7 @@ export class SimSwapOrchestrationParticipant extends SagaParticipantBase {
     );
 
     await emit({
-      eventType: "portability.validation.requested",
+      topic: "portability.validation.requested",
       stepName: "request-portability-validation",
       payload: { swapId, msisdn, newIccid },
     });
@@ -62,7 +62,7 @@ export class SimSwapOrchestrationParticipant extends SagaParticipantBase {
       this.logger.log(`SIM swap ${swapId} completed — portability validated`);
 
       await this.sagaPublisher.emitToParent({
-        eventType: "sim-swap.completed",
+        topic: "sim-swap.completed",
         stepName: "complete-sim-swap",
         payload: {
           swapId,

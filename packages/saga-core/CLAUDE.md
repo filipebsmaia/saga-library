@@ -29,7 +29,8 @@ SagaRegistry  ←──────────── @SagaParticipant / registr
      ▼
 SagaRunner ──► SagaParser (parse inbound) ──► handler dispatch
      │              │ 3-layer fallback:
-     │              │  1. Kafka headers (saga-id present)
+     │              │  1. Kafka headers (saga-id present → metadata from headers
+     │              │     incl. saga-occurred-at; topic from message.topic; body = raw payload)
      │              │  2. W3C Baggage (OTel baggage)
      │              │  3. Legacy envelope (sagaId in body)
      │
@@ -52,7 +53,7 @@ This means `emit()` inside any handler or `start()` callback can read `SagaConte
 For each inbound message, `SagaRunner`:
 
 1. Parses via `SagaParser`
-2. Looks up handler in registry route map (`eventType → { participant, handler, options }`)
+2. Looks up handler in registry route map (`topic → { participant, handler, options }`)
 3. If `{ fork: true }`: wraps `emit` so each call gets a new `sagaId`, `parentSagaId`, and `hint: 'fork'`
 4. If `{ final: true }`: wraps `emit` to auto-add `hint: 'final'`
 5. Sets `SagaContext` via ALS
@@ -82,8 +83,8 @@ OTel context is an optional constructor parameter of both `SagaPublisher` and `S
 - `publish(OutboundMessage)`
 - `subscribe(topics[], handler, options?)`
 
-`OutboundMessage` carries headers as `Record<string, string>` — all saga metadata flows through headers, not the payload body.
+`OutboundMessage` carries headers as `Record<string, string>` — all saga metadata flows through headers, not the payload body. The message body (`value`) contains only the JSON-serialized user payload.
 
 ### Message building
 
-`MessageBuilder` (`src/publisher/message-builder.ts`) assembles the `OutboundMessage` from the current ALS context + emit params. It writes all `saga-*` headers and calls `otelContext.inject()` for W3C propagation.
+`MessageBuilder` (`src/publisher/message-builder.ts`) assembles the `OutboundMessage` from the current ALS context + emit params. It writes all `saga-*` headers (including `saga-occurred-at`) and calls `otelContext.inject()` for W3C propagation. The topic is derived from the message's topic field (`message.topic`), not from a header. The body is set to the JSON-serialized user payload only — no envelope wrapper.

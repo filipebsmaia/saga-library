@@ -46,11 +46,11 @@ SagaModule.forRoot(options)
 
 `@SagaParticipant()` — sets a metadata symbol on the class. Checked by `SagaRunnerProvider` during bootstrap.
 
-`@SagaHandler(...eventTypes, options?)` — sets handler metadata on the method. The last argument is treated as `SagaHandlerOptions` if it's a plain object (not a string). This allows:
+`@SagaHandler(...topics, options?)` — sets handler metadata on the method. The last argument is treated as `SagaHandlerOptions` if it's a plain object (not a string). This allows:
 
 ```typescript
-@SagaHandler('a', 'b', { final: true })   // multiple eventTypes + options
-@SagaHandler('a', { fork: true })          // single eventType + options
+@SagaHandler('a', 'b', { final: true })   // multiple topics + options
+@SagaHandler('a', { fork: true })          // single topic + options
 @SagaHandler('a')                          // no options
 ```
 

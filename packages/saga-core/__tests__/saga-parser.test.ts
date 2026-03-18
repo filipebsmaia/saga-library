@@ -10,12 +10,10 @@ function makeMessage(overrides: Partial<InboundMessage> = {}): InboundMessage {
   return {
     topic: "saga.order.created",
     key: "saga-123",
-    value: JSON.stringify({
-      eventType: "order.created",
-      occurredAt: "2024-01-01T00:00:00.000Z",
-      payload: { orderId: "456" },
-    }),
-    headers: {},
+    value: JSON.stringify({ orderId: "456" }),
+    headers: {
+      "saga-occurred-at": "2024-01-01T00:00:00.000Z",
+    },
     ...overrides,
   };
 }
@@ -34,6 +32,7 @@ describe("SagaParser", () => {
           "saga-schema-version": "1",
           "saga-root-id": "root-100",
           "saga-parent-id": "parent-200",
+          "saga-occurred-at": "2024-01-01T00:00:00.000Z",
         },
       });
 
@@ -43,7 +42,7 @@ describe("SagaParser", () => {
       expect(event!.sagaId).toBe("saga-123");
       expect(event!.causationId).toBe("cause-789");
       expect(event!.eventId).toBe("evt-001");
-      expect(event!.eventType).toBe("order.created");
+      expect(event!.topic).toBe("saga.order.created");
       expect(event!.stepName).toBe("order");
       expect(event!.occurredAt).toBe("2024-01-01T00:00:00.000Z");
       expect(event!.publishedAt).toBe("2024-01-01T00:00:01.000Z");
@@ -59,6 +58,7 @@ describe("SagaParser", () => {
         headers: {
           "saga-id": "saga-123",
           "saga-step-name": "order",
+          "saga-occurred-at": "2024-01-01T00:00:00.000Z",
         },
       });
 
@@ -76,6 +76,11 @@ describe("SagaParser", () => {
     it("should parse from baggage header when saga-id is absent", () => {
       const parser = new SagaParser(noopOtel);
       const message = makeMessage({
+        value: JSON.stringify({
+          topic: "order.created",
+          occurredAt: "2024-01-01T00:00:00.000Z",
+          payload: { orderId: "456" },
+        }),
         headers: {
           baggage:
             "saga.id=saga-123,saga.root.id=root-100,saga.parent.id=parent-200",
@@ -88,7 +93,7 @@ describe("SagaParser", () => {
       expect(event!.sagaId).toBe("saga-123");
       expect(event!.rootSagaId).toBe("root-100");
       expect(event!.parentSagaId).toBe("parent-200");
-      expect(event!.eventType).toBe("order.created");
+      expect(event!.topic).toBe("order.created");
       expect(event!.payload).toEqual({ orderId: "456" });
     });
 
@@ -104,7 +109,14 @@ describe("SagaParser", () => {
       };
 
       const parser = new SagaParser(mockOtel);
-      const message = makeMessage({ headers: {} });
+      const message = makeMessage({
+        value: JSON.stringify({
+          topic: "order.created",
+          occurredAt: "2024-01-01T00:00:00.000Z",
+          payload: { orderId: "456" },
+        }),
+        headers: {},
+      });
 
       const event = parser.parse(message);
 
@@ -122,7 +134,7 @@ describe("SagaParser", () => {
         sagaId: "saga-123",
         causationId: "cause-789",
         eventId: "evt-001",
-        eventType: "order.created",
+        topic: "order.created",
         stepName: "order",
         occurredAt: "2024-01-01T00:00:00.000Z",
         publishedAt: "2024-01-01T00:00:01.000Z",
@@ -142,7 +154,7 @@ describe("SagaParser", () => {
 
       expect(event).not.toBeNull();
       expect(event!.sagaId).toBe("saga-123");
-      expect(event!.eventType).toBe("order.created");
+      expect(event!.topic).toBe("order.created");
       expect(event!.payload).toEqual({ orderId: "456" });
     });
   });
@@ -183,13 +195,14 @@ describe("SagaParser", () => {
         key: "saga-123",
         value: JSON.stringify({
           sagaId: "body-saga-id",
-          eventType: "order.created",
+          topic: "order.created",
           occurredAt: "2024-01-01T00:00:00.000Z",
           payload: { orderId: "456" },
         }),
         headers: {
           "saga-id": "header-saga-id",
           "saga-step-name": "order",
+          "saga-occurred-at": "2024-01-01T00:00:00.000Z",
         },
       };
 

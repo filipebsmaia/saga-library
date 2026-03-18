@@ -67,10 +67,10 @@ describe("SagaRunnerProvider", () => {
     expect(participants).toHaveLength(1);
     expect(participants[0].serviceId).toBe("payment-service");
 
-    const eventTypes = Object.keys(participants[0].on);
-    expect(eventTypes).toContain("order.created");
-    expect(eventTypes).toContain("inventory.failed");
-    expect(eventTypes).toContain("inventory.compensated");
+    const topics = Object.keys(participants[0].on);
+    expect(topics).toContain("order.created");
+    expect(topics).toContain("inventory.failed");
+    expect(topics).toContain("inventory.compensated");
   });
 
   it("should call runner.start() on module init", async () => {

@@ -613,7 +613,7 @@ function renderActiveSagas() {
         name: firstEv.sagaName || '',
         status: saga.status,
         eventCount: saga.events.length,
-        lastEvent: lastEv.eventType,
+        lastEvent: lastEv.topic,
         duration: dur,
         startedAt: firstEv.occurredAt
       });
@@ -657,7 +657,7 @@ function renderLiveFeed() {
 
     html += '<div class="feed-row">';
     html += '<span class="feed-time">' + time + '</span>';
-    html += '<span class="feed-type">' + ev.eventType + '</span>';
+    html += '<span class="feed-type">' + ev.topic + '</span>';
     html += '<span class="feed-hint ' + hintClass + '">' + (ev.hint || 'step') + '</span>';
     html += '<span class="feed-saga">' + ev.sagaId.slice(0, 8) + '...</span>';
     html += '</div>';

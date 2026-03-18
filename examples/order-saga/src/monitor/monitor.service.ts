@@ -13,7 +13,7 @@ export interface SagaTraceEvent {
   sagaId: string;
   rootSagaId: string;
   parentSagaId?: string;
-  eventType: string;
+  topic: string;
   stepName: string;
   stepDescription?: string;
   eventId: string;
@@ -205,8 +205,8 @@ export class MonitorService
         status: this.deriveSagaStatus(events),
         groupStatus: groupStatusMap.get(rootId) ?? "running",
         eventCount: events.length,
-        firstEvent: events[0].eventType,
-        lastEvent: events[events.length - 1].eventType,
+        firstEvent: events[0].topic,
+        lastEvent: events[events.length - 1].topic,
         startedAt: events[0].receivedAt,
         lastUpdatedAt: events[events.length - 1].receivedAt,
       });
@@ -415,10 +415,9 @@ export class MonitorService
     const sagaId = this.headerToString(headers["saga-id"]);
     if (!sagaId) return;
 
-    let body: { eventType?: string; occurredAt?: string; payload?: unknown } =
-      {};
+    let parsedPayload: unknown = {};
     try {
-      body = JSON.parse(message.value?.toString() ?? "{}");
+      parsedPayload = JSON.parse(message.value?.toString() ?? "{}");
     } catch {
       // ignore parse errors
     }
@@ -427,7 +426,7 @@ export class MonitorService
       sagaId,
       rootSagaId: this.headerToString(headers["saga-root-id"]) ?? sagaId,
       parentSagaId: this.headerToString(headers["saga-parent-id"]),
-      eventType: body.eventType ?? topic,
+      topic,
       stepName: this.headerToString(headers["saga-step-name"]) ?? "",
       eventId: this.headerToString(headers["saga-event-id"]) ?? "",
       correlationId: this.headerToString(headers["saga-correlation-id"]) ?? "",
@@ -436,8 +435,8 @@ export class MonitorService
         (this.headerToString(headers["saga-event-hint"]) as EventHintValue) ??
         "step",
       topic,
-      payload: body.payload,
-      occurredAt: body.occurredAt ?? new Date().toISOString(),
+      payload: parsedPayload,
+      occurredAt: this.headerToString(headers["saga-occurred-at"]) ?? new Date().toISOString(),
       receivedAt: new Date().toISOString(),
       sagaName: this.headerToString(headers["saga-name"]),
       sagaDescription: this.headerToString(headers["saga-description"]),
@@ -450,7 +449,7 @@ export class MonitorService
     this.events.get(sagaId)!.push(event);
 
     this.emit("saga-event", event);
-    this.logger.debug(`[${sagaId.slice(0, 8)}] ${event.eventType}`);
+    this.logger.debug(`[${sagaId.slice(0, 8)}] ${event.topic}`);
   }
 
   private headerToString(value: unknown): string | undefined {

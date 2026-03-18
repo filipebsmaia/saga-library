@@ -83,8 +83,11 @@ describe("KafkaTransport", () => {
       await transport.publish({
         topic: "saga.order.created",
         key: "saga-123",
-        value: '{"eventType":"order.created"}',
-        headers: { "saga-id": "saga-123" },
+        value: '{"orderId":"456"}',
+        headers: {
+          "saga-id": "saga-123",
+          "saga-occurred-at": "2024-01-01T00:00:00.000Z",
+        },
       });
 
       expect(mockProducerSend).toHaveBeenCalledWith({
@@ -92,8 +95,11 @@ describe("KafkaTransport", () => {
         messages: [
           {
             key: "saga-123",
-            value: '{"eventType":"order.created"}',
-            headers: { "saga-id": "saga-123" },
+            value: '{"orderId":"456"}',
+            headers: {
+              "saga-id": "saga-123",
+              "saga-occurred-at": "2024-01-01T00:00:00.000Z",
+            },
           },
         ],
       });
@@ -168,21 +174,21 @@ describe("KafkaTransport", () => {
           messages: [
             {
               key: Buffer.from("saga-1"),
-              value: Buffer.from('{"eventType":"e1"}'),
+              value: Buffer.from('{"orderId":"1"}'),
               offset: "0",
-              headers: {},
+              headers: { "saga-occurred-at": "2024-01-01T00:00:00.000Z" },
             },
             {
               key: Buffer.from("saga-2"),
-              value: Buffer.from('{"eventType":"e2"}'),
+              value: Buffer.from('{"orderId":"2"}'),
               offset: "1",
-              headers: {},
+              headers: { "saga-occurred-at": "2024-01-01T00:00:00.000Z" },
             },
             {
               key: Buffer.from("saga-1"),
-              value: Buffer.from('{"eventType":"e3"}'),
+              value: Buffer.from('{"orderId":"3"}'),
               offset: "2",
-              headers: {},
+              headers: { "saga-occurred-at": "2024-01-01T00:00:00.000Z" },
             },
           ],
         },
@@ -220,15 +226,15 @@ describe("KafkaTransport", () => {
           messages: [
             {
               key: Buffer.from("saga-1"),
-              value: Buffer.from('{"eventType":"e1"}'),
+              value: Buffer.from('{"orderId":"1"}'),
               offset: "0",
-              headers: {},
+              headers: { "saga-occurred-at": "2024-01-01T00:00:00.000Z" },
             },
             {
               key: Buffer.from("saga-1"),
-              value: Buffer.from('{"eventType":"e2"}'),
+              value: Buffer.from('{"orderId":"2"}'),
               offset: "1",
-              headers: {},
+              headers: { "saga-occurred-at": "2024-01-01T00:00:00.000Z" },
             },
           ],
         },
@@ -264,10 +270,11 @@ describe("KafkaTransport", () => {
           messages: [
             {
               key: Buffer.from("saga-1"),
-              value: Buffer.from('{"eventType":"e1"}'),
+              value: Buffer.from('{"orderId":"1"}'),
               offset: "0",
               headers: {
                 "saga-id": Buffer.from("saga-123"),
+                "saga-occurred-at": "2024-01-01T00:00:00.000Z",
                 "plain-header": "plain-value",
               },
             },

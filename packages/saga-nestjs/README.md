@@ -31,7 +31,7 @@ SagaModule.forRootAsync(options: SagaModuleAsyncOptions): DynamicModule
 | `retryPolicy.maxRetries`     | `number`        | `3`                 | Max retry attempts for `SagaRetryableError`              |
 | `retryPolicy.initialDelayMs` | `number`        | `200`               | Initial retry delay in ms (doubles each attempt)         |
 | `fromBeginning`              | `boolean`       | `false`             | Read from beginning of topics                            |
-| `topicPrefix`                | `string`        | `''`                | Prefix prepended to eventType for topic names            |
+| `topicPrefix`                | `string`        | `''`                | Prefix prepended to topic for topic names                |
 | `otel.enabled`               | `boolean`       | `false`             | Enable OpenTelemetry tracing and W3C context propagation |
 | `otel.exporterUrl`           | `string`        | —                   | OTel exporter URL                                        |
 | `logger`                     | `SagaLogger`    | `ConsoleSagaLogger` | Custom logger                                            |
@@ -63,16 +63,16 @@ export class PaymentParticipant extends SagaParticipantBase {
 }
 ```
 
-### `@SagaHandler(...eventTypes, options?)`
+### `@SagaHandler(...topics, options?)`
 
-Method decorator. Registers a method as the handler for one or more event types. Accepts an optional options object as the last argument.
+Method decorator. Registers a method as the handler for one or more topics. Accepts an optional options object as the last argument.
 
 ```typescript
-// Single event type
+// Single topic
 @SagaHandler('order.created')
 async handleOrderCreated(event: IncomingEvent, emit: Emit) {}
 
-// Multiple event types
+// Multiple topics
 @SagaHandler('inventory.failed', 'inventory.compensated')
 async handleInventoryIssue(event: IncomingEvent, emit: Emit) {}
 ```
@@ -86,7 +86,7 @@ async handleInventoryIssue(event: IncomingEvent, emit: Emit) {}
 
 `final` and `fork` are **mutually exclusive** — using both throws `SagaInvalidHandlerConfigError`.
 
-**Constraint**: Each event type must have exactly one handler across all participants. Duplicate registrations throw `SagaDuplicateHandlerError`.
+**Constraint**: Each topic must have exactly one handler across all participants. Duplicate registrations throw `SagaDuplicateHandlerError`.
 
 ### `SagaParticipantBase`
 
@@ -158,7 +158,7 @@ export class SagaTerminusIndicator extends HealthIndicator {
 type Emit = <T extends object>(params: EmitParams<T>) => Promise<void>;
 
 interface EmitParams<T extends object = Record<string, unknown>> {
-  eventType: string; // Event type (also used as topic name)
+  topic: string; // Topic name for routing and Kafka
   stepName: string; // Logical step name for tracing
   stepDescription?: string;
   payload: T; // Event payload
@@ -172,7 +172,7 @@ interface IncomingEvent<T = Record<string, unknown>> {
   parentSagaId?: string;
   rootSagaId: string;
   causationId: string;
-  eventType: string;
+  topic: string;
   sagaName?: string;
   sagaDescription?: string;
   stepName: string;
@@ -219,7 +219,7 @@ export class PaymentParticipant extends SagaParticipantBase {
     const transactionId = `txn-${Date.now()}`;
 
     await emit({
-      eventType: "payment.completed",
+      topic: "payment.completed",
       stepName: "process-payment",
       payload: { orderId, transactionId, amount },
     });
@@ -240,7 +240,7 @@ export class OrdersController {
   async create(@Body() body: { amount: number }) {
     const { sagaId } = await this.sagaPublisher.start(async () => {
       await this.sagaPublisher.emit({
-        eventType: "order.created",
+        topic: "order.created",
         stepName: "create-order",
         payload: { orderId: `order-${Date.now()}`, amount: body.amount },
       });
@@ -292,7 +292,7 @@ export class BulkOrchestrationParticipant extends SagaParticipantBase {
     // N emits = N sub-sagas (each gets its own sagaId)
     for (const item of items) {
       await emit({
-        eventType: "item.processing.requested",
+        topic: "item.processing.requested",
         stepName: "request-item-processing",
         payload: { batchId, item },
       });
@@ -314,7 +314,7 @@ export class BulkOrchestrationParticipant extends SagaParticipantBase {
       this.completionCount.delete(batchId);
 
       await this.sagaPublisher.emitToParent({
-        eventType: "bulk.completed",
+        topic: "bulk.completed",
         stepName: "complete-bulk",
         payload: { batchId, totalProcessed: counter.total },
         hint: "final",
@@ -341,7 +341,7 @@ export class ItemProcessorParticipant extends SagaParticipantBase {
     // Process item...
 
     await emit({
-      eventType: "item.processing.completed",
+      topic: "item.processing.completed",
       stepName: "process-item",
       payload: { batchId, item, status: "done" },
     });
@@ -385,7 +385,7 @@ export class OrchestrationParticipant extends SagaParticipantBase {
     // - rootSagaId inherited
     // - hint: 'fork' auto-added
     await emit({
-      eventType: "validation.requested",
+      topic: "validation.requested",
       stepName: "request-validation",
       payload: { taskId },
     });
@@ -400,7 +400,7 @@ export class OrchestrationParticipant extends SagaParticipantBase {
     };
 
     await emit({
-      eventType: "task.done",
+      topic: "task.done",
       stepName: "finish-task",
       payload: { taskId, result },
     });
@@ -427,7 +427,7 @@ export class ValidatorParticipant extends SagaParticipantBase {
 
     // Emit within the sub-saga (hint: 'final' auto-added)
     await emit({
-      eventType: "validation.completed",
+      topic: "validation.completed",
       stepName: "validate",
       payload: { taskId, valid: true },
     });
@@ -435,7 +435,7 @@ export class ValidatorParticipant extends SagaParticipantBase {
     // Report back to parent saga
     // emitToParent reads parentSagaId from AsyncLocalStorage
     await this.sagaPublisher.emitToParent({
-      eventType: "task.completed",
+      topic: "task.completed",
       stepName: "report-to-parent",
       payload: { taskId, result: "validated" },
     });
@@ -451,7 +451,7 @@ async createTask() {
   const { sagaId } = await this.sagaPublisher.start(async () => {
     // emit() reads sagaId from ALS automatically
     await this.sagaPublisher.emit({
-      eventType: 'task.requested',
+      topic: 'task.requested',
       stepName: 'create-task',
       payload: { taskId: `task-${Date.now()}` },
     });
@@ -495,7 +495,7 @@ export class ManualOrdersController {
     const emit = this.sagaPublisher.forSaga(sagaId);
 
     await emit({
-      eventType: "order.created",
+      topic: "order.created",
       stepName: "create-order",
       payload: { orderId: `order-${Date.now()}`, amount: body.amount },
     });
@@ -509,7 +509,7 @@ export class ManualOrdersController {
     const rootEmit = this.sagaPublisher.forSaga(sagaId);
 
     await rootEmit({
-      eventType: "order.created",
+      topic: "order.created",
       stepName: "create-order",
       payload: { orderId: `order-${Date.now()}`, amount: body.amount },
     });
@@ -526,7 +526,7 @@ export class ManualOrdersController {
     ); // causationId
 
     await childEmit({
-      eventType: "fulfillment.started",
+      topic: "fulfillment.started",
       stepName: "start-fulfillment",
       payload: { orderId: `order-${Date.now()}` },
     });
@@ -549,7 +549,7 @@ export class ManualOrdersController {
 
 ## Further Reading
 
-- [Concepts](../doc/concepts.md) — sagaId, hint, eventType, and other domain terms
+- [Concepts](../doc/concepts.md) — sagaId, hint, topic, and other domain terms
 - [Core Functions](../doc/core-functions.md) — detailed semantics of emit, emitToParent, etc.
 - [@fbsm/saga-core API](../saga-core/README.md) — framework-agnostic core reference
 - [@fbsm/saga-transport-kafka API](../saga-transport-kafka/README.md) — Kafka transport options

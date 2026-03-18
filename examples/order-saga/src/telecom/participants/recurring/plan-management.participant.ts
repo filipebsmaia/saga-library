@@ -43,7 +43,7 @@ export class PlanManagementParticipant extends SagaParticipantBase {
     );
 
     await emit({
-      eventType: "plan.order.requested",
+      topic: "plan.order.requested",
       stepName: "request-plan-order",
       payload: {
         recurringId,

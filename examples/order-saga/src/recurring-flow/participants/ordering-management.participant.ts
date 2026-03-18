@@ -54,7 +54,7 @@ export class RFOrderingManagementParticipant extends SagaParticipantBase {
     this.logger.log(`Order ${orderId} created for planOrder ${planOrderId}`);
 
     await emit({
-      eventType: "rf.ordering.order.created",
+      topic: "rf.ordering.order.created",
       stepName: "create-order",
       stepDescription: "ordering-management cria ordem genérica",
       payload: {
@@ -98,7 +98,7 @@ export class RFOrderingManagementParticipant extends SagaParticipantBase {
     this.logger.log(`Order ${orderId} COMPLETED (payment: ${paymentId})`);
 
     await emit({
-      eventType: "rf.ordering.order.updated.completed",
+      topic: "rf.ordering.order.updated.completed",
       stepName: "complete-order",
       stepDescription: "ordering-management atualiza ordem como COMPLETED",
       payload: {
@@ -131,7 +131,7 @@ export class RFOrderingManagementParticipant extends SagaParticipantBase {
     this.logger.warn(`Order ${orderId} PAYMENT_FAILED: ${reason}`);
 
     await emit({
-      eventType: "rf.ordering.order.updated.payment-failed",
+      topic: "rf.ordering.order.updated.payment-failed",
       stepName: "fail-order-payment",
       stepDescription: "ordering-management atualiza ordem como PAYMENT_FAILED",
       payload: {

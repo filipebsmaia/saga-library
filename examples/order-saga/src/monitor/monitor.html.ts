@@ -156,8 +156,8 @@ function handleEvent(event) {
       parentSagaId: event.parentSagaId,
       sagaName: event.sagaName,
       eventCount: 0,
-      firstEvent: event.eventType,
-      lastEvent: event.eventType,
+      firstEvent: event.topic,
+      lastEvent: event.topic,
       startedAt: event.receivedAt,
       lastUpdatedAt: event.receivedAt,
       isNew: true,
@@ -168,7 +168,7 @@ function handleEvent(event) {
 
   const s = sagas[sagaId];
   s.eventCount++;
-  s.lastEvent = event.eventType;
+  s.lastEvent = event.topic;
   s.lastUpdatedAt = event.receivedAt;
 
   // Track hints to derive status

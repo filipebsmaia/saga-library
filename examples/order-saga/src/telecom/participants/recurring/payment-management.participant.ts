@@ -50,7 +50,7 @@ export class PaymentManagementParticipant extends SagaParticipantBase {
     if (simulatePaymentFailure) {
       this.logger.warn(`Simulating payment rejection for order ${orderId}`);
       await emit({
-        eventType: "payment.rejected",
+        topic: "payment.rejected",
         stepName: "process-payment",
         payload: { orderId, recurringId, reason: "Insufficient funds" },
         hint: "compensation",
@@ -64,7 +64,7 @@ export class PaymentManagementParticipant extends SagaParticipantBase {
     );
 
     await emit({
-      eventType: "payment.approved",
+      topic: "payment.approved",
       stepName: "process-payment",
       payload: {
         orderId,
@@ -91,7 +91,7 @@ export class PaymentManagementParticipant extends SagaParticipantBase {
       `Retries exhausted for order ${orderId}: ${error.message}`,
     );
     await emit({
-      eventType: "payment.rejected",
+      topic: "payment.rejected",
       stepName: "process-payment",
       payload: {
         orderId,

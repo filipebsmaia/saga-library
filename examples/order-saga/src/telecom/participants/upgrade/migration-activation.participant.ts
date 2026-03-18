@@ -47,7 +47,7 @@ export class MigrationActivationParticipant extends SagaParticipantBase {
       );
 
       await emit({
-        eventType: "migration.activation-failed",
+        topic: "migration.activation-failed",
         stepName: "Fail Activation",
         stepDescription: "Plan activation failed, triggering rollback",
         payload: {
@@ -67,7 +67,7 @@ export class MigrationActivationParticipant extends SagaParticipantBase {
     this.upgradeStore.updateStatus(upgradeId, "COMPLETED");
 
     await emit({
-      eventType: "migration.activated",
+      topic: "migration.activated",
       stepName: "Activate New Plan",
       stepDescription: "New plan activated successfully",
       payload: { upgradeId, customerId, targetPlan, provisioningId },

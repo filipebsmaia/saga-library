@@ -56,7 +56,7 @@ export class RFPaymentManagementParticipant extends SagaParticipantBase {
       this.logger.warn(`Payment ${paymentId} FAILED for order ${orderId}`);
 
       await emit({
-        eventType: "rf.payment.created.failed",
+        topic: "rf.payment.created.failed",
         stepName: "process-payment",
         stepDescription: "payment-management — pagamento recusado",
         payload: {
@@ -85,7 +85,7 @@ export class RFPaymentManagementParticipant extends SagaParticipantBase {
     );
 
     await emit({
-      eventType: "rf.payment.created.success",
+      topic: "rf.payment.created.success",
       stepName: "process-payment",
       stepDescription: "payment-management — pagamento aprovado",
       payload: {

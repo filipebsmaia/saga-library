@@ -31,7 +31,7 @@ export class NumberPortabilityParticipant extends SagaParticipantBase {
     );
 
     await emit({
-      eventType: "portability.validated",
+      topic: "portability.validated",
       stepName: "validate-portability",
       payload: {
         swapId,

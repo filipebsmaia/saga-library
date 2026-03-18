@@ -60,7 +60,7 @@ export class RFPlanOrderingManagementParticipant extends SagaParticipantBase {
     );
 
     await emit({
-      eventType: "rf.plan-ordering.order.created",
+      topic: "rf.plan-ordering.order.created",
       stepName: "create-plan-order",
       stepDescription: "plan-ordering-management cria ordem de plano",
       payload: {
@@ -93,7 +93,7 @@ export class RFPlanOrderingManagementParticipant extends SagaParticipantBase {
     this.logger.log(`PlanOrder ${planOrderId} COMPLETED`);
 
     await emit({
-      eventType: "rf.plan-ordering.order.updated.completed",
+      topic: "rf.plan-ordering.order.updated.completed",
       stepName: "complete-plan-order",
       stepDescription: "plan-ordering-management atualiza ordem como COMPLETED",
       payload: { planOrderId, recurringId, planId, customerId, amount, cycle },
@@ -120,7 +120,7 @@ export class RFPlanOrderingManagementParticipant extends SagaParticipantBase {
     this.logger.warn(`PlanOrder ${planOrderId} PAYMENT_FAILED: ${reason}`);
 
     await emit({
-      eventType: "rf.plan-ordering.order.updated.payment-failed",
+      topic: "rf.plan-ordering.order.updated.payment-failed",
       stepName: "fail-plan-order",
       stepDescription:
         "plan-ordering-management atualiza ordem como PAYMENT_FAILED",

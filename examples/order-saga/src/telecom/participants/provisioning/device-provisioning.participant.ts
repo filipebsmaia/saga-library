@@ -70,7 +70,7 @@ export class DeviceProvisioningParticipant extends SagaParticipantBase {
     this.logger.log(`[${deviceSerial}] Provisioning complete`);
 
     await emit({
-      eventType: "device-provisioning.completed",
+      topic: "device-provisioning.completed",
       stepName: "complete-device-provisioning",
       payload: {
         provisioningId,

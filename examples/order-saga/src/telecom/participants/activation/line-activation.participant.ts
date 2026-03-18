@@ -31,7 +31,7 @@ export class LineActivationParticipant extends SagaParticipantBase {
     );
 
     await emit({
-      eventType: "line-activation.completed",
+      topic: "line-activation.completed",
       stepName: "complete-line-activation",
       payload: {
         bulkId,

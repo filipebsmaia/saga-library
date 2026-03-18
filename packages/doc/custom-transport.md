@@ -32,8 +32,8 @@ interface SagaTransport {
 interface OutboundMessage {
   topic: string; // Event type (with optional prefix)
   key: string; // Partition/routing key (default: rootSagaId)
-  value: string; // JSON payload
-  headers: Record<string, string>; // Saga metadata headers
+  value: string; // JSON-serialized user payload only (no envelope)
+  headers: Record<string, string>; // All saga metadata headers (including saga-occurred-at)
 }
 
 interface InboundMessage {
@@ -94,6 +94,10 @@ export class RedisStreamsTransport implements SagaTransport {
   }
 }
 ```
+
+## Message Format
+
+The message body (`value`) contains **only the user's payload** as JSON (e.g., `{"orderId":"456"}`). Saga metadata such as `saga-occurred-at` (ISO timestamp) is transmitted via `headers`. The topic is derived from the message's topic field (e.g., `message.topic` in Kafka), not from a header. Your transport must preserve headers faithfully for `SagaParser` to reconstruct the full event.
 
 ## Important Notes
 

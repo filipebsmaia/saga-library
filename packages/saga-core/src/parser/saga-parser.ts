@@ -28,7 +28,7 @@ export class SagaParser {
 
   private parseFromHeaders<T>(message: InboundMessage): SagaEvent<T> | null {
     const headers = message.headers;
-    const body = JSON.parse(message.value);
+    const payload = JSON.parse(message.value) as T;
 
     const sagaId = headers["saga-id"];
     if (!sagaId) {
@@ -39,14 +39,14 @@ export class SagaParser {
       sagaId,
       causationId: headers["saga-causation-id"] ?? sagaId,
       eventId: headers["saga-event-id"] ?? uuidv7(),
-      eventType: body.eventType,
+      topic: message.topic,
       stepName: headers["saga-step-name"] ?? "",
-      occurredAt: body.occurredAt ?? new Date().toISOString(),
+      occurredAt: headers["saga-occurred-at"] ?? new Date().toISOString(),
       publishedAt: headers["saga-published-at"] ?? new Date().toISOString(),
       schemaVersion: 1,
       rootSagaId: headers["saga-root-id"] ?? sagaId,
       parentSagaId: headers["saga-parent-id"] || undefined,
-      payload: body.payload as T,
+      payload,
       sagaName: headers["saga-name"] || undefined,
       sagaDescription: headers["saga-description"] || undefined,
       stepDescription: headers["saga-step-description"] || undefined,
@@ -83,7 +83,7 @@ export class SagaParser {
       sagaId,
       causationId: sagaId,
       eventId: uuidv7(),
-      eventType: body.eventType,
+      topic: body.topic,
       stepName: "",
       occurredAt: body.occurredAt ?? new Date().toISOString(),
       publishedAt: new Date().toISOString(),

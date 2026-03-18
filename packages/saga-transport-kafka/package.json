@@ -1,6 +1,6 @@
 {
   "name": "@fbsm/saga-transport-kafka",
-  "version": "0.1.0-beta.3",
+  "version": "0.1.0-beta.4",
   "description": "KafkaJS transport adapter for saga choreography: eachBatch, watermark offset tracking",
   "license": "MIT",
   "author": "fbsm",

@@ -13,15 +13,15 @@ export interface SagaHandlerOptions {
 export function SagaHandler(
   ...args: [...string[]] | [...string[], SagaHandlerOptions]
 ): MethodDecorator {
-  let eventTypes: string[];
+  let topics: string[];
   let options: SagaHandlerOptions = {};
 
   const lastArg = args[args.length - 1];
   if (typeof lastArg === "object" && lastArg !== null) {
     options = lastArg as SagaHandlerOptions;
-    eventTypes = args.slice(0, -1) as string[];
+    topics = args.slice(0, -1) as string[];
   } else {
-    eventTypes = args as string[];
+    topics = args as string[];
   }
 
   return (target, propertyKey) => {
@@ -32,10 +32,10 @@ export function SagaHandler(
       Reflect.getMetadata(SAGA_HANDLER_OPTIONS_METADATA, target.constructor) ??
       new Map();
 
-    for (const eventType of eventTypes) {
-      existingMap.set(eventType, propertyKey);
+    for (const topic of topics) {
+      existingMap.set(topic, propertyKey);
       if (options.final || options.fork) {
-        existingOptions.set(eventType, options);
+        existingOptions.set(topic, options);
       }
     }
 

@@ -27,24 +27,24 @@ export class SagaRegistry {
     const map = new Map<string, RouteEntry>();
 
     for (const participant of this.participants) {
-      for (const [eventType, handler] of Object.entries(participant.on)) {
-        if (map.has(eventType)) {
-          const existing = map.get(eventType)!;
+      for (const [topic, handler] of Object.entries(participant.on)) {
+        if (map.has(topic)) {
+          const existing = map.get(topic)!;
           throw new SagaDuplicateHandlerError(
-            eventType,
+            topic,
             existing.participant.serviceId,
             participant.serviceId,
           );
         }
-        const options = participant.handlerOptions?.[eventType];
+        const options = participant.handlerOptions?.[topic];
         if (options?.final && options?.fork) {
           throw new SagaInvalidHandlerConfigError(
-            eventType,
+            topic,
             participant.serviceId,
             "cannot have both final and fork options",
           );
         }
-        map.set(eventType, { participant, handler, options });
+        map.set(topic, { participant, handler, options });
       }
     }
 

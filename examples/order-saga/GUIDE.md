@@ -166,7 +166,7 @@ export class MeuModule {}
 
 ### Handler
 
-O decorator `@SagaHandler(...eventTypes)` registra um método como handler para um ou mais tipos de evento.
+O decorator `@SagaHandler(...topics)` registra um método como handler para um ou mais tópicos.
 
 ```typescript
 // Handler para um evento
@@ -176,8 +176,8 @@ async handle(event: IncomingEvent, emit: Emit): Promise<void> { }
 // Handler para múltiplos eventos
 @SagaHandler('order.completed', 'order.failed')
 async handle(event: IncomingEvent, emit: Emit): Promise<void> {
-  if (event.eventType === 'order.completed') { /* ... */ }
-  if (event.eventType === 'order.failed') { /* ... */ }
+  if (event.topic === 'order.completed') { /* ... */ }
+  if (event.topic === 'order.failed') { /* ... */ }
 }
 ```
 
@@ -193,12 +193,12 @@ O handler recebe dois argumentos:
 A função `emit` publica um evento no Kafka vinculado à saga atual.
 
 ```typescript
-await emit(eventType, stepName, payload, options?)
+await emit(topic, stepName, payload, options?)
 ```
 
 | Parâmetro   | Tipo                   | Descrição                                  |
 | ----------- | ---------------------- | ------------------------------------------ |
-| `eventType` | `string`               | Tipo do evento (vira o tópico Kafka)       |
+| `topic` | `string`               | Tipo do evento (vira o tópico Kafka)       |
 | `stepName`  | `string`               | Identificador do passo (para rastreamento) |
 | `payload`   | `object`               | Dados do evento                            |
 | `options`   | `{ hint?: EventHint }` | Opcional — dica sobre a natureza do evento |
@@ -591,7 +591,7 @@ async handleProvisioningRequested(event: IncomingEvent, emit: Emit): Promise<voi
     await heartbeat?.();                // mantém o consumer vivo
   }
 
-  await emit({ eventType: 'device-provisioning.completed', ... });
+  await emit({ topic: 'device-provisioning.completed', ... });
 }
 ```
 

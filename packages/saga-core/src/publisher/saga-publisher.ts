@@ -113,7 +113,7 @@ export class SagaPublisher {
     const parentSagaId = parentCtx?.parentSagaId;
     const baseCausationId = causationId ?? sagaId;
     return async <T extends object>({
-      eventType,
+      topic,
       stepName,
       stepDescription,
       payload,
@@ -127,7 +127,7 @@ export class SagaPublisher {
         sagaId,
         causationId: baseCausationId,
         eventId: uuidv7(),
-        eventType,
+        topic,
         stepName,
         stepDescription,
         occurredAt: now,
@@ -155,7 +155,7 @@ export class SagaPublisher {
 
     const attrs: Record<string, string> = {
       "saga.id": event.sagaId,
-      "saga.event.type": event.eventType,
+      "saga.topic": event.topic,
       "saga.step.name": event.stepName,
       "saga.root.id": event.rootSagaId,
     };
@@ -178,7 +178,7 @@ export class SagaPublisher {
 
     this.otelCtx.injectTraceContext(message.headers);
 
-    await this.otelCtx.withSpan(`saga.publish ${event.eventType}`, attrs, () =>
+    await this.otelCtx.withSpan(`saga.publish ${event.topic}`, attrs, () =>
       this.transport.publish(message),
     );
   }

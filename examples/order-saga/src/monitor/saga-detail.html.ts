@@ -385,7 +385,7 @@ function renderTraceTimeline(events) {
     html += '<div class="event-line"></div>';
     html += '<div class="event-dot ' + getEventDotClass(ev) + '"></div>';
     html += '<div class="event-content">';
-    html += '<div class="event-type' + getEventTypeClass(ev) + '">' + ev.eventType + '</div>';
+    html += '<div class="event-type' + getEventTypeClass(ev) + '">' + ev.topic + '</div>';
     html += '<div class="event-detail"><span class="event-step">' + ev.stepName + '</span>';
     if (isCrossSaga) html += ' <span style="color:#a371f7; font-size:10px">[' + ev.sagaId.slice(0, 8) + '...]</span>';
     if (ev.stepDescription) html += ' <span style="color:#8b949e; font-size:10px; font-style:italic">' + ev.stepDescription + '</span>';
@@ -395,10 +395,10 @@ function renderTraceTimeline(events) {
     const triggered = childrenByCausation[ev.eventId] || [];
     if (causedBy || triggered.length > 0) {
       html += '<div class="event-causation">';
-      if (causedBy) html += '<span class="event-caused-by">&#8592; ' + causedBy.eventType + '</span>';
+      if (causedBy) html += '<span class="event-caused-by">&#8592; ' + causedBy.topic + '</span>';
       if (triggered.length > 0) {
         if (causedBy) html += '<span style="color:#30363d; margin:0 3px"> | </span>';
-        html += '<span class="event-triggered">&#8594; ' + triggered.map(t => t.eventType).join(', ') + '</span>';
+        html += '<span class="event-triggered">&#8594; ' + triggered.map(t => t.topic).join(', ') + '</span>';
       }
       html += '</div>';
     }
@@ -595,13 +595,13 @@ function renderSpan(container) {
         html += '<div class="span-row">';
         html += '<div class="span-label" style="width:' + labelWidth + 'px">';
         if (isSubSaga) html += '<span class="span-indent"></span>';
-        html += '<span style="color:' + hintColor(ev) + '">' + ev.eventType + '</span>';
+        html += '<span style="color:' + hintColor(ev) + '">' + ev.topic + '</span>';
         html += '</div>';
         html += '<div class="span-bar-area">';
         html += '<div class="span-bar ' + barClass + '" style="left:' + leftPct + '%; width:' + widthPct + '%"';
-        html += ' onmouseenter="showFlameTooltip(event, \\'' + ev.eventType.replace(/'/g, "\\\\'") + '\\', \\'' + ev.stepName.replace(/'/g, "\\\\'") + '\\', \\'' + formatTime(ev.occurredAt) + '\\', \\'' + (ev.hint || 'step') + '\\', \\'' + (ev.eventId || '') + '\\', \\'' + (ev.stepDescription || '').replace(/'/g, "\\\\'") + '\\')"';
+        html += ' onmouseenter="showFlameTooltip(event, \\'' + ev.topic.replace(/'/g, "\\\\'") + '\\', \\'' + ev.stepName.replace(/'/g, "\\\\'") + '\\', \\'' + formatTime(ev.occurredAt) + '\\', \\'' + (ev.hint || 'step') + '\\', \\'' + (ev.eventId || '') + '\\', \\'' + (ev.stepDescription || '').replace(/'/g, "\\\\'") + '\\')"';
         html += ' onmouseleave="hideFlameTooltip()">';
-        html += ev.stepName || ev.eventType;
+        html += ev.stepName || ev.topic;
         html += '</div></div></div>';
       }
     }
@@ -641,9 +641,9 @@ function renderFlameEventRows(events, tMin, totalSpan) {
 
     html += '<div class="flame-row">';
     html += '<div class="flame-bar ' + barClass + '" style="left:' + evLeft + '%; width:' + evWidth + '%"';
-    html += ' onmouseenter="showFlameTooltip(event, \\'' + ev.eventType.replace(/'/g, "\\\\'") + '\\', \\'' + ev.stepName.replace(/'/g, "\\\\'") + '\\', \\'' + formatTime(ev.occurredAt) + '\\', \\'' + (ev.hint || 'step') + '\\', \\'' + (ev.eventId || '') + '\\', \\'' + (ev.stepDescription || '').replace(/'/g, "\\\\'") + '\\')"';
+    html += ' onmouseenter="showFlameTooltip(event, \\'' + ev.topic.replace(/'/g, "\\\\'") + '\\', \\'' + ev.stepName.replace(/'/g, "\\\\'") + '\\', \\'' + formatTime(ev.occurredAt) + '\\', \\'' + (ev.hint || 'step') + '\\', \\'' + (ev.eventId || '') + '\\', \\'' + (ev.stepDescription || '').replace(/'/g, "\\\\'") + '\\')"';
     html += ' onmouseleave="hideFlameTooltip()">';
-    html += ev.eventType;
+    html += ev.topic;
     html += '</div></div>';
   }
   return html;
@@ -791,10 +791,10 @@ function showFlameTooltip(e, type, step, time, hint, evId, stepDesc) {
     const causedByEv = Object.values(eventById).find(ev => ev.eventId === evId);
     if (causedByEv && causedByEv.causationId && causedByEv.causationId !== causedByEv.eventId) {
       const parent = eventById[causedByEv.causationId];
-      if (parent) tooltipHtml += '<div class="tt-detail" style="color:#58a6ff">&#8592; ' + parent.eventType + '</div>';
+      if (parent) tooltipHtml += '<div class="tt-detail" style="color:#58a6ff">&#8592; ' + parent.topic + '</div>';
     }
     if (triggered.length > 0) {
-      tooltipHtml += '<div class="tt-detail" style="color:#3fb950">&#8594; ' + triggered.map(t => t.eventType).join(', ') + '</div>';
+      tooltipHtml += '<div class="tt-detail" style="color:#3fb950">&#8594; ' + triggered.map(t => t.topic).join(', ') + '</div>';
     }
   }
 

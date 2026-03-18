@@ -21,7 +21,7 @@ describe("@SagaParticipant()", () => {
 });
 
 describe("@SagaHandler()", () => {
-  it("should map a single event type to the method", () => {
+  it("should map a single topic to the method", () => {
     class TestParticipant {
       @SagaHandler("order.created")
       async process() {}
@@ -36,7 +36,7 @@ describe("@SagaHandler()", () => {
     expect(map.get("order.created")).toBe("process");
   });
 
-  it("should map multiple event types to the same method", () => {
+  it("should map multiple topics to the same method", () => {
     class TestParticipant {
       @SagaHandler("inventory.failed", "inventory.compensated")
       async compensate() {}

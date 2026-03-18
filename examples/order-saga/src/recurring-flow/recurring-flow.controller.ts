@@ -67,7 +67,7 @@ export class RecurringFlowController {
     const { sagaId } = await this.sagaPublisher.start(
       async () => {
         await this.sagaPublisher.emit({
-          eventType: "rf.recurring.updated.processing",
+          topic: "rf.recurring.updated.processing",
           stepName: "trigger-recurring",
           stepDescription:
             "CRON run-queue publica RECURRING_UPDATED (PROCESSING)",
@@ -140,7 +140,7 @@ export class RecurringFlowController {
     const { sagaId } = await this.sagaPublisher.start(
       async () => {
         await this.sagaPublisher.emit({
-          eventType: "rf.recurring.updated.processing",
+          topic: "rf.recurring.updated.processing",
           stepName: "retry-recurring",
           stepDescription: `CRON run-queue retenta recorrência (tentativa ${record.totalAttempts}/${record.maxAttempts})`,
           payload: {

@@ -40,7 +40,7 @@ export class UpgradeApprovalParticipant extends SagaParticipantBase {
 
     // Final event on Saga A
     await emit({
-      eventType: "upgrade.approved",
+      topic: "upgrade.approved",
       stepName: "Approve Upgrade",
       stepDescription: "Plan upgrade approved, starting migration",
       payload: { upgradeId, customerId, currentPlan, targetPlan },
@@ -51,7 +51,7 @@ export class UpgradeApprovalParticipant extends SagaParticipantBase {
     const { sagaId: migrationSagaId } = await this.sagaPublisher.startChild(
       async () => {
         await this.sagaPublisher.emit({
-          eventType: "migration.started",
+          topic: "migration.started",
           stepName: "Start Migration",
           stepDescription: "Plan migration saga initiated",
           payload: {

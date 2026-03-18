@@ -133,7 +133,7 @@ interface RunnerOptions {
 
 Parses inbound messages using a 3-layer fallback strategy:
 
-1. **Headers** — `saga-id` header present → metadata from headers, payload from body
+1. **Headers** — `saga-id` header present → metadata from headers (including `saga-occurred-at`), body is the raw user payload. Topic is derived from the message's topic field
 2. **W3C Baggage** — OpenTelemetry baggage present → extract saga context from baggage items
 3. **Legacy envelope** — Body contains `sagaId` field → full envelope in message body
 
@@ -146,6 +146,7 @@ When using the header-based format (default with `@fbsm/saga-transport-kafka`):
 | `saga-id`               | Saga instance ID                                       |
 | `saga-event-id`         | Unique event ID                                        |
 | `saga-causation-id`     | ID of the event that caused this one                   |
+| `saga-occurred-at`      | ISO timestamp of when the event occurred               |
 | `saga-step-name`        | Logical step name                                      |
 | `saga-published-at`     | ISO timestamp of publication                           |
 | `saga-schema-version`   | Schema version (currently `1`)                         |
@@ -157,13 +158,15 @@ When using the header-based format (default with `@fbsm/saga-transport-kafka`):
 | `saga-step-description` | Step description (optional)                            |
 | `saga-key`              | Partition key (optional)                               |
 
+**Message body**: The Kafka message body contains **only the user's payload** (e.g., `{"orderId":"456"}`). Event metadata such as `occurredAt` is transmitted via the headers listed above, not in the body. The topic is derived from the Kafka message topic (i.e., `message.topic`), not from a header.
+
 ## Errors
 
 | Error                            | Description                                                                                                 |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `SagaError`                      | Base error class for all saga errors                                                                        |
 | `SagaRetryableError`             | Throw in handlers to trigger retry with exponential backoff. `new SagaRetryableError(message, maxRetries?)` |
-| `SagaDuplicateHandlerError`      | Two handlers registered for the same event type                                                             |
+| `SagaDuplicateHandlerError`      | Two handlers registered for the same topic                                                                  |
 | `SagaParseError`                 | Message parsing failed                                                                                      |
 | `SagaTransportNotConnectedError` | Publishing to a disconnected transport                                                                      |
 | `SagaContextNotFoundError`       | `emit()`/`startChild()`/`emitToParent()` called outside a saga context                                      |
@@ -250,7 +253,7 @@ Default: `ConsoleSagaLogger` (wraps `console.log/warn/error`).
 
 ## Further Reading
 
-- [Concepts](../doc/concepts.md) — sagaId, hint, eventType, and other domain terms
+- [Concepts](../doc/concepts.md) — sagaId, hint, topic, and other domain terms
 - [Core Functions](../doc/core-functions.md) — emit, emitToParent, start, startChild, forSaga
 - [@fbsm/saga-nestjs](../saga-nestjs/README.md) — NestJS decorators and auto-discovery
 - [@fbsm/saga-transport-kafka](../saga-transport-kafka/README.md) — Kafka transport
