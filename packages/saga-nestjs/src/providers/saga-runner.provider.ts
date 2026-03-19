@@ -50,8 +50,8 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
         continue;
       }
 
-      // Force instantiation via ModuleRef (like ConsumerExplorerService does)
-      const instance = await this.moduleRef.resolve(metatype);
+      // Force instantiation via ModuleRef with { strict: false } to resolve across all modules
+      const instance = this.moduleRef.get(metatype, { strict: false });
       if (!instance) {
         this.logger.warn(
           `Could not resolve participant "${metatype.name}" — skipping`
