@@ -121,13 +121,13 @@ interface RunnerOptions {
 
 **Handler execution flow**:
 
-1. Parse inbound message via `SagaParser`
-2. Look up handler in route map
-3. Wrap emit with `final` hint (if `{ final: true }`)
-4. Wrap emit with fork logic (if `{ fork: true }`) — creates sub-saga per emit
-5. Set `SagaContext` via `AsyncLocalStorage`
-6. Execute handler with retry on `SagaRetryableError`
-7. On retry exhaustion, call `participant.onRetryExhausted()` if defined
+1. Parse inbound message via `SagaParser` — if parsed (saga metadata found), route to saga handler; if null (no metadata), route to plain handler
+2. Look up handler in route map (`RouteEntry` supports both `sagaHandler` and `plainHandler` per topic)
+3. **Saga path**: Wrap emit with `final` hint (if `{ final: true }`), fork logic (if `{ fork: true }`), set `SagaContext` via `AsyncLocalStorage`
+4. Execute handler with retry on `SagaRetryableError`
+5. On non-retryable error: call `participant.onFail()` if defined (with independent retry)
+6. On retry exhaustion (from handle or onFail): call `participant.onRetryExhausted()` if defined
+7. **Plain path**: Parse payload, call `plainHandler(PlainMessage)` — no context, no emit, no retry
 
 ## SagaParser
 
@@ -173,7 +173,21 @@ When using the header-based format (default with `@fbsm/saga-transport-kafka`):
 | `SagaNoParentError`              | `emitToParent()` called in a saga without `parentSagaId`                                                    |
 | `SagaInvalidHandlerConfigError`  | Handler has conflicting options (e.g., both `final` and `fork`)                                             |
 
-**Retry behavior**: `SagaRetryableError` triggers exponential backoff: `initialDelayMs * 2^attempt`. After `maxRetries` attempts, `onRetryExhausted()` is called if defined. Non-retryable errors are logged and skipped.
+**Retry behavior**: `SagaRetryableError` triggers exponential backoff: `initialDelayMs * 2^attempt`. After `maxRetries` attempts, `onRetryExhausted()` is called if defined. Non-retryable errors are routed to `onFail()` if defined; otherwise logged and skipped.
+
+**Error flow**:
+
+```
+handle(event, emit)
+  ├── SUCCESS → done
+  ├── throws SagaRetryableError → retry → exhausted → onRetryExhausted?
+  └── throws non-retryable Error
+        ├── onFail defined → call onFail (retries independently)
+        │     ├── onFail succeeds → done
+        │     ├── onFail retries exhausted → onRetryExhausted?
+        │     └── onFail throws non-retryable → log → done
+        └── onFail not defined → log → done
+```
 
 ## OTel Integration
 

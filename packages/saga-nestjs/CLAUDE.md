@@ -10,7 +10,7 @@ pnpm dev         # tsup --watch
 pnpm typecheck   # tsc --noEmit
 ```
 
-Tests are run from the **monorepo root** (no test files in this package currently):
+Tests are run from the **monorepo root**:
 
 ```bash
 pnpm vitest run packages/saga-nestjs
@@ -21,7 +21,7 @@ pnpm vitest run packages/saga-nestjs
 This package is a thin NestJS wrapper over `@fbsm/saga-core`. It adds:
 
 1. A dynamic module (`SagaModule`) that wires the core classes as NestJS providers
-2. Decorators (`@SagaParticipant`, `@SagaHandler`) for auto-discovery
+2. Decorators (`@SagaParticipant(topics)`, `@MessageHandler(topics)`) for auto-discovery
 3. An injectable `SagaPublisherProvider` that delegates to `SagaPublisher`
 
 ### Module bootstrap flow
@@ -32,31 +32,40 @@ SagaModule.forRoot(options)
   ├─ Provides: SagaRegistry, SagaParser, SagaPublisher, SagaRunner (from @fbsm/saga-core)
   ├─ Provides: SagaPublisherProvider (injectable wrapper)
   │
-  └─ SagaRunnerProvider (OnApplicationBootstrap)
-       │  on bootstrap:
-       ├─ Discovers all @SagaParticipant classes via NestJS ModuleRef
-       ├─ Reads @SagaHandler metadata from each method
+  └─ SagaRunnerProvider (OnModuleInit)
+       │  on init:
+       ├─ Discovers all @SagaParticipant classes via DiscoveryService
+       ├─ Reads SAGA_PARTICIPANT_TOPICS_METADATA → saga topics
+       ├─ Reads SAGA_PARTICIPANT_OPTIONS_METADATA → handler options (fork, final)
+       ├─ Binds handle() as the saga handler for all declared topics
+       ├─ Reads MESSAGE_HANDLER_METADATA → plain message topics → method bindings
+       ├─ Binds onFail() and onRetryExhausted() if defined
+       ├─ Derives serviceId from instance.constructor.name
        ├─ Calls registry.register(participant) for each
        └─ Calls runner.start()
 ```
 
-`SagaRunnerProvider` (`src/providers/saga-runner.provider.ts`) is the orchestration point. It uses `ModuleRef` to iterate over all registered providers and filter those with the `SAGA_PARTICIPANT_METADATA` symbol (set by `@SagaParticipant()`).
-
 ### Decorator mechanics
 
-`@SagaParticipant()` — sets a metadata symbol on the class. Checked by `SagaRunnerProvider` during bootstrap.
-
-`@SagaHandler(...topics, options?)` — sets handler metadata on the method. The last argument is treated as `SagaHandlerOptions` if it's a plain object (not a string). This allows:
+`@SagaParticipant(topics, options?)` — class decorator. Sets SAGA_PARTICIPANT_METADATA, SAGA_PARTICIPANT_TOPICS_METADATA, and optionally SAGA_PARTICIPANT_OPTIONS_METADATA.
 
 ```typescript
-@SagaHandler('a', 'b', { final: true })   // multiple topics + options
-@SagaHandler('a', { fork: true })          // single topic + options
-@SagaHandler('a')                          // no options
+@SagaParticipant('order.created')                        // single topic
+@SagaParticipant(['event.a', 'event.b'])                 // multiple topics
+@SagaParticipant('bulk.requested', { fork: true })       // with options
+@SagaParticipant('provisioning.completed', { final: true })
 ```
+
+`@MessageHandler(...topics)` — method decorator for non-saga messages. Sets MESSAGE_HANDLER_METADATA (Map of topic → method name).
 
 ### SagaParticipantBase
 
-Participants must extend `SagaParticipantBase`. The base class has an `on` map (`Record<string, EventHandler>`) that is auto-populated by `SagaRunnerProvider` from the `@SagaHandler` metadata, so the participant's `on` property is ready when `registry.register()` is called.
+Participants must extend `SagaParticipantBase`. The base class requires implementing:
+- `handle(event, emit)` — mandatory, handles all declared saga topics
+- `onFail?(event, error, emit)` — optional, called on non-retryable error from handle
+- `onRetryExhausted?(event, error, emit)` — optional, called when retries are exhausted
+
+`serviceId` is auto-derived from `instance.constructor.name` — no manual declaration needed.
 
 ### forRootAsync
 
@@ -64,4 +73,8 @@ Participants must extend `SagaParticipantBase`. The base class has an `on` map (
 
 ### Constants
 
-`src/constants.ts` holds the metadata keys (`SAGA_PARTICIPANT_METADATA`, `SAGA_HANDLER_METADATA`) used by decorators and provider discovery. If adding new decorator-driven behavior, follow this pattern.
+`src/constants.ts` holds the metadata keys used by decorators and provider discovery:
+- `SAGA_PARTICIPANT_METADATA` — marks a class as a saga participant
+- `SAGA_PARTICIPANT_TOPICS_METADATA` — saga topics from @SagaParticipant
+- `SAGA_PARTICIPANT_OPTIONS_METADATA` — handler options (fork, final)
+- `MESSAGE_HANDLER_METADATA` — plain handler topic → method mappings

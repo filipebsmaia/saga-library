@@ -2,7 +2,6 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
-  SagaHandler,
 } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
 import { v7 as uuidv7 } from "uuid";
@@ -10,20 +9,15 @@ import { randomDelay } from "../../delay";
 import { ProductStore } from "../../stores/product.store";
 
 @Injectable()
-@SagaParticipant()
-export class MobileProductLifecycleParticipant extends SagaParticipantBase {
-  readonly serviceId = "mobile-product-lifecycle";
-  private readonly logger = new Logger(MobileProductLifecycleParticipant.name);
+@SagaParticipant("recurring.created")
+export class RecurringCreatedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(RecurringCreatedParticipant.name);
 
   constructor(private readonly productStore: ProductStore) {
     super();
   }
 
-  @SagaHandler("recurring.created")
-  async handleRecurringCreated(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { recurringId, planId, customerId, msisdn } = event.payload as {
       recurringId: string;
       planId: string;
@@ -51,12 +45,18 @@ export class MobileProductLifecycleParticipant extends SagaParticipantBase {
       payload: { productId, recurringId, planId, customerId, msisdn },
     });
   }
+}
 
-  @SagaHandler("product.provisioned")
-  async handleProductProvisioned(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+@Injectable()
+@SagaParticipant("product.provisioned")
+export class ProductProvisionedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(ProductProvisionedParticipant.name);
+
+  constructor(private readonly productStore: ProductStore) {
+    super();
+  }
+
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { productId, provisioningId } = event.payload as {
       productId: string;
       provisioningId: string;

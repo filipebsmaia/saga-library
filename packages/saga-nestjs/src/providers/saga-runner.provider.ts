@@ -7,14 +7,14 @@ import {
 } from "@nestjs/common";
 import { DiscoveryService } from "@nestjs/core";
 import { SagaRunner, SagaRegistry } from "@fbsm/saga-core";
-import type { EventHandler } from "@fbsm/saga-core";
+import type { EventHandler, HandlerConfig, PlainHandler } from "@fbsm/saga-core";
 import {
   SAGA_PARTICIPANT_METADATA,
-  SAGA_HANDLER_METADATA,
-  SAGA_HANDLER_OPTIONS_METADATA,
+  SAGA_PARTICIPANT_TOPICS_METADATA,
+  SAGA_PARTICIPANT_OPTIONS_METADATA,
+  MESSAGE_HANDLER_METADATA,
 } from "../constants";
-import type { SagaHandlerOptions } from "../decorators/saga-handler.decorator";
-import type { HandlerConfig } from "@fbsm/saga-core";
+import type { SagaParticipantOptions } from "../decorators/saga-participant.decorator";
 
 @Injectable()
 export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
@@ -45,44 +45,67 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
         continue;
       }
 
-      const handlesMap: Map<string, string | symbol> | undefined =
-        Reflect.getMetadata(SAGA_HANDLER_METADATA, instance.constructor);
+      // Derive serviceId from class name
+      const serviceId = instance.constructor.name;
 
-      if (!handlesMap || handlesMap.size === 0) {
-        continue;
-      }
-
-      const on: Record<string, EventHandler<any>> = {};
-
-      for (const [topic, methodName] of handlesMap.entries()) {
-        const method = (instance as any)[methodName];
-        if (typeof method === "function") {
-          on[topic] = method.bind(instance);
-        }
-      }
-
-      // Populate the `on` property if instance extends SagaParticipantBase
-      if ("on" in instance && typeof instance.on === "object") {
-        Object.assign(instance.on, on);
-      }
-
-      // Extract handler options (final, fork, etc.) from decorator metadata
-      const handlerOptionsMap: Map<string, SagaHandlerOptions> | undefined =
+      // Read saga topics from @SagaParticipant(topics) decorator
+      const sagaTopics: string[] =
         Reflect.getMetadata(
-          SAGA_HANDLER_OPTIONS_METADATA,
+          SAGA_PARTICIPANT_TOPICS_METADATA,
+          instance.constructor,
+        ) ?? [];
+
+      // Read options (final, fork) from @SagaParticipant(topics, options) decorator
+      const participantOptions: SagaParticipantOptions | undefined =
+        Reflect.getMetadata(
+          SAGA_PARTICIPANT_OPTIONS_METADATA,
           instance.constructor,
         );
 
+      // Bind handle() as the saga handler for all declared topics
+      const on: Record<string, EventHandler<any>> = {};
       const handlerOptions: Record<string, HandlerConfig> = {};
-      if (handlerOptionsMap) {
-        for (const [topic, opts] of handlerOptionsMap.entries()) {
-          handlerOptions[topic] = { final: opts.final, fork: !!opts.fork };
+
+      if (
+        sagaTopics.length > 0 &&
+        typeof (instance as any).handle === "function"
+      ) {
+        const boundHandle = (instance as any).handle.bind(instance);
+        for (const topic of sagaTopics) {
+          on[topic] = boundHandle;
+          if (participantOptions?.final || participantOptions?.fork) {
+            handlerOptions[topic] = {
+              final: participantOptions.final,
+              fork: participantOptions.fork,
+            };
+          }
         }
       }
 
-      const serviceId = (instance as any).serviceId ?? "unknown";
+      // Read @MessageHandler metadata for plain handlers
+      const messageHandlerMap: Map<string, string | symbol> | undefined =
+        Reflect.getMetadata(MESSAGE_HANDLER_METADATA, instance.constructor);
+
+      const onPlain: Record<string, PlainHandler> = {};
+      if (messageHandlerMap) {
+        for (const [topic, methodName] of messageHandlerMap.entries()) {
+          const method = (instance as any)[methodName];
+          if (typeof method === "function") {
+            onPlain[topic] = method.bind(instance);
+          }
+        }
+      }
+
+      const sagaTopicsList = Object.keys(on);
+      const plainTopicsList = Object.keys(onPlain);
+
+      if (sagaTopicsList.length === 0 && plainTopicsList.length === 0) {
+        continue;
+      }
+
+      const allTopics = [...sagaTopicsList, ...plainTopicsList];
       this.logger.log(
-        `Registered participant "${serviceId}" handling: [${Object.keys(on).join(", ")}]`,
+        `Registered participant "${serviceId}" handling: [${allTopics.join(", ")}]`,
       );
 
       this.registry.register({
@@ -90,6 +113,12 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
         on,
         handlerOptions:
           Object.keys(handlerOptions).length > 0 ? handlerOptions : undefined,
+        onPlain:
+          Object.keys(onPlain).length > 0 ? onPlain : undefined,
+        onFail:
+          typeof (instance as any).onFail === "function"
+            ? (instance as any).onFail.bind(instance)
+            : undefined,
         onRetryExhausted:
           typeof (instance as any).onRetryExhausted === "function"
             ? (instance as any).onRetryExhausted.bind(instance)

@@ -1,15 +1,14 @@
-import type {
-  SagaParticipant,
-  EventHandler,
-  IncomingEvent,
-  Emit,
-} from "@fbsm/saga-core";
+import type { IncomingEvent, Emit } from "@fbsm/saga-core";
 import { SagaRetryableError } from "@fbsm/saga-core";
 
-export abstract class SagaParticipantBase implements SagaParticipant {
-  abstract readonly serviceId: string;
+export abstract class SagaParticipantBase {
+  abstract handle(event: IncomingEvent, emit: Emit): Promise<void>;
 
-  readonly on: Record<string, EventHandler<any>> = {};
+  onFail?(
+    event: IncomingEvent,
+    error: Error,
+    emit: Emit,
+  ): Promise<void>;
 
   onRetryExhausted?(
     event: IncomingEvent,

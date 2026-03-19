@@ -52,13 +52,18 @@ This means `emit()` inside any handler or `start()` callback can read `SagaConte
 
 For each inbound message, `SagaRunner`:
 
-1. Parses via `SagaParser`
-2. Looks up handler in registry route map (`topic → { participant, handler, options }`)
-3. If `{ fork: true }`: wraps `emit` so each call gets a new `sagaId`, `parentSagaId`, and `hint: 'fork'`
-4. If `{ final: true }`: wraps `emit` to auto-add `hint: 'final'`
-5. Sets `SagaContext` via ALS
-6. Executes handler with exponential-backoff retry on `SagaRetryableError` (`initialDelayMs * 2^attempt`)
-7. On exhaustion: calls `participant.onRetryExhausted()` if defined
+1. Looks up `RouteEntry` in route map (supports both `sagaHandler` and `plainHandler` per topic)
+2. Parses via `SagaParser` — determines if message is saga (has metadata) or plain (no metadata)
+3. **Saga path**: If parsed (saga metadata) and `sagaHandler` exists:
+   - If `{ fork: true }`: wraps `emit` so each call gets a new `sagaId`, `parentSagaId`, and `hint: 'fork'`
+   - If `{ final: true }`: wraps `emit` to auto-add `hint: 'final'`
+   - Sets `SagaContext` via ALS
+   - Executes handler with exponential-backoff retry on `SagaRetryableError` (`initialDelayMs * 2^attempt`)
+   - On non-retryable error: calls `participant.onFail()` if defined (with independent retry)
+   - On exhaustion (from handle or onFail): calls `participant.onRetryExhausted()` if defined
+4. **Plain path**: If parse returns null (no saga metadata) and `plainHandler` exists:
+   - Constructs `PlainMessage` (topic, key, payload, headers) — no saga context, no emit
+   - Calls `plainHandler(message)` directly
 
 ### fork vs final
 

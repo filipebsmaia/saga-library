@@ -2,22 +2,16 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
-  SagaHandler,
 } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
 import { randomDelay } from "../../delay";
 
 @Injectable()
-@SagaParticipant()
+@SagaParticipant("portability.validation.requested", { final: true })
 export class NumberPortabilityParticipant extends SagaParticipantBase {
-  readonly serviceId = "number-portability";
   private readonly logger = new Logger(NumberPortabilityParticipant.name);
 
-  @SagaHandler("portability.validation.requested", { final: true })
-  async handleValidationRequested(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { swapId, msisdn, newIccid } = event.payload as {
       swapId: string;
       msisdn: string;

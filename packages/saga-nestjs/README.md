@@ -51,33 +51,31 @@ SagaModule.forRootAsync({
 });
 ```
 
-### `@SagaParticipant()`
+### `@SagaParticipant(topics, options?)`
 
-Class decorator. Marks a class for auto-discovery by the saga runner. Must extend `SagaParticipantBase`.
-
-```typescript
-@Injectable()
-@SagaParticipant()
-export class PaymentParticipant extends SagaParticipantBase {
-  readonly serviceId = "payment-service";
-}
-```
-
-### `@SagaHandler(...topics, options?)`
-
-Method decorator. Registers a method as the handler for one or more topics. Accepts an optional options object as the last argument.
+Class decorator. Declares the saga topics this participant handles. Must extend `SagaParticipantBase`.
 
 ```typescript
 // Single topic
-@SagaHandler('order.created')
-async handleOrderCreated(event: IncomingEvent, emit: Emit) {}
+@Injectable()
+@SagaParticipant("order.created")
+export class PaymentParticipant extends SagaParticipantBase {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> { ... }
+}
 
-// Multiple topics
-@SagaHandler('inventory.failed', 'inventory.compensated')
-async handleInventoryIssue(event: IncomingEvent, emit: Emit) {}
+// Multiple topics (same logic for all)
+@Injectable()
+@SagaParticipant(["inventory.failed", "inventory.compensated"])
+export class InventoryCompensationParticipant extends SagaParticipantBase {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> { ... }
+}
+
+// With options
+@SagaParticipant("bulk.requested", { fork: true })
+@SagaParticipant("provisioning.completed", { final: true })
 ```
 
-**`SagaHandlerOptions`**:
+**`SagaParticipantOptions`**:
 
 | Field   | Type                    | Description                                                                                                                                                        |
 | ------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -86,17 +84,52 @@ async handleInventoryIssue(event: IncomingEvent, emit: Emit) {}
 
 `final` and `fork` are **mutually exclusive** — using both throws `SagaInvalidHandlerConfigError`.
 
-**Constraint**: Each topic must have exactly one handler across all participants. Duplicate registrations throw `SagaDuplicateHandlerError`.
+Options apply uniformly to all topics in the decorator. Different options require different classes.
+
+**Constraint**: Each topic must have exactly one saga handler across all participants. Duplicate registrations throw `SagaDuplicateHandlerError`.
+
+**`serviceId`** is auto-derived from the class name (e.g., `PaymentParticipant` → `"PaymentParticipant"`). No manual declaration needed.
+
+### `@MessageHandler(...topics)`
+
+Method decorator for non-saga (plain) message consumption. Routes messages that lack saga headers to the decorated method.
+
+```typescript
+@Injectable()
+@SagaParticipant("order.created")
+export class OrderParticipant extends SagaParticipantBase {
+  // Called when message HAS saga headers
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> { ... }
+
+  // Called when message does NOT have saga headers
+  @MessageHandler("order.created")
+  async handlePlain(message: PlainMessage): Promise<void> { ... }
+}
+```
+
+The same topic can have both a saga handler and a plain handler — routing is per-message based on whether saga metadata is present.
+
+**`PlainMessage`**:
+
+```typescript
+interface PlainMessage<T = unknown> {
+  topic: string;
+  key: string;
+  payload: T;
+  headers: Record<string, string>;
+  timestamp?: string;
+}
+```
 
 ### `SagaParticipantBase`
 
 Abstract base class for saga participants.
 
-| Property / Method     | Type                                    | Description                                           |
-| --------------------- | --------------------------------------- | ----------------------------------------------------- |
-| `serviceId`           | `string` (abstract)                     | Unique service identifier                             |
-| `on`                  | `Record<string, EventHandler>`          | Auto-populated handler registry                       |
-| `onRetryExhausted?()` | `(event, error, emit) => Promise<void>` | Called when `SagaRetryableError` exceeds `maxRetries` |
+| Property / Method     | Type                                            | Description                                                        |
+| --------------------- | ----------------------------------------------- | ------------------------------------------------------------------ |
+| `handle()`            | `(event, emit) => Promise<void>` (abstract)     | Mandatory handler for all declared saga topics                     |
+| `onFail?()`           | `(event, error, emit) => Promise<void>`         | Called on non-retryable error from `handle()` (retries independently) |
+| `onRetryExhausted?()` | `(event, error, emit) => Promise<void>`         | Called when `SagaRetryableError` exceeds `maxRetries`              |
 
 ### `SagaPublisherProvider`
 
@@ -196,20 +229,13 @@ A basic participant that handles one event and emits another.
 ```typescript
 // payment.participant.ts
 import { Injectable } from "@nestjs/common";
-import {
-  SagaParticipant,
-  SagaParticipantBase,
-  SagaHandler,
-} from "@fbsm/saga-nestjs";
+import { SagaParticipant, SagaParticipantBase } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-core";
 
 @Injectable()
-@SagaParticipant()
+@SagaParticipant("order.created")
 export class PaymentParticipant extends SagaParticipantBase {
-  readonly serviceId = "payment-service";
-
-  @SagaHandler("order.created")
-  async handleOrderCreated(event: IncomingEvent, emit: Emit): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { orderId, amount } = event.payload as {
       orderId: string;
       amount: number;
@@ -258,37 +284,19 @@ export class OrdersController {
 A handler that forks N sub-sagas and coordinates their completion via `emitToParent()`.
 
 ```typescript
-// bulk-orchestration.participant.ts
+// bulk-fork.participant.ts — Each emit() creates a separate sub-saga
 import { Injectable } from "@nestjs/common";
-import {
-  SagaParticipant,
-  SagaParticipantBase,
-  SagaHandler,
-  SagaPublisherProvider,
-} from "@fbsm/saga-nestjs";
+import { SagaParticipant, SagaParticipantBase } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-core";
 
 @Injectable()
-@SagaParticipant()
-export class BulkOrchestrationParticipant extends SagaParticipantBase {
-  readonly serviceId = "bulk-orchestration";
-
-  private completionCount = new Map<string, { total: number; done: number }>();
-
-  constructor(private readonly sagaPublisher: SagaPublisherProvider) {
-    super();
-  }
-
-  // Each emit() inside this handler creates a separate sub-saga
-  @SagaHandler("bulk.requested", { fork: true })
-  async handleBulkRequested(event: IncomingEvent, emit: Emit): Promise<void> {
+@SagaParticipant("bulk.requested", { fork: true })
+export class BulkForkParticipant extends SagaParticipantBase {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { batchId, items } = event.payload as {
       batchId: string;
       items: string[];
     };
-
-    this.completionCount.set(batchId, { total: items.length, done: 0 });
-
     // N emits = N sub-sagas (each gets its own sagaId)
     for (const item of items) {
       await emit({
@@ -298,21 +306,36 @@ export class BulkOrchestrationParticipant extends SagaParticipantBase {
       });
     }
   }
+}
+```
 
-  // Called when each sub-saga completes
-  @SagaHandler("item.processing.completed")
-  async handleItemCompleted(event: IncomingEvent): Promise<void> {
+```typescript
+// item-completed.participant.ts — Fan-in: when all sub-sagas complete, notify parent
+import { Injectable } from "@nestjs/common";
+import {
+  SagaParticipant,
+  SagaParticipantBase,
+  SagaPublisherProvider,
+} from "@fbsm/saga-nestjs";
+import type { IncomingEvent } from "@fbsm/saga-core";
+
+@Injectable()
+@SagaParticipant("item.processing.completed")
+export class ItemCompletedParticipant extends SagaParticipantBase {
+  private completionCount = new Map<string, { total: number; done: number }>();
+
+  constructor(private readonly sagaPublisher: SagaPublisherProvider) {
+    super();
+  }
+
+  async handle(event: IncomingEvent): Promise<void> {
     const { batchId } = event.payload as { batchId: string };
-
     const counter = this.completionCount.get(batchId);
     if (!counter) return;
 
     counter.done++;
-
-    // Fan-in: when all sub-sagas complete, notify parent
     if (counter.done >= counter.total) {
       this.completionCount.delete(batchId);
-
       await this.sagaPublisher.emitToParent({
         topic: "bulk.completed",
         stepName: "complete-bulk",
@@ -327,19 +350,14 @@ export class BulkOrchestrationParticipant extends SagaParticipantBase {
 ```typescript
 // item-processor.participant.ts
 @Injectable()
-@SagaParticipant()
+@SagaParticipant("item.processing.requested", { final: true })
 export class ItemProcessorParticipant extends SagaParticipantBase {
-  readonly serviceId = "item-processor";
-
-  @SagaHandler("item.processing.requested", { final: true })
-  async handleProcessing(event: IncomingEvent, emit: Emit): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { batchId, item } = event.payload as {
       batchId: string;
       item: string;
     };
-
     // Process item...
-
     await emit({
       topic: "item.processing.completed",
       stepName: "process-item",
@@ -366,39 +384,28 @@ POST /bulk → bulk.requested [fork x N]
 Full flow showing how AsyncLocalStorage context propagates through `start()` → handler → fork → final → `emitToParent()`.
 
 ```typescript
-// orchestration.participant.ts
+// task-fork.participant.ts — Fork: each emit creates a sub-saga with its own context
 @Injectable()
-@SagaParticipant()
-export class OrchestrationParticipant extends SagaParticipantBase {
-  readonly serviceId = "orchestration";
-
-  // Fork: each emit creates a sub-saga with its own context
-  // Inside the handler, SagaContext.current() returns the PARENT saga context
-  // The framework wraps each emit in a NEW context for the sub-saga
-  @SagaHandler("task.requested", { fork: true })
-  async handleTaskRequested(event: IncomingEvent, emit: Emit): Promise<void> {
+@SagaParticipant("task.requested", { fork: true })
+export class TaskForkParticipant extends SagaParticipantBase {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { taskId } = event.payload as { taskId: string };
-
     // This emit runs in a sub-saga context automatically:
-    // - New sagaId generated
-    // - parentSagaId = event.sagaId (the parent)
-    // - rootSagaId inherited
-    // - hint: 'fork' auto-added
+    // - New sagaId generated, parentSagaId = event.sagaId, hint: 'fork' auto-added
     await emit({
       topic: "validation.requested",
       stepName: "request-validation",
       payload: { taskId },
     });
   }
+}
 
-  // Parent receives the result when sub-saga calls emitToParent()
-  @SagaHandler("task.completed", { final: true })
-  async handleTaskCompleted(event: IncomingEvent, emit: Emit): Promise<void> {
-    const { taskId, result } = event.payload as {
-      taskId: string;
-      result: string;
-    };
-
+// task-completed.participant.ts — Parent receives the result when sub-saga calls emitToParent()
+@Injectable()
+@SagaParticipant("task.completed", { final: true })
+export class TaskCompletedParticipant extends SagaParticipantBase {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
+    const { taskId, result } = event.payload as { taskId: string; result: string };
     await emit({
       topic: "task.done",
       stepName: "finish-task",
@@ -410,30 +417,24 @@ export class OrchestrationParticipant extends SagaParticipantBase {
 ```
 
 ```typescript
-// validator.participant.ts
+// validator.participant.ts — Final handler in the sub-saga
 @Injectable()
-@SagaParticipant()
+@SagaParticipant("validation.requested", { final: true })
 export class ValidatorParticipant extends SagaParticipantBase {
-  readonly serviceId = "validator";
-
   constructor(private readonly sagaPublisher: SagaPublisherProvider) {
     super();
   }
 
-  // Final handler in the sub-saga
-  @SagaHandler("validation.requested", { final: true })
-  async handleValidation(event: IncomingEvent, emit: Emit): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { taskId } = event.payload as { taskId: string };
 
-    // Emit within the sub-saga (hint: 'final' auto-added)
     await emit({
       topic: "validation.completed",
       stepName: "validate",
       payload: { taskId, valid: true },
     });
 
-    // Report back to parent saga
-    // emitToParent reads parentSagaId from AsyncLocalStorage
+    // Report back to parent saga (reads parentSagaId from AsyncLocalStorage)
     await this.sagaPublisher.emitToParent({
       topic: "task.completed",
       stepName: "report-to-parent",

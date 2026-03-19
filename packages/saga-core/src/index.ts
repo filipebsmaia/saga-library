@@ -50,5 +50,9 @@ export type {
   HandlerConfig,
   ForkConfig,
 } from "./interfaces/saga-participant.interface";
+export type {
+  PlainMessage,
+  PlainHandler,
+} from "./interfaces/plain-message.interface";
 export type { ParentSagaContext } from "./interfaces/parent-saga-context.interface";
 export type { RunnerOptions } from "./interfaces/runner-options.interface";

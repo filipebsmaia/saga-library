@@ -1,31 +1,22 @@
 import { Injectable, Logger } from "@nestjs/common";
-import {
-  SagaParticipant,
-  SagaParticipantBase,
-  SagaHandler,
-} from "@fbsm/saga-nestjs";
+import { SagaParticipant, SagaParticipantBase } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
 import { v7 as uuidv7 } from "uuid";
 import { randomDelay } from "../../telecom/delay";
 import { RFPlanOrderStore } from "../stores/plan-order.store";
 
 @Injectable()
-@SagaParticipant()
-export class RFPlanOrderingManagementParticipant extends SagaParticipantBase {
-  readonly serviceId = "rf-plan-ordering-management";
+@SagaParticipant("rf.plan.order.requested")
+export class RFPlanOrderingRequestedParticipant extends SagaParticipantBase {
   private readonly logger = new Logger(
-    RFPlanOrderingManagementParticipant.name,
+    RFPlanOrderingRequestedParticipant.name,
   );
 
   constructor(private readonly planOrderStore: RFPlanOrderStore) {
     super();
   }
 
-  @SagaHandler("rf.plan.order.requested")
-  async handlePlanOrderRequested(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const {
       recurringId,
       planId,
@@ -74,9 +65,20 @@ export class RFPlanOrderingManagementParticipant extends SagaParticipantBase {
       },
     });
   }
+}
 
-  @SagaHandler("rf.ordering.order.updated.completed")
-  async handleOrderCompleted(event: IncomingEvent, emit: Emit): Promise<void> {
+@Injectable()
+@SagaParticipant("rf.ordering.order.updated.completed")
+export class RFPlanOrderingCompletedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(
+    RFPlanOrderingCompletedParticipant.name,
+  );
+
+  constructor(private readonly planOrderStore: RFPlanOrderStore) {
+    super();
+  }
+
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { planOrderId, recurringId, planId, customerId, amount, cycle } =
       event.payload as {
         planOrderId: string;
@@ -99,12 +101,20 @@ export class RFPlanOrderingManagementParticipant extends SagaParticipantBase {
       payload: { planOrderId, recurringId, planId, customerId, amount, cycle },
     });
   }
+}
 
-  @SagaHandler("rf.ordering.order.updated.payment-failed")
-  async handleOrderPaymentFailed(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+@Injectable()
+@SagaParticipant("rf.ordering.order.updated.payment-failed")
+export class RFPlanOrderingPaymentFailedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(
+    RFPlanOrderingPaymentFailedParticipant.name,
+  );
+
+  constructor(private readonly planOrderStore: RFPlanOrderStore) {
+    super();
+  }
+
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { planOrderId, recurringId, planId, customerId, reason } =
       event.payload as {
         planOrderId: string;

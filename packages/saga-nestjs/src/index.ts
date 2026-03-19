@@ -6,9 +6,9 @@ export { SagaPublisherProvider } from "./providers/saga-publisher.provider";
 export { SagaHealthIndicator } from "./providers/saga-health-indicator";
 
 // Decorators
-export { SagaHandler } from "./decorators/saga-handler.decorator";
-export type { SagaHandlerOptions } from "./decorators/saga-handler.decorator";
 export { SagaParticipant } from "./decorators/saga-participant.decorator";
+export type { SagaParticipantOptions } from "./decorators/saga-participant.decorator";
+export { MessageHandler } from "./decorators/message-handler.decorator";
 
 // Base class
 export { SagaParticipantBase } from "./saga-participant-base";
@@ -40,6 +40,9 @@ export type {
   EventHandler,
   ParentSagaContext,
   HandlerConfig,
+  ForkConfig,
+  PlainMessage,
+  PlainHandler,
   SagaTransport,
   TransportHealthResult,
   HealthCheckable,

@@ -1,12 +1,12 @@
 # Example Projects
 
-This directory contains production-realistic example applications demonstrating the saga choreography library.
+This directory contains example applications demonstrating the saga choreography library. These examples showcase realistic patterns and scenarios but are **not production-ready** — they use in-memory stores, simplified error handling, and simulated delays. Use them as a reference for learning the library's API and patterns.
 
 ## Projects
 
 ### [order-saga](order-saga/)
 
-A telecom-domain NestJS application with 11 saga participants across 3 scenarios, demonstrating linear flows, sub-saga forking, fan-out/fan-in, compensation, and retry patterns.
+A telecom-domain NestJS application with thin single-topic saga participants across 4 scenarios, demonstrating linear flows, sub-saga forking, fan-out/fan-in, compensation, and retry patterns. Each participant uses `@SagaParticipant(topic)` with a single `handle()` method.
 
 **Tech stack**: NestJS + Kafka (KRaft) + Jaeger (tracing)
 

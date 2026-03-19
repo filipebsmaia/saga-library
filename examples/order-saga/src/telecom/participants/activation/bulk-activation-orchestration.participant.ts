@@ -2,7 +2,6 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
-  SagaHandler,
   SagaPublisherProvider,
 } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
@@ -10,25 +9,11 @@ import { randomDelay } from "../../delay";
 import { BulkActivationStore } from "../../stores/bulk-activation.store";
 
 @Injectable()
-@SagaParticipant()
-export class BulkActivationOrchestrationParticipant extends SagaParticipantBase {
-  readonly serviceId = "bulk-activation-orchestration";
-  private readonly logger = new Logger(
-    BulkActivationOrchestrationParticipant.name,
-  );
+@SagaParticipant("bulk-activation.requested", { fork: true })
+export class BulkActivationForkParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(BulkActivationForkParticipant.name);
 
-  constructor(
-    private readonly bulkActivationStore: BulkActivationStore,
-    private readonly sagaPublisher: SagaPublisherProvider,
-  ) {
-    super();
-  }
-
-  @SagaHandler("bulk-activation.requested", { fork: true })
-  async handleBulkActivationRequested(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { bulkId, lines } = event.payload as {
       bulkId: string;
       lines: number;
@@ -40,25 +25,37 @@ export class BulkActivationOrchestrationParticipant extends SagaParticipantBase 
       `Bulk activation ${bulkId} — fanning out ${lines} line activations`,
     );
 
-    for (let i = 0; i < lines; i++) {
-      const lineNumber = `+5511${Date.now().toString().slice(-8)}${i}`;
+    for (let index = 0; index < lines; index++) {
+      const lineNumber = `+5511${Date.now().toString().slice(-8)}${index}`;
 
       await emit({
         topic: "line-activation.requested",
         stepName: "request-line-activation",
-        payload: { bulkId, lineIndex: i, lineNumber },
+        payload: { bulkId, lineIndex: index, lineNumber },
       });
 
-      this.logger.log(`Sub-saga forked for line ${i + 1}/${lines}`);
+      this.logger.log(`Sub-saga forked for line ${index + 1}/${lines}`);
     }
 
     this.logger.log(
       `All ${lines} line activation sub-sagas forked for bulk ${bulkId}`,
     );
   }
+}
 
-  @SagaHandler("line-activation.completed")
-  async handleLineActivationCompleted(event: IncomingEvent): Promise<void> {
+@Injectable()
+@SagaParticipant("line-activation.completed")
+export class LineActivationCompletedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(LineActivationCompletedParticipant.name);
+
+  constructor(
+    private readonly bulkActivationStore: BulkActivationStore,
+    private readonly sagaPublisher: SagaPublisherProvider,
+  ) {
+    super();
+  }
+
+  async handle(event: IncomingEvent): Promise<void> {
     const { bulkId, lineIndex, lineNumber } = event.payload as {
       bulkId: string;
       lineIndex: number;

@@ -142,7 +142,7 @@ Are you starting a new saga flow?
 ├── Yes → start(fn)
 │
 Are you inside a handler and need to spawn a related sub-process?
-├── Yes, and I want the framework to create sub-sagas per emit → @SagaHandler({ fork: true })
+├── Yes, and I want the framework to create sub-sagas per emit → @SagaParticipant("topic", { fork: true })
 ├── Yes, and I want explicit control over the child saga → startChild(fn)
 │
 Are you in a sub-saga and need to report back to the parent?

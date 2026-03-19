@@ -2,7 +2,6 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
-  SagaHandler,
 } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
 import { getKafkaHeartbeat } from "@fbsm/saga-transport-kafka";
@@ -22,20 +21,15 @@ import { ProvisioningStore } from "../../stores/provisioning.store";
  * fine-grained control over the checkpoint positions.
  */
 @Injectable()
-@SagaParticipant()
+@SagaParticipant("device-provisioning.requested", { final: true })
 export class DeviceProvisioningParticipant extends SagaParticipantBase {
-  readonly serviceId = "device-provisioning";
   private readonly logger = new Logger(DeviceProvisioningParticipant.name);
 
   constructor(private readonly provisioningStore: ProvisioningStore) {
     super();
   }
 
-  @SagaHandler("device-provisioning.requested", { final: true })
-  async handleProvisioningRequested(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { provisioningId, deviceSerial } = event.payload as {
       provisioningId: string;
       deviceSerial: string;

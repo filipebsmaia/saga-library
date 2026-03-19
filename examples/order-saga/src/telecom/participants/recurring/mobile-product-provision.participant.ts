@@ -2,27 +2,21 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
-  SagaHandler,
 } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
 import { ProductStore } from "../../stores/product.store";
 import { randomDelay } from "../../delay";
 
 @Injectable()
-@SagaParticipant()
+@SagaParticipant("product.activation.requested")
 export class MobileProductProvisionParticipant extends SagaParticipantBase {
-  readonly serviceId = "mobile-product-provision";
   private readonly logger = new Logger(MobileProductProvisionParticipant.name);
 
   constructor(private readonly productStore: ProductStore) {
     super();
   }
 
-  @SagaHandler("product.activation.requested")
-  async handleActivationRequested(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { productId, planId, customerId, msisdn } = event.payload as {
       productId: string;
       planId: string;

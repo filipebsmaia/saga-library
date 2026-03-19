@@ -2,7 +2,6 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
-  SagaHandler,
   SagaPublisherProvider,
 } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
@@ -10,23 +9,11 @@ import { randomDelay } from "../../delay";
 import { SimSwapStore } from "../../stores/sim-swap.store";
 
 @Injectable()
-@SagaParticipant()
-export class SimSwapOrchestrationParticipant extends SagaParticipantBase {
-  readonly serviceId = "sim-swap-orchestration";
-  private readonly logger = new Logger(SimSwapOrchestrationParticipant.name);
+@SagaParticipant("sim-swap.requested", { fork: true })
+export class SimSwapForkParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(SimSwapForkParticipant.name);
 
-  constructor(
-    private readonly simSwapStore: SimSwapStore,
-    private readonly sagaPublisher: SagaPublisherProvider,
-  ) {
-    super();
-  }
-
-  @SagaHandler("sim-swap.requested", { fork: true })
-  async handleSimSwapRequested(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { swapId, msisdn, newIccid } = event.payload as {
       swapId: string;
       msisdn: string;
@@ -45,9 +32,21 @@ export class SimSwapOrchestrationParticipant extends SagaParticipantBase {
       payload: { swapId, msisdn, newIccid },
     });
   }
+}
 
-  @SagaHandler("portability.validated")
-  async handlePortabilityValidated(event: IncomingEvent): Promise<void> {
+@Injectable()
+@SagaParticipant("portability.validated")
+export class PortabilityValidatedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(PortabilityValidatedParticipant.name);
+
+  constructor(
+    private readonly simSwapStore: SimSwapStore,
+    private readonly sagaPublisher: SagaPublisherProvider,
+  ) {
+    super();
+  }
+
+  async handle(event: IncomingEvent): Promise<void> {
     const { swapId, msisdn, newIccid, valid } = event.payload as {
       swapId: string;
       msisdn: string;

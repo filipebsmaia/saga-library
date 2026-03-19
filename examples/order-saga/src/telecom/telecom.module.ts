@@ -7,20 +7,40 @@ import { SimSwapStore } from "./stores/sim-swap.store";
 import { BulkActivationStore } from "./stores/bulk-activation.store";
 
 // Recurring flow
-import { PlanRecurringManagementParticipant } from "./participants/recurring/plan-recurring-management.participant";
+import {
+  PlanOrderCompletedParticipant,
+  PlanOrderFailedParticipant,
+} from "./participants/recurring/plan-recurring-management.participant";
 import { PlanManagementParticipant } from "./participants/recurring/plan-management.participant";
-import { PlanOrderingManagementParticipant } from "./participants/recurring/plan-ordering-management.participant";
-import { OrderingManagementParticipant } from "./participants/recurring/ordering-management.participant";
+import {
+  PlanOrderRequestedParticipant,
+  OrderCompletedBridgeParticipant,
+  OrderFailedBridgeParticipant,
+} from "./participants/recurring/plan-ordering-management.participant";
+import {
+  OrderRequestedParticipant,
+  PaymentApprovedParticipant,
+  PaymentRejectedParticipant,
+} from "./participants/recurring/ordering-management.participant";
 import { PaymentManagementParticipant } from "./participants/recurring/payment-management.participant";
-import { MobileProductLifecycleParticipant } from "./participants/recurring/mobile-product-lifecycle.participant";
+import {
+  RecurringCreatedParticipant,
+  ProductProvisionedParticipant,
+} from "./participants/recurring/mobile-product-lifecycle.participant";
 import { MobileProductProvisionParticipant } from "./participants/recurring/mobile-product-provision.participant";
 
 // SIM Swap flow
-import { SimSwapOrchestrationParticipant } from "./participants/swap/sim-swap-orchestration.participant";
+import {
+  SimSwapForkParticipant,
+  PortabilityValidatedParticipant,
+} from "./participants/swap/sim-swap-orchestration.participant";
 import { NumberPortabilityParticipant } from "./participants/swap/number-portability.participant";
 
 // Bulk Activation flow
-import { BulkActivationOrchestrationParticipant } from "./participants/activation/bulk-activation-orchestration.participant";
+import {
+  BulkActivationForkParticipant,
+  LineActivationCompletedParticipant,
+} from "./participants/activation/bulk-activation-orchestration.participant";
 import { LineActivationParticipant } from "./participants/activation/line-activation.participant";
 
 // Upgrade flow
@@ -45,20 +65,28 @@ import { ProvisioningStore } from "./stores/provisioning.store";
     BulkActivationStore,
 
     // Recurring flow
-    PlanRecurringManagementParticipant,
+    PlanOrderCompletedParticipant,
+    PlanOrderFailedParticipant,
     PlanManagementParticipant,
-    PlanOrderingManagementParticipant,
-    OrderingManagementParticipant,
+    PlanOrderRequestedParticipant,
+    OrderCompletedBridgeParticipant,
+    OrderFailedBridgeParticipant,
+    OrderRequestedParticipant,
+    PaymentApprovedParticipant,
+    PaymentRejectedParticipant,
     PaymentManagementParticipant,
-    MobileProductLifecycleParticipant,
+    RecurringCreatedParticipant,
+    ProductProvisionedParticipant,
     MobileProductProvisionParticipant,
 
     // SIM Swap flow
-    SimSwapOrchestrationParticipant,
+    SimSwapForkParticipant,
+    PortabilityValidatedParticipant,
     NumberPortabilityParticipant,
 
     // Bulk Activation flow
-    BulkActivationOrchestrationParticipant,
+    BulkActivationForkParticipant,
+    LineActivationCompletedParticipant,
     LineActivationParticipant,
 
     // Upgrade flow

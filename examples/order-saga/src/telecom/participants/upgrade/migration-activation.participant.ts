@@ -2,27 +2,21 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
-  SagaHandler,
 } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
 import { randomDelay } from "../../delay";
 import { UpgradeStore } from "../../stores/upgrade.store";
 
 @Injectable()
-@SagaParticipant()
+@SagaParticipant("migration.provisioned")
 export class MigrationActivationParticipant extends SagaParticipantBase {
-  readonly serviceId = "migration-activation";
   private readonly logger = new Logger(MigrationActivationParticipant.name);
 
   constructor(private readonly upgradeStore: UpgradeStore) {
     super();
   }
 
-  @SagaHandler("migration.provisioned")
-  async handleMigrationProvisioned(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const {
       upgradeId,
       customerId,

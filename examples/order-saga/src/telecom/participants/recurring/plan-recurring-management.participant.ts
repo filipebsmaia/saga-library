@@ -2,7 +2,6 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
-  SagaHandler,
   SagaPublisherProvider,
 } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
@@ -11,10 +10,9 @@ import { randomDelay } from "../../delay";
 import { RecurringStore } from "../../stores/recurring.store";
 
 @Injectable()
-@SagaParticipant()
-export class PlanRecurringManagementParticipant extends SagaParticipantBase {
-  readonly serviceId = "plan-recurring-management";
-  private readonly logger = new Logger(PlanRecurringManagementParticipant.name);
+@SagaParticipant("plan.order.completed")
+export class PlanOrderCompletedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(PlanOrderCompletedParticipant.name);
 
   constructor(
     private readonly recurringStore: RecurringStore,
@@ -23,11 +21,7 @@ export class PlanRecurringManagementParticipant extends SagaParticipantBase {
     super();
   }
 
-  @SagaHandler("plan.order.completed")
-  async handlePlanOrderCompleted(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { recurringId, planId, customerId, amount, cycle } =
       event.payload as {
         recurringId: string;
@@ -86,9 +80,18 @@ export class PlanRecurringManagementParticipant extends SagaParticipantBase {
       `New saga ${newSagaId} started for recurring ${newRecurringId} (cycle ${newCycle})`,
     );
   }
+}
 
-  @SagaHandler("plan.order.failed")
-  async handlePlanOrderFailed(event: IncomingEvent, emit: Emit): Promise<void> {
+@Injectable()
+@SagaParticipant("plan.order.failed")
+export class PlanOrderFailedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(PlanOrderFailedParticipant.name);
+
+  constructor(private readonly recurringStore: RecurringStore) {
+    super();
+  }
+
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { recurringId, reason } = event.payload as {
       recurringId: string;
       reason: string;

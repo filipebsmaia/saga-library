@@ -1,28 +1,21 @@
 import { Injectable, Logger } from "@nestjs/common";
-import {
-  SagaParticipant,
-  SagaParticipantBase,
-  SagaHandler,
-} from "@fbsm/saga-nestjs";
+import { SagaParticipant, SagaParticipantBase } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
 import { randomDelay } from "../../telecom/delay";
 import { RFPlanStore } from "../stores/plan.store";
 
 @Injectable()
-@SagaParticipant()
-export class RFPlanManagementParticipant extends SagaParticipantBase {
-  readonly serviceId = "rf-plan-management";
-  private readonly logger = new Logger(RFPlanManagementParticipant.name);
+@SagaParticipant("rf.recurring.updated.processing")
+export class RFPlanManagementRecurringProcessingParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(
+    RFPlanManagementRecurringProcessingParticipant.name,
+  );
 
   constructor(private readonly planStore: RFPlanStore) {
     super();
   }
 
-  @SagaHandler("rf.recurring.updated.processing")
-  async handleRecurringProcessing(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const {
       recurringId,
       planId,
@@ -63,9 +56,20 @@ export class RFPlanManagementParticipant extends SagaParticipantBase {
       },
     });
   }
+}
 
-  @SagaHandler("rf.recurring.updated.failed")
-  async handleRecurringFailed(event: IncomingEvent, emit: Emit): Promise<void> {
+@Injectable()
+@SagaParticipant("rf.recurring.updated.failed", { final: true })
+export class RFPlanManagementRecurringFailedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(
+    RFPlanManagementRecurringFailedParticipant.name,
+  );
+
+  constructor(private readonly planStore: RFPlanStore) {
+    super();
+  }
+
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { recurringId, planId } = event.payload as {
       recurringId: string;
       planId: string;

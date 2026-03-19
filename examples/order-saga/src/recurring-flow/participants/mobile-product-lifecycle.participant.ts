@@ -1,31 +1,22 @@
 import { Injectable, Logger } from "@nestjs/common";
-import {
-  SagaParticipant,
-  SagaParticipantBase,
-  SagaHandler,
-} from "@fbsm/saga-nestjs";
+import { SagaParticipant, SagaParticipantBase } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
 import { v7 as uuidv7 } from "uuid";
 import { randomDelay } from "../../telecom/delay";
 import { RFProductStore } from "../stores/product.store";
 
 @Injectable()
-@SagaParticipant()
-export class RFMobileProductLifecycleParticipant extends SagaParticipantBase {
-  readonly serviceId = "rf-mobile-product-lifecycle";
+@SagaParticipant("rf.recurring.created")
+export class RFMobileProductRecurringCreatedParticipant extends SagaParticipantBase {
   private readonly logger = new Logger(
-    RFMobileProductLifecycleParticipant.name,
+    RFMobileProductRecurringCreatedParticipant.name,
   );
 
   constructor(private readonly productStore: RFProductStore) {
     super();
   }
 
-  @SagaHandler("rf.recurring.created")
-  async handleRecurringCreated(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { recurringId, planId, customerId, msisdn } = event.payload as {
       recurringId: string;
       planId: string;
@@ -56,12 +47,20 @@ export class RFMobileProductLifecycleParticipant extends SagaParticipantBase {
       payload: { productId, customerId, planId, msisdn },
     });
   }
+}
 
-  @SagaHandler("rf.provision.completed")
-  async handleProvisionCompleted(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+@Injectable()
+@SagaParticipant("rf.provision.completed", { final: true })
+export class RFMobileProductProvisionCompletedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(
+    RFMobileProductProvisionCompletedParticipant.name,
+  );
+
+  constructor(private readonly productStore: RFProductStore) {
+    super();
+  }
+
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { productId, provisionId } = event.payload as {
       productId: string;
       provisionId: string;

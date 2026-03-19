@@ -2,20 +2,17 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
-  SagaHandler,
   SagaRetryableError,
 } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
 import { randomDelay } from "../../delay";
 
 @Injectable()
-@SagaParticipant()
+@SagaParticipant("order.created")
 export class PaymentManagementParticipant extends SagaParticipantBase {
-  readonly serviceId = "payment-management";
   private readonly logger = new Logger(PaymentManagementParticipant.name);
 
-  @SagaHandler("order.created")
-  async handleOrderCreated(event: IncomingEvent, emit: Emit): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const {
       orderId,
       recurringId,

@@ -2,7 +2,6 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
-  SagaHandler,
   SagaPublisherProvider,
 } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
@@ -11,11 +10,10 @@ import { randomDelay } from "../../telecom/delay";
 import { RFRecurringStore } from "../stores/recurring.store";
 
 @Injectable()
-@SagaParticipant()
-export class RFPlanRecurringManagementParticipant extends SagaParticipantBase {
-  readonly serviceId = "rf-plan-recurring-management";
+@SagaParticipant("rf.plan-ordering.order.updated.completed", { final: true })
+export class RFPlanRecurringCompletedParticipant extends SagaParticipantBase {
   private readonly logger = new Logger(
-    RFPlanRecurringManagementParticipant.name,
+    RFPlanRecurringCompletedParticipant.name,
   );
 
   constructor(
@@ -25,11 +23,7 @@ export class RFPlanRecurringManagementParticipant extends SagaParticipantBase {
     super();
   }
 
-  @SagaHandler("rf.plan-ordering.order.updated.completed")
-  async handlePlanOrderCompleted(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { recurringId, planId, customerId, amount, cycle } =
       event.payload as {
         recurringId: string;
@@ -94,12 +88,20 @@ export class RFPlanRecurringManagementParticipant extends SagaParticipantBase {
       `New recurring ${newRecurringId} created for cycle ${newCycle} (saga: ${newSagaId})`,
     );
   }
+}
 
-  @SagaHandler("rf.plan-ordering.order.updated.payment-failed")
-  async handlePlanOrderPaymentFailed(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+@Injectable()
+@SagaParticipant("rf.plan-ordering.order.updated.payment-failed")
+export class RFPlanRecurringPaymentFailedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(
+    RFPlanRecurringPaymentFailedParticipant.name,
+  );
+
+  constructor(private readonly recurringStore: RFRecurringStore) {
+    super();
+  }
+
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { recurringId, planId, customerId, reason } = event.payload as {
       recurringId: string;
       planId: string;

@@ -59,7 +59,7 @@ pnpm test
 ### Packages
 
 - **saga-core** — Framework-agnostic core. `SagaPublisher` manages emitting events (`emit`, `emitToParent`, `start`, `startChild`). `SagaRunner` consumes events with retry logic. `SagaRegistry` registers participants and handlers. `SagaParser` decodes incoming messages using a 3-layer fallback: Kafka headers → W3C Baggage → message envelope. Saga metadata propagates via **AsyncLocalStorage** (no context threading required).
-- **saga-nestjs** — NestJS module. `@SagaParticipant()` / `@SagaHandler()` decorators enable auto-discovery. `SagaModule.forRoot()` / `forRootAsync()` configure the module. `SagaPublisherProvider` is the injectable service.
+- **saga-nestjs** — NestJS module. `@SagaParticipant(topics, options?)` is the primary decorator — declares saga topics and options (`fork`, `final`) at the class level. `@MessageHandler(topics)` is a method decorator for non-saga (plain) message consumption. `SagaParticipantBase` requires implementing `handle()` and optionally `onFail()`/`onRetryExhausted()`. `serviceId` is auto-derived from the class name. `SagaModule.forRoot()` / `forRootAsync()` configure the module. `SagaPublisherProvider` is the injectable service.
 - **saga-transport-kafka** — KafkaJS adapter. Uses `eachBatch` with key-based grouping: parallel across saga trees, sequential within a tree. Watermark tracker prevents offset loss.
 
 ### Key concepts

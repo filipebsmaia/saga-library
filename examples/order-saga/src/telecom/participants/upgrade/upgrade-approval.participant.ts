@@ -2,7 +2,6 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
-  SagaHandler,
   SagaPublisherProvider,
 } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
@@ -10,9 +9,8 @@ import { randomDelay } from "../../delay";
 import { UpgradeStore } from "../../stores/upgrade.store";
 
 @Injectable()
-@SagaParticipant()
+@SagaParticipant("upgrade.eligible")
 export class UpgradeApprovalParticipant extends SagaParticipantBase {
-  readonly serviceId = "upgrade-approval";
   private readonly logger = new Logger(UpgradeApprovalParticipant.name);
 
   constructor(
@@ -22,8 +20,7 @@ export class UpgradeApprovalParticipant extends SagaParticipantBase {
     super();
   }
 
-  @SagaHandler("upgrade.eligible")
-  async handleUpgradeEligible(event: IncomingEvent, emit: Emit): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { upgradeId, customerId, currentPlan, targetPlan, simulateFailure } =
       event.payload as {
         upgradeId: string;

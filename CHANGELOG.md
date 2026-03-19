@@ -1,5 +1,57 @@
 # Changelog
 
+## 0.2.0-beta.1
+
+### Breaking Changes
+
+- **`@SagaParticipant(topics, options?)` is now the primary entry point.** The decorator now requires topics as the first argument. `@SagaParticipant()` (no-arg) no longer exists.
+- **`@SagaHandler` removed entirely.** Topic binding is now done at the class level via `@SagaParticipant("topic")`. Handler logic goes in the mandatory `handle()` method.
+- **`SagaParticipantBase.serviceId` removed.** `serviceId` is auto-derived from the class name (e.g., `PaymentParticipant` → `"PaymentParticipant"`). No manual declaration needed.
+- **`SagaParticipantBase.on` removed.** The `on` record was an internal detail; the provider now reads topics from decorator metadata.
+- **`SagaParticipantBase.handle()` is now abstract and mandatory.** All participants must implement `handle(event, emit)`.
+- **Multi-handler participants must be split.** Classes that previously had multiple `@SagaHandler` methods must be split into separate classes (one class per topic or topic group with same options).
+- **`RouteEntry` redesigned.** Fields renamed from `participant`/`handler`/`options` to `sagaParticipant`/`sagaHandler`/`sagaOptions`. Supports both saga and plain handlers per topic.
+
+### Features
+
+- **`onFail()` error hook.** Optional method on `SagaParticipantBase` called when `handle()` throws a non-retryable error. `onFail` retries independently (same retry policy). If `onFail` retries are exhausted, `onRetryExhausted` is called with `onFail`'s error.
+- **`@MessageHandler(topics)` decorator.** Method decorator for consuming non-saga (plain) messages. Routes messages without saga headers to the decorated method. Same topic can have both a saga handler and a plain handler — routing is per-message.
+- **`PlainMessage` type.** New interface for plain messages: `{ topic, key, payload, headers, timestamp? }`. No saga fields.
+- **Per-message routing in `SagaRunner`.** The runner now routes each message based on whether `SagaParser` finds saga metadata: saga messages → `handle()`, plain messages → `@MessageHandler`.
+
+### Migration
+
+1. Move topic declarations: `@SagaHandler("topic")` → `@SagaParticipant("topic")`
+2. Rename handler methods to `handle()`
+3. Remove `readonly serviceId = "..."` — now auto-derived from class name
+4. Split multi-handler classes into separate single-topic classes
+5. Remove `SagaHandler` imports
+6. Implement `onFail()` where you previously caught non-retryable errors inside handlers
+7. For non-saga messages: use `@MessageHandler("topic")` on a method
+
+Before:
+
+```typescript
+@Injectable()
+@SagaParticipant()
+export class PaymentParticipant extends SagaParticipantBase {
+  readonly serviceId = "payment-service";
+
+  @SagaHandler("order.created")
+  async handleOrderCreated(event: IncomingEvent, emit: Emit) { ... }
+}
+```
+
+After:
+
+```typescript
+@Injectable()
+@SagaParticipant("order.created")
+export class PaymentParticipant extends SagaParticipantBase {
+  async handle(event: IncomingEvent, emit: Emit) { ... }
+}
+```
+
 ## 0.1.0-beta.4
 
 ### Breaking Changes

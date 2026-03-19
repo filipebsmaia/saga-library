@@ -45,6 +45,18 @@ function makeInboundMessage(
   };
 }
 
+function makePlainMessage(
+  topic: string,
+  payload: Record<string, unknown> = { orderId: "456" },
+): InboundMessage {
+  return {
+    topic,
+    key: "key-123",
+    value: JSON.stringify(payload),
+    headers: {},
+  };
+}
+
 describe("SagaRunner", () => {
   let transport: SagaTransport;
   let registry: SagaRegistry;
@@ -122,7 +134,7 @@ describe("SagaRunner", () => {
     );
   });
 
-  it("should skip unparseable messages", async () => {
+  it("should skip unparseable messages when no plain handler", async () => {
     const handler = vi.fn().mockResolvedValue(undefined);
     registry.register({
       serviceId: "svc-a",
@@ -135,7 +147,7 @@ describe("SagaRunner", () => {
 
     await runner.start();
     await subscribeHandler!({
-      topic: "saga.order.created",
+      topic: "order.created",
       key: "saga-123",
       value: "not-json",
       headers: {},
@@ -285,6 +297,326 @@ describe("SagaRunner", () => {
       expect(handler).toHaveBeenCalledTimes(1);
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe("onFail error flow", () => {
+    it("should call onFail on non-retryable error from handle", async () => {
+      const handler = vi.fn().mockRejectedValue(new Error("fatal"));
+      const onFail = vi.fn().mockResolvedValue(undefined);
+
+      registry.register({
+        serviceId: "svc-a",
+        on: { "order.created": handler },
+        onFail,
+      });
+
+      const runner = new SagaRunner(registry, transport, publisher, parser, {
+        groupId: "test-group",
+      });
+
+      await runner.start();
+      await subscribeHandler!(makeInboundMessage("order.created"));
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(onFail).toHaveBeenCalledTimes(1);
+      expect(onFail).toHaveBeenCalledWith(
+        expect.objectContaining({ sagaId: "saga-123" }),
+        expect.any(Error),
+        expect.any(Function),
+      );
+    });
+
+    it("should succeed when onFail completes without error", async () => {
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      const handler = vi.fn().mockRejectedValue(new Error("fatal"));
+      const onFail = vi.fn().mockResolvedValue(undefined);
+
+      registry.register({
+        serviceId: "svc-a",
+        on: { "order.created": handler },
+        onFail,
+      });
+
+      const runner = new SagaRunner(registry, transport, publisher, parser, {
+        groupId: "test-group",
+      });
+
+      await runner.start();
+      await subscribeHandler!(makeInboundMessage("order.created"));
+
+      expect(onFail).toHaveBeenCalledTimes(1);
+      // Should NOT log error since onFail succeeded
+      expect(consoleSpy).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it("should retry onFail when it throws SagaRetryableError", async () => {
+      const handler = vi.fn().mockRejectedValue(new Error("fatal"));
+      let onFailCallCount = 0;
+      const onFail = vi.fn().mockImplementation(async () => {
+        onFailCallCount++;
+        if (onFailCallCount <= 1) {
+          throw new SagaRetryableError("transient onFail");
+        }
+      });
+
+      registry.register({
+        serviceId: "svc-a",
+        on: { "order.created": handler },
+        onFail,
+      });
+
+      const runner = new SagaRunner(registry, transport, publisher, parser, {
+        groupId: "test-group",
+        retryPolicy: { maxRetries: 2, initialDelayMs: 10 },
+      });
+
+      await runner.start();
+
+      const handlePromise = subscribeHandler!(
+        makeInboundMessage("order.created"),
+      );
+
+      await vi.advanceTimersByTimeAsync(10);
+      await handlePromise;
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(onFail).toHaveBeenCalledTimes(2);
+    });
+
+    it("should call onRetryExhausted when onFail retries are exhausted", async () => {
+      const handler = vi.fn().mockRejectedValue(new Error("fatal"));
+      const onFail = vi
+        .fn()
+        .mockRejectedValue(new SagaRetryableError("onFail always fails"));
+      const onRetryExhausted = vi.fn().mockResolvedValue(undefined);
+
+      registry.register({
+        serviceId: "svc-a",
+        on: { "order.created": handler },
+        onFail,
+        onRetryExhausted,
+      });
+
+      const runner = new SagaRunner(registry, transport, publisher, parser, {
+        groupId: "test-group",
+        retryPolicy: { maxRetries: 1, initialDelayMs: 10 },
+      });
+
+      await runner.start();
+
+      const handlePromise = subscribeHandler!(
+        makeInboundMessage("order.created"),
+      );
+
+      await vi.advanceTimersByTimeAsync(10);
+      await handlePromise;
+
+      // handler: 1 call, onFail: 1 + 1 retry = 2, onRetryExhausted: 1
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(onFail).toHaveBeenCalledTimes(2);
+      expect(onRetryExhausted).toHaveBeenCalledTimes(1);
+      expect(onRetryExhausted).toHaveBeenCalledWith(
+        expect.objectContaining({ sagaId: "saga-123" }),
+        expect.any(SagaRetryableError),
+        expect.any(Function),
+      );
+    });
+
+    it("should log error when onFail throws non-retryable error", async () => {
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      const handler = vi.fn().mockRejectedValue(new Error("fatal"));
+      const onFail = vi
+        .fn()
+        .mockRejectedValue(new Error("onFail also fatal"));
+
+      registry.register({
+        serviceId: "svc-a",
+        on: { "order.created": handler },
+        onFail,
+      });
+
+      const runner = new SagaRunner(registry, transport, publisher, parser, {
+        groupId: "test-group",
+      });
+
+      await runner.start();
+      await subscribeHandler!(makeInboundMessage("order.created"));
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(onFail).toHaveBeenCalledTimes(1);
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it("should not call onFail for retryable errors (only non-retryable)", async () => {
+      const handler = vi
+        .fn()
+        .mockRejectedValue(new SagaRetryableError("transient"));
+      const onFail = vi.fn().mockResolvedValue(undefined);
+      const onRetryExhausted = vi.fn().mockResolvedValue(undefined);
+
+      registry.register({
+        serviceId: "svc-a",
+        on: { "order.created": handler },
+        onFail,
+        onRetryExhausted,
+      });
+
+      const runner = new SagaRunner(registry, transport, publisher, parser, {
+        groupId: "test-group",
+        retryPolicy: { maxRetries: 1, initialDelayMs: 10 },
+      });
+
+      await runner.start();
+
+      const handlePromise = subscribeHandler!(
+        makeInboundMessage("order.created"),
+      );
+      await vi.advanceTimersByTimeAsync(10);
+      await handlePromise;
+
+      expect(onFail).not.toHaveBeenCalled();
+      expect(onRetryExhausted).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("plain message routing", () => {
+    it("should route plain messages to plain handler", async () => {
+      const plainHandler = vi.fn().mockResolvedValue(undefined);
+
+      registry.register({
+        serviceId: "svc-a",
+        on: {},
+        onPlain: { "legacy.event": plainHandler },
+      });
+
+      const runner = new SagaRunner(registry, transport, publisher, parser, {
+        groupId: "test-group",
+      });
+
+      await runner.start();
+      await subscribeHandler!(makePlainMessage("legacy.event"));
+
+      expect(plainHandler).toHaveBeenCalledTimes(1);
+      expect(plainHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          topic: "legacy.event",
+          key: "key-123",
+          payload: { orderId: "456" },
+        }),
+      );
+    });
+
+    it("should route saga messages to saga handler even when plain handler exists", async () => {
+      const sagaHandler = vi.fn().mockResolvedValue(undefined);
+      const plainHandler = vi.fn().mockResolvedValue(undefined);
+
+      registry.register({
+        serviceId: "svc-a",
+        on: { "order.created": sagaHandler },
+        onPlain: { "order.created": plainHandler },
+      });
+
+      const runner = new SagaRunner(registry, transport, publisher, parser, {
+        groupId: "test-group",
+      });
+
+      await runner.start();
+      await subscribeHandler!(makeInboundMessage("order.created"));
+
+      expect(sagaHandler).toHaveBeenCalledTimes(1);
+      expect(plainHandler).not.toHaveBeenCalled();
+    });
+
+    it("should route plain messages to plain handler even when saga handler exists", async () => {
+      const sagaHandler = vi.fn().mockResolvedValue(undefined);
+      const plainHandler = vi.fn().mockResolvedValue(undefined);
+
+      registry.register({
+        serviceId: "svc-a",
+        on: { "order.created": sagaHandler },
+        onPlain: { "order.created": plainHandler },
+      });
+
+      const runner = new SagaRunner(registry, transport, publisher, parser, {
+        groupId: "test-group",
+      });
+
+      await runner.start();
+      await subscribeHandler!(makePlainMessage("order.created"));
+
+      expect(plainHandler).toHaveBeenCalledTimes(1);
+      expect(sagaHandler).not.toHaveBeenCalled();
+    });
+
+    it("should skip saga message when no saga handler on topic", async () => {
+      const plainHandler = vi.fn().mockResolvedValue(undefined);
+
+      registry.register({
+        serviceId: "svc-a",
+        on: {},
+        onPlain: { "order.created": plainHandler },
+      });
+
+      const runner = new SagaRunner(registry, transport, publisher, parser, {
+        groupId: "test-group",
+      });
+
+      await runner.start();
+      await subscribeHandler!(makeInboundMessage("order.created"));
+
+      expect(plainHandler).not.toHaveBeenCalled();
+    });
+
+    it("should skip plain message when no plain handler on topic", async () => {
+      const sagaHandler = vi.fn().mockResolvedValue(undefined);
+
+      registry.register({
+        serviceId: "svc-a",
+        on: { "order.created": sagaHandler },
+      });
+
+      const runner = new SagaRunner(registry, transport, publisher, parser, {
+        groupId: "test-group",
+      });
+
+      await runner.start();
+      await subscribeHandler!(makePlainMessage("order.created"));
+
+      expect(sagaHandler).not.toHaveBeenCalled();
+    });
+
+    it("should receive PlainMessage without saga fields", async () => {
+      const plainHandler = vi.fn().mockResolvedValue(undefined);
+
+      registry.register({
+        serviceId: "svc-a",
+        on: {},
+        onPlain: { "legacy.event": plainHandler },
+      });
+
+      const runner = new SagaRunner(registry, transport, publisher, parser, {
+        groupId: "test-group",
+      });
+
+      await runner.start();
+      await subscribeHandler!(makePlainMessage("legacy.event", { data: "test" }));
+
+      const receivedMessage = plainHandler.mock.calls[0][0];
+      expect(receivedMessage.topic).toBe("legacy.event");
+      expect(receivedMessage.key).toBe("key-123");
+      expect(receivedMessage.payload).toEqual({ data: "test" });
+      expect(receivedMessage.headers).toEqual({});
+      // No saga fields
+      expect(receivedMessage).not.toHaveProperty("sagaId");
+      expect(receivedMessage).not.toHaveProperty("rootSagaId");
+      expect(receivedMessage).not.toHaveProperty("causationId");
     });
   });
 });

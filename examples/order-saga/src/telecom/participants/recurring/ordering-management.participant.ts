@@ -2,7 +2,6 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
-  SagaHandler,
 } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
 import { v7 as uuidv7 } from "uuid";
@@ -10,17 +9,15 @@ import { randomDelay } from "../../delay";
 import { OrderStore } from "../../stores/order.store";
 
 @Injectable()
-@SagaParticipant()
-export class OrderingManagementParticipant extends SagaParticipantBase {
-  readonly serviceId = "ordering-management";
-  private readonly logger = new Logger(OrderingManagementParticipant.name);
+@SagaParticipant("order.requested")
+export class OrderRequestedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(OrderRequestedParticipant.name);
 
   constructor(private readonly orderStore: OrderStore) {
     super();
   }
 
-  @SagaHandler("order.requested")
-  async handleOrderRequested(event: IncomingEvent, emit: Emit): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const {
       recurringId,
       planId,
@@ -65,9 +62,18 @@ export class OrderingManagementParticipant extends SagaParticipantBase {
       },
     });
   }
+}
 
-  @SagaHandler("payment.approved")
-  async handlePaymentApproved(event: IncomingEvent, emit: Emit): Promise<void> {
+@Injectable()
+@SagaParticipant("payment.approved")
+export class PaymentApprovedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(PaymentApprovedParticipant.name);
+
+  constructor(private readonly orderStore: OrderStore) {
+    super();
+  }
+
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const {
       orderId,
       recurringId,
@@ -107,9 +113,18 @@ export class OrderingManagementParticipant extends SagaParticipantBase {
       },
     });
   }
+}
 
-  @SagaHandler("payment.rejected")
-  async handlePaymentRejected(event: IncomingEvent, emit: Emit): Promise<void> {
+@Injectable()
+@SagaParticipant("payment.rejected")
+export class PaymentRejectedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(PaymentRejectedParticipant.name);
+
+  constructor(private readonly orderStore: OrderStore) {
+    super();
+  }
+
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { orderId, recurringId, reason } = event.payload as {
       orderId: string;
       recurringId: string;

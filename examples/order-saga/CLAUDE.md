@@ -47,13 +47,13 @@ There are two top-level domains in `src/`:
 
 ### Scenarios and patterns
 
-**Scenario 1 — Recurring Billing** (`telecom/participants/recurring/`): Linear chain of 7 participants. `PaymentManagement` checks `paymentFail` flag and either completes or emits a `compensation` hint to roll back the chain.
+**Scenario 1 — Recurring Billing** (`telecom/participants/recurring/`): Linear chain split into thin single-topic participants. Multi-handler classes have been split: `OrderRequestedParticipant`, `PaymentApprovedParticipant`, `PaymentRejectedParticipant` (from ordering-management), `PlanOrderRequestedParticipant`, `OrderCompletedBridgeParticipant`, `OrderFailedBridgeParticipant` (from plan-ordering-management), etc. `PaymentManagementParticipant` checks `paymentFail` flag and either completes or emits a `compensation` hint to roll back the chain.
 
-**Scenario 2 — SIM Swap** (`telecom/participants/swap/`): `SimSwapOrchestration` uses `{ fork: true }` to spawn a `NumberPortability` sub-saga. When portability completes, it calls `emitToParent()` to resume the parent. Demonstrates the fork → sub-saga → emitToParent → resume pattern.
+**Scenario 2 — SIM Swap** (`telecom/participants/swap/`): `SimSwapForkParticipant` uses `@SagaParticipant("sim-swap.requested", { fork: true })` to spawn a `NumberPortability` sub-saga. `PortabilityValidatedParticipant` calls `emitToParent()` to resume the parent. Demonstrates the fork → sub-saga → emitToParent → resume pattern.
 
-**Scenario 3 — Bulk Activation** (`telecom/participants/activation/`): `BulkActivationOrchestration` uses `{ fork: true }` to fan out N `LineActivation` sub-sagas. Fan-in is coordinated by a counter in `BulkActivationStore` — when all N sub-sagas report back via `emitToParent()`, the root saga completes.
+**Scenario 3 — Bulk Activation** (`telecom/participants/activation/`): `BulkActivationForkParticipant` uses `@SagaParticipant("bulk-activation.requested", { fork: true })` to fan out N `LineActivation` sub-sagas. `LineActivationCompletedParticipant` coordinates fan-in via a counter in `BulkActivationStore`.
 
-**Scenario 4 — Plan Upgrade** (`telecom/participants/upgrade/`): Linear saga with an `UpgradeApproval` gate. Demonstrates multi-step compensation rollback triggered mid-chain.
+**Scenario 4 — Plan Upgrade** (`telecom/participants/upgrade/`): Linear saga with an `UpgradeApproval` gate. Demonstrates multi-step compensation rollback triggered mid-chain. Each step is a separate thin participant class.
 
 ### Stores
 

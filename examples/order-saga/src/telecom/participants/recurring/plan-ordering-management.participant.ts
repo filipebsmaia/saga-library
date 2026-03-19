@@ -2,22 +2,16 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
-  SagaHandler,
 } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
 import { randomDelay } from "../../delay";
 
 @Injectable()
-@SagaParticipant()
-export class PlanOrderingManagementParticipant extends SagaParticipantBase {
-  readonly serviceId = "plan-ordering-management";
-  private readonly logger = new Logger(PlanOrderingManagementParticipant.name);
+@SagaParticipant("plan.order.requested")
+export class PlanOrderRequestedParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(PlanOrderRequestedParticipant.name);
 
-  @SagaHandler("plan.order.requested")
-  async handlePlanOrderRequested(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const {
       recurringId,
       planId,
@@ -56,9 +50,14 @@ export class PlanOrderingManagementParticipant extends SagaParticipantBase {
       },
     });
   }
+}
 
-  @SagaHandler("order.completed")
-  async handleOrderCompleted(event: IncomingEvent, emit: Emit): Promise<void> {
+@Injectable()
+@SagaParticipant("order.completed")
+export class OrderCompletedBridgeParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(OrderCompletedBridgeParticipant.name);
+
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { orderId, recurringId, planId, customerId, amount, cycle } =
       event.payload as {
         orderId: string;
@@ -81,9 +80,14 @@ export class PlanOrderingManagementParticipant extends SagaParticipantBase {
       payload: { orderId, recurringId, planId, customerId, amount, cycle },
     });
   }
+}
 
-  @SagaHandler("order.failed")
-  async handleOrderFailed(event: IncomingEvent, emit: Emit): Promise<void> {
+@Injectable()
+@SagaParticipant("order.failed")
+export class OrderFailedBridgeParticipant extends SagaParticipantBase {
+  private readonly logger = new Logger(OrderFailedBridgeParticipant.name);
+
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { orderId, recurringId, reason } = event.payload as {
       orderId: string;
       recurringId: string;

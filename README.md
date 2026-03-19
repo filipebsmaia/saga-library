@@ -37,20 +37,13 @@ export class AppModule {}
 
 ```typescript
 import { Injectable } from "@nestjs/common";
-import {
-  SagaParticipant,
-  SagaParticipantBase,
-  SagaHandler,
-} from "@fbsm/saga-nestjs";
+import { SagaParticipant, SagaParticipantBase } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-core";
 
 @Injectable()
-@SagaParticipant()
+@SagaParticipant("order.created")
 export class PaymentParticipant extends SagaParticipantBase {
-  readonly serviceId = "payment-service";
-
-  @SagaHandler("order.created")
-  async handleOrderCreated(event: IncomingEvent, emit: Emit): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { orderId, amount } = event.payload as {
       orderId: string;
       amount: number;
@@ -76,7 +69,7 @@ export class PaymentParticipant extends SagaParticipantBase {
 ## API Reference
 
 - [@fbsm/saga-core](packages/saga-core/README.md) — SagaContext, SagaPublisher, SagaRunner, errors, Kafka headers
-- [@fbsm/saga-nestjs](packages/saga-nestjs/README.md) — SagaModule, @SagaParticipant, @SagaHandler, SagaPublisherProvider
+- [@fbsm/saga-nestjs](packages/saga-nestjs/README.md) — SagaModule, @SagaParticipant, @MessageHandler, SagaPublisherProvider
 - [@fbsm/saga-transport-kafka](packages/saga-transport-kafka/README.md) — KafkaTransport, KafkaTransportOptions
 
 ## Examples

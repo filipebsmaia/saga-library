@@ -11,12 +11,29 @@ import { RFProductStore } from "./stores/product.store";
 import { RFProvisionStore } from "./stores/provision.store";
 
 // Participants
-import { RFPlanRecurringManagementParticipant } from "./participants/plan-recurring-management.participant";
-import { RFPlanManagementParticipant } from "./participants/plan-management.participant";
-import { RFPlanOrderingManagementParticipant } from "./participants/plan-ordering-management.participant";
-import { RFOrderingManagementParticipant } from "./participants/ordering-management.participant";
+import {
+  RFPlanRecurringCompletedParticipant,
+  RFPlanRecurringPaymentFailedParticipant,
+} from "./participants/plan-recurring-management.participant";
+import {
+  RFPlanManagementRecurringProcessingParticipant,
+  RFPlanManagementRecurringFailedParticipant,
+} from "./participants/plan-management.participant";
+import {
+  RFPlanOrderingRequestedParticipant,
+  RFPlanOrderingCompletedParticipant,
+  RFPlanOrderingPaymentFailedParticipant,
+} from "./participants/plan-ordering-management.participant";
+import {
+  RFOrderingPlanOrderCreatedParticipant,
+  RFOrderingPaymentSuccessParticipant,
+  RFOrderingPaymentFailedParticipant,
+} from "./participants/ordering-management.participant";
 import { RFPaymentManagementParticipant } from "./participants/payment-management.participant";
-import { RFMobileProductLifecycleParticipant } from "./participants/mobile-product-lifecycle.participant";
+import {
+  RFMobileProductRecurringCreatedParticipant,
+  RFMobileProductProvisionCompletedParticipant,
+} from "./participants/mobile-product-lifecycle.participant";
 import { RFMobileProductProvisionParticipant } from "./participants/mobile-product-provision.participant";
 
 @Module({
@@ -32,12 +49,19 @@ import { RFMobileProductProvisionParticipant } from "./participants/mobile-produ
     RFProvisionStore,
 
     // Participants
-    RFPlanRecurringManagementParticipant,
-    RFPlanManagementParticipant,
-    RFPlanOrderingManagementParticipant,
-    RFOrderingManagementParticipant,
+    RFPlanRecurringCompletedParticipant,
+    RFPlanRecurringPaymentFailedParticipant,
+    RFPlanManagementRecurringProcessingParticipant,
+    RFPlanManagementRecurringFailedParticipant,
+    RFPlanOrderingRequestedParticipant,
+    RFPlanOrderingCompletedParticipant,
+    RFPlanOrderingPaymentFailedParticipant,
+    RFOrderingPlanOrderCreatedParticipant,
+    RFOrderingPaymentSuccessParticipant,
+    RFOrderingPaymentFailedParticipant,
     RFPaymentManagementParticipant,
-    RFMobileProductLifecycleParticipant,
+    RFMobileProductRecurringCreatedParticipant,
+    RFMobileProductProvisionCompletedParticipant,
     RFMobileProductProvisionParticipant,
   ],
 })

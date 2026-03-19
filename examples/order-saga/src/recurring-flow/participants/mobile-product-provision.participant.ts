@@ -1,18 +1,13 @@
 import { Injectable, Logger } from "@nestjs/common";
-import {
-  SagaParticipant,
-  SagaParticipantBase,
-  SagaHandler,
-} from "@fbsm/saga-nestjs";
+import { SagaParticipant, SagaParticipantBase } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
 import { v7 as uuidv7 } from "uuid";
 import { randomDelay } from "../../telecom/delay";
 import { RFProvisionStore } from "../stores/provision.store";
 
 @Injectable()
-@SagaParticipant()
+@SagaParticipant("rf.product.updated.pending")
 export class RFMobileProductProvisionParticipant extends SagaParticipantBase {
-  readonly serviceId = "rf-mobile-product-provision";
   private readonly logger = new Logger(
     RFMobileProductProvisionParticipant.name,
   );
@@ -21,8 +16,7 @@ export class RFMobileProductProvisionParticipant extends SagaParticipantBase {
     super();
   }
 
-  @SagaHandler("rf.product.updated.pending")
-  async handleProductPending(event: IncomingEvent, emit: Emit): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const { productId, msisdn, planId } = event.payload as {
       productId: string;
       msisdn: string;

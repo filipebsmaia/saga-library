@@ -7,7 +7,9 @@ import { isHealthCheckable } from "../transport/transport.interface";
 import type { IncomingEvent } from "../interfaces/incoming-event.interface";
 import type { Emit } from "../interfaces/emit.type";
 import type { EventHandler } from "../interfaces/event-handler.type";
+import type { SagaEvent } from "../interfaces/saga-event.interface";
 import type { SagaParticipant } from "../interfaces/saga-participant.interface";
+import type { PlainMessage } from "../interfaces/plain-message.interface";
 import type { RunnerOptions } from "../interfaces/runner-options.interface";
 import { SagaRetryableError } from "../errors/saga-retryable.error";
 import { SagaRegistry, type RouteEntry } from "../registry/saga-registry";
@@ -80,17 +82,33 @@ export class SagaRunner {
   }
 
   private async handleMessage(message: InboundMessage): Promise<void> {
-    const event = this.parser.parse<Record<string, unknown>>(message);
-    if (!event) {
-      return;
-    }
-
-    const route = this.routeMap.get(event.topic);
+    const route = this.routeMap.get(message.topic);
     if (!route) {
       return;
     }
 
-    const isFinalHandler = route.options?.final === true;
+    // Try to parse as saga event
+    const event = this.parser.parse<Record<string, unknown>>(message);
+
+    if (event && route.sagaHandler) {
+      await this.handleSagaMessage(message, event, route);
+      return;
+    }
+
+    if (!event && route.plainHandler) {
+      await this.handlePlainMessage(message, route);
+      return;
+    }
+
+    // No matching handler for this message type — skip
+  }
+
+  private async handleSagaMessage(
+    message: InboundMessage,
+    event: SagaEvent<Record<string, unknown>>,
+    route: RouteEntry,
+  ): Promise<void> {
+    const isFinalHandler = route.sagaOptions?.final === true;
 
     const incoming: IncomingEvent = {
       sagaId: event.sagaId,
@@ -127,7 +145,7 @@ export class SagaRunner {
     };
 
     // Fork layer: if handler has fork config, wrap emit to auto-create sub-sagas
-    const forkConfig = route.options?.fork;
+    const forkConfig = route.sagaOptions?.fork;
     const finalEmit: Emit = forkConfig
       ? async (params) => {
           const subSagaId = uuidv7();
@@ -164,7 +182,7 @@ export class SagaRunner {
       "saga.step.name": event.stepName,
       "saga.event.id": event.eventId,
       "saga.root.id": event.rootSagaId,
-      "saga.handler.service": route.participant.serviceId,
+      "saga.handler.service": route.sagaParticipant!.serviceId,
     };
     if (event.sagaName) spanAttrs["saga.name"] = event.sagaName;
     if (event.sagaDescription)
@@ -186,8 +204,8 @@ export class SagaRunner {
     const runHandler = () =>
       SagaContext.run(sagaCtxData, () =>
         this.runWithRetry(
-          route.handler,
-          route.participant,
+          route.sagaHandler!,
+          route.sagaParticipant!,
           incoming,
           finalEmit,
         ),
@@ -205,9 +223,77 @@ export class SagaRunner {
     }
   }
 
+  private async handlePlainMessage(
+    message: InboundMessage,
+    route: RouteEntry,
+  ): Promise<void> {
+    let payload: unknown;
+    try {
+      payload = JSON.parse(message.value);
+    } catch {
+      payload = message.value;
+    }
+
+    const plainMessage: PlainMessage = {
+      topic: message.topic,
+      key: message.key,
+      payload,
+      headers: message.headers,
+    };
+
+    await route.plainHandler!(plainMessage);
+  }
+
   private async runWithRetry(
     handler: EventHandler,
     participant: SagaParticipant,
+    event: IncomingEvent,
+    emit: Emit,
+  ): Promise<void> {
+    try {
+      await this.executeWithRetry(handler, event, emit);
+    } catch (error) {
+      if (error instanceof SagaRetryableError) {
+        // Retries exhausted
+        await this.callOnRetryExhausted(participant, event, error, emit);
+        return;
+      }
+
+      // Non-retryable error — route to onFail if defined
+      if (participant.onFail) {
+        try {
+          await this.executeWithRetry(
+            (ev, em) => participant.onFail!(ev, error as Error, em),
+            event,
+            emit,
+          );
+        } catch (failError) {
+          if (failError instanceof SagaRetryableError) {
+            await this.callOnRetryExhausted(
+              participant,
+              event,
+              failError,
+              emit,
+            );
+          } else {
+            this.logger.error(
+              `[SagaRunner] onFail threw non-retryable error for ${event.topic}:`,
+              failError,
+            );
+          }
+        }
+        return;
+      }
+
+      this.logger.error(
+        `[SagaRunner] Non-retryable error in handler for ${event.topic}:`,
+        error,
+      );
+    }
+  }
+
+  private async executeWithRetry(
+    fn: (event: IncomingEvent, emit: Emit) => Promise<void>,
     event: IncomingEvent,
     emit: Emit,
   ): Promise<void> {
@@ -216,7 +302,7 @@ export class SagaRunner {
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        await handler(event, emit);
+        await fn(event, emit);
         return;
       } catch (error) {
         if (error instanceof SagaRetryableError) {
@@ -225,17 +311,23 @@ export class SagaRunner {
             await this.sleep(delay);
             continue;
           }
-          if (participant.onRetryExhausted) {
-            await participant.onRetryExhausted(event, error, emit);
-          }
-          return;
+          // Exhausted — re-throw so caller can handle
+          throw error;
         }
-        this.logger.error(
-          `[SagaRunner] Non-retryable error in handler for ${event.topic}:`,
-          error,
-        );
-        return;
+        // Non-retryable — re-throw immediately
+        throw error;
       }
+    }
+  }
+
+  private async callOnRetryExhausted(
+    participant: SagaParticipant,
+    event: IncomingEvent,
+    error: SagaRetryableError,
+    emit: Emit,
+  ): Promise<void> {
+    if (participant.onRetryExhausted) {
+      await participant.onRetryExhausted(event, error, emit);
     }
   }
 

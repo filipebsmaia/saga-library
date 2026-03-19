@@ -2,22 +2,16 @@ import { Injectable, Logger } from "@nestjs/common";
 import {
   SagaParticipant,
   SagaParticipantBase,
-  SagaHandler,
 } from "@fbsm/saga-nestjs";
 import type { IncomingEvent, Emit } from "@fbsm/saga-nestjs";
 import { randomDelay } from "../../delay";
 
 @Injectable()
-@SagaParticipant()
+@SagaParticipant("recurring.triggered")
 export class PlanManagementParticipant extends SagaParticipantBase {
-  readonly serviceId = "plan-management";
   private readonly logger = new Logger(PlanManagementParticipant.name);
 
-  @SagaHandler("recurring.triggered")
-  async handleRecurringTriggered(
-    event: IncomingEvent,
-    emit: Emit,
-  ): Promise<void> {
+  async handle(event: IncomingEvent, emit: Emit): Promise<void> {
     const {
       recurringId,
       planId,
