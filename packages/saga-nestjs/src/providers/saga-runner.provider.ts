@@ -29,7 +29,7 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
     private readonly discoveryService: DiscoveryService,
     @Inject(SagaRegistry) private readonly registry: SagaRegistry,
     @Inject(SagaRunner) private readonly runner: SagaRunner,
-    @Inject(ModuleRef) private readonly moduleRef: ModuleRef
+    @Inject(ModuleRef) private readonly moduleRef: ModuleRef,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -43,18 +43,23 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
 
       const isParticipant = Reflect.getMetadata(
         SAGA_PARTICIPANT_METADATA,
-        metatype
+        metatype,
       );
 
       if (!isParticipant) {
         continue;
       }
 
-      // Force instantiation via ModuleRef with { strict: false } to resolve across all modules
-      const instance = this.moduleRef.get(metatype, { strict: false });
-      if (!instance) {
+      // Resolve instance via ModuleRef — async, works with forRoot and forRootAsync
+      let instance: any;
+      try {
+        instance = await this.moduleRef.resolve(metatype, undefined, {
+          strict: false,
+        });
+      } catch (resolveError) {
         this.logger.warn(
-          `Could not resolve participant "${metatype.name}" — skipping`
+          `Could not resolve participant "${metatype.name}" — skipping. ` +
+            `Ensure it is listed in a module's providers array.`,
         );
         continue;
       }
@@ -114,8 +119,8 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
       const allTopics = [...sagaTopicsList, ...plainTopicsList];
       this.logger.log(
         `Registered participant "${serviceId}" handling: [${allTopics.join(
-          ", "
-        )}]`
+          ", ",
+        )}]`,
       );
 
       this.registry.register({

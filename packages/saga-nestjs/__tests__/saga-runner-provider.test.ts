@@ -11,7 +11,6 @@ import type { IncomingEvent, Emit, PlainMessage } from "@fbsm/saga-core";
 import { SagaRetryableError } from "@fbsm/saga-core";
 
 @SagaParticipant("order.created")
-@Injectable()
 class TestPaymentParticipant extends SagaParticipantBase {
   async handle(_event: IncomingEvent, _emit: Emit): Promise<void> {}
 }
@@ -33,11 +32,14 @@ function createMockDiscoveryService(
 
 function createMockModuleRef(instances: object[]): Partial<ModuleRef> {
   return {
-    get: vi.fn().mockImplementation((metatype: any) => {
+    resolve: vi.fn().mockImplementation(async (metatype: any) => {
       const found = instances.find(
         (instance) => instance.constructor === metatype,
       );
-      return found ?? null;
+      if (!found) {
+        throw new Error(`Could not find ${metatype?.name ?? "unknown"}`);
+      }
+      return found;
     }),
   };
 }
@@ -170,7 +172,6 @@ describe("SagaRunnerProvider", () => {
 
   it("should include onRetryExhausted when defined", async () => {
     @SagaParticipant("some.event")
-    @Injectable()
     class ParticipantWithRetry extends SagaParticipantBase {
       async handle(_event: IncomingEvent, _emit: Emit): Promise<void> {}
 
@@ -195,7 +196,6 @@ describe("SagaRunnerProvider", () => {
 
   it("should include onFail when defined", async () => {
     @SagaParticipant("some.event")
-    @Injectable()
     class ParticipantWithFail extends SagaParticipantBase {
       async handle(_event: IncomingEvent, _emit: Emit): Promise<void> {}
 
@@ -224,7 +224,6 @@ describe("SagaRunnerProvider", () => {
 
   it("should discover @MessageHandler methods and register plain handlers", async () => {
     @SagaParticipant("order.created")
-    @Injectable()
     class ParticipantWithPlain extends SagaParticipantBase {
       async handle(_event: IncomingEvent, _emit: Emit): Promise<void> {}
 
@@ -251,7 +250,6 @@ describe("SagaRunnerProvider", () => {
 
   it("should register participant with handler options (fork, final)", async () => {
     @SagaParticipant("bulk-activation.requested", { fork: true })
-    @Injectable()
     class ForkParticipant extends SagaParticipantBase {
       async handle(_event: IncomingEvent, _emit: Emit): Promise<void> {}
     }
@@ -277,7 +275,6 @@ describe("SagaRunnerProvider", () => {
 
   it("should register participant with multiple saga topics mapping to handle()", async () => {
     @SagaParticipant(["event.a", "event.b"])
-    @Injectable()
     class MultiTopicParticipant extends SagaParticipantBase {
       async handle(_event: IncomingEvent, _emit: Emit): Promise<void> {}
     }
@@ -298,5 +295,80 @@ describe("SagaRunnerProvider", () => {
     const topics = Object.keys(participants[0].on);
     expect(topics).toContain("event.a");
     expect(topics).toContain("event.b");
+  });
+
+  it("should resolve participant with constructor dependencies", async () => {
+    @Injectable()
+    class OrderRepository {
+      findOrder(orderId: string) {
+        return { orderId, status: "pending" };
+      }
+    }
+
+    @SagaParticipant("order.paid")
+    class PaymentParticipantWithDeps extends SagaParticipantBase {
+      constructor(private readonly orderRepo: OrderRepository) {
+        super();
+      }
+
+      async handle(_event: IncomingEvent, _emit: Emit): Promise<void> {
+        this.orderRepo.findOrder("test");
+      }
+    }
+
+    const orderRepo = new OrderRepository();
+    const instance = new PaymentParticipantWithDeps(orderRepo);
+    const discovery = createMockDiscoveryService([instance]);
+    const moduleRef = createMockModuleRef([instance]);
+    const provider = new SagaRunnerProvider(
+      discovery as DiscoveryService,
+      registry,
+      runner as unknown as SagaRunner,
+      moduleRef as ModuleRef,
+    );
+
+    await provider.onModuleInit();
+
+    const participants = registry.getAll();
+    expect(participants).toHaveLength(1);
+    expect(participants[0].serviceId).toBe("PaymentParticipantWithDeps");
+    expect(participants[0].on["order.paid"]).toBeInstanceOf(Function);
+  });
+
+  it("should skip unresolvable participant and still register others", async () => {
+    @SagaParticipant("broken.topic")
+    class BrokenParticipant extends SagaParticipantBase {
+      async handle(_event: IncomingEvent, _emit: Emit): Promise<void> {}
+    }
+
+    const brokenInstance = new BrokenParticipant();
+    const discovery = createMockDiscoveryService([brokenInstance, participant]);
+
+    // Only the working participant is resolvable; BrokenParticipant throws
+    const moduleRef: Partial<ModuleRef> = {
+      resolve: vi.fn().mockImplementation(async (metatype: any) => {
+        if (metatype === BrokenParticipant) {
+          throw new Error("NotFoundException: BrokenParticipant not found");
+        }
+        if (metatype === TestPaymentParticipant) {
+          return participant;
+        }
+        throw new Error(`Unknown metatype: ${metatype?.name}`);
+      }),
+    };
+
+    const provider = new SagaRunnerProvider(
+      discovery as DiscoveryService,
+      registry,
+      runner as unknown as SagaRunner,
+      moduleRef as ModuleRef,
+    );
+
+    await provider.onModuleInit();
+
+    const participants = registry.getAll();
+    expect(participants).toHaveLength(1);
+    expect(participants[0].serviceId).toBe("TestPaymentParticipant");
+    expect(runner.start).toHaveBeenCalledTimes(1);
   });
 });

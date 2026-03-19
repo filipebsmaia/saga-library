@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Logger } from "@nestjs/common";
 import { SagaPublisherProvider } from "@fbsm/saga-nestjs";
+import { PingCounterService } from "./ping-counter.service";
 import { PongStore } from "./pong.store";
 
 @Controller()
@@ -8,6 +9,7 @@ export class PingPongController {
 
   constructor(
     private readonly sagaPublisher: SagaPublisherProvider,
+    private readonly pingCounter: PingCounterService,
     private readonly pongStore: PongStore,
   ) {}
 
@@ -25,6 +27,11 @@ export class PingPongController {
     });
 
     return { sagaId };
+  }
+
+  @Get("ping-count")
+  getPingCount() {
+    return { count: this.pingCounter.getCount() };
   }
 
   @Get("pongs")
