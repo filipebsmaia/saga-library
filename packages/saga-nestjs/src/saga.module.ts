@@ -6,8 +6,13 @@ import {
   SagaPublisher,
   SagaParser,
   createOtelContext,
+  type OtelContext,
 } from "@fbsm/saga-core";
-import { SAGA_OPTIONS_TOKEN, SAGA_TRANSPORT_TOKEN } from "./constants";
+import {
+  SAGA_OPTIONS_TOKEN,
+  SAGA_TRANSPORT_TOKEN,
+  SAGA_OTEL_CONTEXT_TOKEN,
+} from "./constants";
 import type {
   SagaModuleOptions,
   SagaModuleAsyncOptions,
@@ -84,24 +89,25 @@ export class SagaModule {
         inject: [SAGA_OPTIONS_TOKEN],
       },
       {
+        provide: SAGA_OTEL_CONTEXT_TOKEN,
+        useFactory: (opts: SagaModuleOptions) =>
+          createOtelContext(opts.otel?.enabled ?? false),
+        inject: [SAGA_OPTIONS_TOKEN],
+      },
+      {
         provide: SagaRegistry,
         useFactory: () => new SagaRegistry(),
       },
       {
         provide: SagaParser,
-        useFactory: (opts: SagaModuleOptions) => {
-          const otelCtx = createOtelContext(opts.otel?.enabled ?? false);
-          return new SagaParser(otelCtx);
-        },
-        inject: [SAGA_OPTIONS_TOKEN],
+        useFactory: (otelCtx: OtelContext) => new SagaParser(otelCtx),
+        inject: [SAGA_OTEL_CONTEXT_TOKEN],
       },
       {
         provide: SagaPublisher,
-        useFactory: (opts: SagaModuleOptions) => {
-          const otelCtx = createOtelContext(opts.otel?.enabled ?? false);
-          return new SagaPublisher(opts.transport, otelCtx, opts.topicPrefix);
-        },
-        inject: [SAGA_OPTIONS_TOKEN],
+        useFactory: (opts: SagaModuleOptions, otelCtx: OtelContext) =>
+          new SagaPublisher(opts.transport, otelCtx, opts.topicPrefix),
+        inject: [SAGA_OPTIONS_TOKEN, SAGA_OTEL_CONTEXT_TOKEN],
       },
       {
         provide: SagaRunner,
@@ -110,8 +116,8 @@ export class SagaModule {
           publisher: SagaPublisher,
           parser: SagaParser,
           opts: SagaModuleOptions,
+          otelCtx: OtelContext,
         ) => {
-          const otelCtx = createOtelContext(opts.otel?.enabled ?? false);
           if (opts.runnerFactory) {
             return opts.runnerFactory(
               registry,
@@ -133,7 +139,13 @@ export class SagaModule {
             opts.logger,
           );
         },
-        inject: [SagaRegistry, SagaPublisher, SagaParser, SAGA_OPTIONS_TOKEN],
+        inject: [
+          SagaRegistry,
+          SagaPublisher,
+          SagaParser,
+          SAGA_OPTIONS_TOKEN,
+          SAGA_OTEL_CONTEXT_TOKEN,
+        ],
       },
     ];
 

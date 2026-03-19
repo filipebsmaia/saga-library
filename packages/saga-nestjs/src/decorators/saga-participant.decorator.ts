@@ -1,3 +1,4 @@
+import { Injectable } from "@nestjs/common";
 import type { ForkConfig } from "@fbsm/saga-core";
 import {
   SAGA_PARTICIPANT_METADATA,
@@ -16,6 +17,7 @@ export function SagaParticipant(
 ): ClassDecorator {
   const topicArray = Array.isArray(topics) ? topics : [topics];
   return (target) => {
+    Injectable()(target);
     Reflect.defineMetadata(SAGA_PARTICIPANT_METADATA, true, target);
     Reflect.defineMetadata(
       SAGA_PARTICIPANT_TOPICS_METADATA,

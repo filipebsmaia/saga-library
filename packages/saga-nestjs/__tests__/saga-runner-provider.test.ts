@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Injectable } from "@nestjs/common";
-import { DiscoveryService } from "@nestjs/core";
+import { DiscoveryService, ModuleRef } from "@nestjs/core";
 import { SagaRunnerProvider } from "../src/providers/saga-runner.provider";
 import { SagaParticipant } from "../src/decorators/saga-participant.decorator";
 import { MessageHandler } from "../src/decorators/message-handler.decorator";
@@ -31,6 +31,17 @@ function createMockDiscoveryService(
   };
 }
 
+function createMockModuleRef(instances: object[]): Partial<ModuleRef> {
+  return {
+    get: vi.fn().mockImplementation((metatype: any) => {
+      const found = instances.find(
+        (instance) => instance.constructor === metatype,
+      );
+      return found ?? null;
+    }),
+  };
+}
+
 describe("SagaRunnerProvider", () => {
   let registry: SagaRegistry;
   let runner: {
@@ -50,10 +61,12 @@ describe("SagaRunnerProvider", () => {
 
   it("should discover @SagaParticipant classes and register handle() for declared topics", async () => {
     const discovery = createMockDiscoveryService([participant]);
+    const moduleRef = createMockModuleRef([participant]);
     const provider = new SagaRunnerProvider(
       discovery as DiscoveryService,
       registry,
       runner as unknown as SagaRunner,
+      moduleRef as ModuleRef,
     );
 
     await provider.onModuleInit();
@@ -68,10 +81,12 @@ describe("SagaRunnerProvider", () => {
 
   it("should auto-derive serviceId from class name", async () => {
     const discovery = createMockDiscoveryService([participant]);
+    const moduleRef = createMockModuleRef([participant]);
     const provider = new SagaRunnerProvider(
       discovery as DiscoveryService,
       registry,
       runner as unknown as SagaRunner,
+      moduleRef as ModuleRef,
     );
 
     await provider.onModuleInit();
@@ -82,10 +97,12 @@ describe("SagaRunnerProvider", () => {
 
   it("should call runner.start() on module init", async () => {
     const discovery = createMockDiscoveryService([participant]);
+    const moduleRef = createMockModuleRef([participant]);
     const provider = new SagaRunnerProvider(
       discovery as DiscoveryService,
       registry,
       runner as unknown as SagaRunner,
+      moduleRef as ModuleRef,
     );
 
     await provider.onModuleInit();
@@ -95,10 +112,12 @@ describe("SagaRunnerProvider", () => {
 
   it("should call runner.stop() on module destroy", async () => {
     const discovery = createMockDiscoveryService([participant]);
+    const moduleRef = createMockModuleRef([participant]);
     const provider = new SagaRunnerProvider(
       discovery as DiscoveryService,
       registry,
       runner as unknown as SagaRunner,
+      moduleRef as ModuleRef,
     );
 
     await provider.onModuleDestroy();
@@ -108,10 +127,12 @@ describe("SagaRunnerProvider", () => {
 
   it("should bind handle method to the instance correctly", async () => {
     const discovery = createMockDiscoveryService([participant]);
+    const moduleRef = createMockModuleRef([participant]);
     const provider = new SagaRunnerProvider(
       discovery as DiscoveryService,
       registry,
       runner as unknown as SagaRunner,
+      moduleRef as ModuleRef,
     );
 
     await provider.onModuleInit();
@@ -132,10 +153,12 @@ describe("SagaRunnerProvider", () => {
       regularInstance,
       participant,
     ]);
+    const moduleRef = createMockModuleRef([regularInstance, participant]);
     const provider = new SagaRunnerProvider(
       discovery as DiscoveryService,
       registry,
       runner as unknown as SagaRunner,
+      moduleRef as ModuleRef,
     );
 
     await provider.onModuleInit();
@@ -156,10 +179,12 @@ describe("SagaRunnerProvider", () => {
 
     const instance = new ParticipantWithRetry();
     const discovery = createMockDiscoveryService([instance]);
+    const moduleRef = createMockModuleRef([instance]);
     const provider = new SagaRunnerProvider(
       discovery as DiscoveryService,
       registry,
       runner as unknown as SagaRunner,
+      moduleRef as ModuleRef,
     );
 
     await provider.onModuleInit();
@@ -183,10 +208,12 @@ describe("SagaRunnerProvider", () => {
 
     const instance = new ParticipantWithFail();
     const discovery = createMockDiscoveryService([instance]);
+    const moduleRef = createMockModuleRef([instance]);
     const provider = new SagaRunnerProvider(
       discovery as DiscoveryService,
       registry,
       runner as unknown as SagaRunner,
+      moduleRef as ModuleRef,
     );
 
     await provider.onModuleInit();
@@ -207,10 +234,12 @@ describe("SagaRunnerProvider", () => {
 
     const instance = new ParticipantWithPlain();
     const discovery = createMockDiscoveryService([instance]);
+    const moduleRef = createMockModuleRef([instance]);
     const provider = new SagaRunnerProvider(
       discovery as DiscoveryService,
       registry,
       runner as unknown as SagaRunner,
+      moduleRef as ModuleRef,
     );
 
     await provider.onModuleInit();
@@ -229,10 +258,12 @@ describe("SagaRunnerProvider", () => {
 
     const instance = new ForkParticipant();
     const discovery = createMockDiscoveryService([instance]);
+    const moduleRef = createMockModuleRef([instance]);
     const provider = new SagaRunnerProvider(
       discovery as DiscoveryService,
       registry,
       runner as unknown as SagaRunner,
+      moduleRef as ModuleRef,
     );
 
     await provider.onModuleInit();
@@ -253,10 +284,12 @@ describe("SagaRunnerProvider", () => {
 
     const instance = new MultiTopicParticipant();
     const discovery = createMockDiscoveryService([instance]);
+    const moduleRef = createMockModuleRef([instance]);
     const provider = new SagaRunnerProvider(
       discovery as DiscoveryService,
       registry,
       runner as unknown as SagaRunner,
+      moduleRef as ModuleRef,
     );
 
     await provider.onModuleInit();
