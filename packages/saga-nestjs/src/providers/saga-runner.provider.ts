@@ -29,7 +29,7 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
     private readonly discoveryService: DiscoveryService,
     @Inject(SagaRegistry) private readonly registry: SagaRegistry,
     @Inject(SagaRunner) private readonly runner: SagaRunner,
-    private readonly moduleRef: ModuleRef
+    @Inject(ModuleRef) private readonly moduleRef: ModuleRef
   ) {}
 
   async onModuleInit(): Promise<void> {
