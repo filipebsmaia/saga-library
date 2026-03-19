@@ -5,9 +5,13 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from "@nestjs/common";
-import { DiscoveryService } from "@nestjs/core";
+import { DiscoveryService, ModuleRef } from "@nestjs/core";
 import { SagaRunner, SagaRegistry } from "@fbsm/saga-core";
-import type { EventHandler, HandlerConfig, PlainHandler } from "@fbsm/saga-core";
+import type {
+  EventHandler,
+  HandlerConfig,
+  PlainHandler,
+} from "@fbsm/saga-core";
 import {
   SAGA_PARTICIPANT_METADATA,
   SAGA_PARTICIPANT_TOPICS_METADATA,
@@ -25,42 +29,46 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
     private readonly discoveryService: DiscoveryService,
     @Inject(SagaRegistry) private readonly registry: SagaRegistry,
     @Inject(SagaRunner) private readonly runner: SagaRunner,
+    private readonly moduleRef: ModuleRef
   ) {}
 
   async onModuleInit(): Promise<void> {
     const providers = this.discoveryService.getProviders();
 
     for (const wrapper of providers) {
-      const instance = wrapper.instance;
-      if (!instance || !instance.constructor) {
+      const metatype = wrapper.metatype;
+      if (!metatype || typeof metatype !== "function" || !metatype.prototype) {
         continue;
       }
 
       const isParticipant = Reflect.getMetadata(
         SAGA_PARTICIPANT_METADATA,
-        instance.constructor,
+        metatype
       );
 
       if (!isParticipant) {
         continue;
       }
 
+      // Force instantiation via ModuleRef (like ConsumerExplorerService does)
+      const instance = await this.moduleRef.resolve(metatype);
+      if (!instance) {
+        this.logger.warn(
+          `Could not resolve participant "${metatype.name}" — skipping`
+        );
+        continue;
+      }
+
       // Derive serviceId from class name
-      const serviceId = instance.constructor.name;
+      const serviceId = metatype.name;
 
       // Read saga topics from @SagaParticipant(topics) decorator
       const sagaTopics: string[] =
-        Reflect.getMetadata(
-          SAGA_PARTICIPANT_TOPICS_METADATA,
-          instance.constructor,
-        ) ?? [];
+        Reflect.getMetadata(SAGA_PARTICIPANT_TOPICS_METADATA, metatype) ?? [];
 
       // Read options (final, fork) from @SagaParticipant(topics, options) decorator
       const participantOptions: SagaParticipantOptions | undefined =
-        Reflect.getMetadata(
-          SAGA_PARTICIPANT_OPTIONS_METADATA,
-          instance.constructor,
-        );
+        Reflect.getMetadata(SAGA_PARTICIPANT_OPTIONS_METADATA, metatype);
 
       // Bind handle() as the saga handler for all declared topics
       const on: Record<string, EventHandler<any>> = {};
@@ -84,7 +92,7 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
 
       // Read @MessageHandler metadata for plain handlers
       const messageHandlerMap: Map<string, string | symbol> | undefined =
-        Reflect.getMetadata(MESSAGE_HANDLER_METADATA, instance.constructor);
+        Reflect.getMetadata(MESSAGE_HANDLER_METADATA, metatype);
 
       const onPlain: Record<string, PlainHandler> = {};
       if (messageHandlerMap) {
@@ -105,7 +113,9 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
 
       const allTopics = [...sagaTopicsList, ...plainTopicsList];
       this.logger.log(
-        `Registered participant "${serviceId}" handling: [${allTopics.join(", ")}]`,
+        `Registered participant "${serviceId}" handling: [${allTopics.join(
+          ", "
+        )}]`
       );
 
       this.registry.register({
@@ -113,8 +123,7 @@ export class SagaRunnerProvider implements OnModuleInit, OnModuleDestroy {
         on,
         handlerOptions:
           Object.keys(handlerOptions).length > 0 ? handlerOptions : undefined,
-        onPlain:
-          Object.keys(onPlain).length > 0 ? onPlain : undefined,
+        onPlain: Object.keys(onPlain).length > 0 ? onPlain : undefined,
         onFail:
           typeof (instance as any).onFail === "function"
             ? (instance as any).onFail.bind(instance)
