@@ -282,6 +282,120 @@ describe("SagaPublisher", () => {
     });
   });
 
+  describe("start() context-aware auto-promotion", () => {
+    it("should create child saga when called inside existing context", async () => {
+      let parentSagaId: string | undefined;
+      let childParentSagaId: string | undefined;
+      let childRootSagaId: string | undefined;
+      let childAncestorChain: string[] | undefined;
+
+      const { sagaId: rootId } = await publisher.start(async () => {
+        const { SagaContext } = await import("../src/context/saga-context");
+        parentSagaId = SagaContext.require().sagaId;
+
+        const { sagaId: childId } = await publisher.start(async () => {
+          const childCtx = SagaContext.require();
+          childParentSagaId = childCtx.parentSagaId;
+          childRootSagaId = childCtx.rootSagaId;
+          childAncestorChain = childCtx.ancestorChain;
+        });
+
+        expect(childId).not.toBe(parentSagaId);
+      });
+
+      expect(childParentSagaId).toBe(parentSagaId);
+      expect(childRootSagaId).toBe(rootId);
+      expect(childAncestorChain).toEqual([parentSagaId]);
+    });
+
+    it("should inherit key and sagaName from parent when not overridden", async () => {
+      let childKey: string | undefined;
+      let childSagaName: string | undefined;
+
+      await publisher.start(
+        async () => {
+          await publisher.start(async () => {
+            const { SagaContext } = await import("../src/context/saga-context");
+            const childCtx = SagaContext.require();
+            childKey = childCtx.key;
+            childSagaName = childCtx.sagaName;
+          });
+        },
+        { key: "parent-key", sagaName: "parent-saga" },
+      );
+
+      expect(childKey).toBe("parent-key");
+      expect(childSagaName).toBe("parent-saga");
+    });
+
+    it("should create independent root saga with independent: true", async () => {
+      let innerParentSagaId: string | undefined;
+      let innerRootSagaId: string | undefined;
+      let innerSagaId: string | undefined;
+
+      await publisher.start(async () => {
+        const { sagaId } = await publisher.start(
+          async () => {
+            const { SagaContext } = await import("../src/context/saga-context");
+            const ctx = SagaContext.require();
+            innerSagaId = ctx.sagaId;
+            innerParentSagaId = ctx.parentSagaId;
+            innerRootSagaId = ctx.rootSagaId;
+          },
+          { independent: true },
+        );
+
+        innerSagaId = sagaId;
+      });
+
+      expect(innerParentSagaId).toBeUndefined();
+      expect(innerRootSagaId).toBe(innerSagaId);
+    });
+
+    it("should create root saga when no context exists (regression)", async () => {
+      let sagaIdFromCtx: string | undefined;
+      let rootSagaIdFromCtx: string | undefined;
+      let parentSagaIdFromCtx: string | undefined;
+
+      const { sagaId } = await publisher.start(async () => {
+        const { SagaContext } = await import("../src/context/saga-context");
+        const ctx = SagaContext.require();
+        sagaIdFromCtx = ctx.sagaId;
+        rootSagaIdFromCtx = ctx.rootSagaId;
+        parentSagaIdFromCtx = ctx.parentSagaId;
+      });
+
+      expect(sagaIdFromCtx).toBe(sagaId);
+      expect(rootSagaIdFromCtx).toBe(sagaId);
+      expect(parentSagaIdFromCtx).toBeUndefined();
+    });
+
+    it("emitToParent() should work in saga created via auto-promoted start()", async () => {
+      let rootId: string | undefined;
+      let midId: string | undefined;
+
+      await publisher.start(async () => {
+        const { SagaContext } = await import("../src/context/saga-context");
+        rootId = SagaContext.require().sagaId;
+
+        // auto-promoted start() creates a child
+        await publisher.start(async () => {
+          midId = SagaContext.require().sagaId;
+
+          await publisher.emitToParent({
+            topic: "child.done",
+            stepName: "child-done",
+            payload: { status: "ok" },
+          });
+        });
+      });
+
+      const msg = transport.publishedMessages[0];
+      expect(msg.headers["saga-id"]).toBe(rootId);
+      expect(msg.headers["saga-parent-id"]).toBeUndefined();
+    });
+  });
+
   describe("with NoopOtelContext", () => {
     it("should work without errors", async () => {
       const noopPublisher = new SagaPublisher(transport, new NoopOtelContext());

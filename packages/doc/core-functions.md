@@ -6,7 +6,7 @@ These functions are available via `SagaPublisherProvider` (NestJS) or `SagaPubli
 
 | Function                   | Requires Context? | Creates New Saga? | Use Case                                    |
 | -------------------------- | :---------------: | :---------------: | ------------------------------------------- |
-| `start(fn)`                |        No         |    Yes (root)     | Entry point: HTTP controller, cron job, CLI |
+| `start(fn)`                |     Optional      | Yes (root/child)  | Entry point or context-aware child creation |
 | `startChild(fn)`           |        Yes        |    Yes (child)    | Spawn related sub-process within a handler  |
 | `emit(params)`             |        Yes        |        No         | Publish event in current saga               |
 | `emitToParent(params\|fn)` |    Yes (child)    |        No         | Sub-saga reporting back to parent           |
@@ -28,11 +28,12 @@ const { sagaId, result } = await sagaPublisher.start(
 );
 ```
 
-- Generates a new `sagaId` (UUID v7)
-- Sets `rootSagaId = sagaId` (this is a root saga)
+- **Context-aware**: if called inside an existing saga context, automatically delegates to `startChild()` — creating a child saga with proper `parentSagaId`, `rootSagaId`, and `ancestorChain`. This means code using `start()` works correctly both standalone and as a sub-saga without manual branching.
+- If no existing context, generates a new `sagaId` (UUID v7) and sets `rootSagaId = sagaId` (root saga)
 - Wraps `fn` in `AsyncLocalStorage` context
 - Returns `{ sagaId, result }` where result is the return value of `fn`
-- Options: `sagaName`, `sagaDescription`, `key`
+- Options: `sagaName`, `sagaDescription`, `key`, `independent`
+- **`independent: true`**: escape hatch to force creation of a root saga even inside an existing context
 
 ## `startChild(fn, opts?)`
 
@@ -141,11 +142,12 @@ await childEmit({
 
 ```
 Are you starting a new saga flow?
-├── Yes → start(fn)
+├── Yes, and it might also run inside an existing saga → start(fn) (auto-promotes to child)
+├── Yes, and it must always be a root saga → start(fn, { independent: true })
 │
 Are you inside a handler and need to spawn a related sub-process?
 ├── Yes, and I want the framework to create sub-sagas per emit → @SagaParticipant("topic", { fork: true })
-├── Yes, and I want explicit control over the child saga → startChild(fn)
+├── Yes, and I want explicit control over the child saga → startChild(fn) or start(fn)
 │
 Are you in a sub-saga and need to report back to the parent?
 ├── Yes → emitToParent(params)

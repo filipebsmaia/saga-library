@@ -137,7 +137,7 @@ Injectable service to initiate sagas or emit events. See [Core Functions](../doc
 
 | Method                                      | Description                                      |
 | ------------------------------------------- | ------------------------------------------------ |
-| `start(fn, opts?)`                          | Start a new root saga                            |
+| `start(fn, opts?)`                          | Start a saga (context-aware: child if inside existing context, root otherwise). Use `{ independent: true }` to force root. |
 | `startChild(fn, opts?)`                     | Start a child saga linked to the current context |
 | `emit(params)`                              | Emit an event in the current saga context        |
 | `emitToParent(params \| fn)`                | Emit to the parent saga                          |

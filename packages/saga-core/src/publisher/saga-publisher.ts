@@ -12,6 +12,7 @@ export interface SagaStartOptions {
   sagaName?: string;
   sagaDescription?: string;
   key?: string;
+  independent?: boolean;
 }
 
 export class SagaPublisher {
@@ -25,6 +26,11 @@ export class SagaPublisher {
     fn: () => R | Promise<R>,
     opts?: SagaStartOptions,
   ): Promise<{ sagaId: string; result: Awaited<R> }> {
+    const existingContext = SagaContext.current();
+    if (existingContext && !opts?.independent) {
+      return this.startChild(fn, opts);
+    }
+
     const sagaId = uuidv7();
     const ctxData = {
       sagaId,

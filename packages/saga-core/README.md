@@ -64,7 +64,7 @@ const publisher = new SagaPublisher(transport, otelContext, topicPrefix);
 
 | Method                                            | Description                           |
 | ------------------------------------------------- | ------------------------------------- |
-| `start(fn, opts?)`                                | Create a root saga with ALS context   |
+| `start(fn, opts?)`                                | Context-aware: creates child if inside existing context, root otherwise |
 | `startChild(fn, opts?)`                           | Create a child saga linked to current |
 | `emit(params)`                                    | Publish event in current context      |
 | `emitToParent(params \| fn)`                      | Emit to parent saga                   |
@@ -77,6 +77,7 @@ interface SagaStartOptions {
   sagaName?: string;
   sagaDescription?: string;
   key?: string;
+  independent?: boolean; // Force root saga even inside existing context
 }
 ```
 

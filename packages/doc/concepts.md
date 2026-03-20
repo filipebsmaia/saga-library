@@ -8,7 +8,7 @@ A distributed transaction pattern where participants react to events and emit ne
 
 - **`sagaId`** (`string`, UUID v7) — Unique identifier for a saga instance. Generated automatically by `start()` or by the framework when forking sub-sagas.
 - **`rootSagaId`** (`string`) — The ID of the top-level (root) saga. Stays the same across all child/sub-sagas. When there are no sub-sagas, `rootSagaId === sagaId`.
-- **`parentSagaId`** (`string | undefined`) — The direct parent saga's ID. Only present in child/sub-sagas created via `fork` or `startChild()`. Undefined for root sagas.
+- **`parentSagaId`** (`string | undefined`) — The direct parent saga's ID. Present in child/sub-sagas created via `fork`, `startChild()`, or `start()` when called inside an existing context. Undefined for root sagas.
 - **`ancestorChain`** (`string[] | undefined`) — Ordered array of ancestor saga IDs from the immediate parent to the root. Enables multi-level `emitToParent()` bubbling by allowing each level to reconstruct its parent's context. Empty array for root sagas, undefined for legacy messages without this field.
 - **`causationId`** (`string`) — The `eventId` of the event that triggered the current handler. Enables causal chain tracing.
 - **`eventId`** (`string`, UUID v7) — Unique identifier for each published event.
