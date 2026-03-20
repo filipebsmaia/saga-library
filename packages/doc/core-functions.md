@@ -97,7 +97,9 @@ await sagaPublisher.emitToParent(async () => {
 
 - Must be inside a child saga context (with `parentSagaId`)
 - Throws `SagaNoParentError` if the current saga has no parent
-- Use for: sub-saga reporting completion, fan-in coordination
+- Supports multi-level bubbling (A→B→C): when C calls `emitToParent()`, the message targets B with correct `parentSagaId` pointing to A, enabling B to subsequently call `emitToParent()` to reach A
+- Uses `ancestorChain` internally to reconstruct the parent's context at any depth
+- Use for: sub-saga reporting completion, fan-in coordination, cascaded completion across nested sub-sagas
 
 ## `forSaga(sagaId, parentCtx?, causationId?, key?)`
 

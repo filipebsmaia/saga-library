@@ -5,6 +5,7 @@ export interface SagaContextData {
   sagaId: string;
   rootSagaId: string;
   parentSagaId?: string;
+  ancestorChain?: string[];
   causationId: string;
   key?: string;
   sagaName?: string;

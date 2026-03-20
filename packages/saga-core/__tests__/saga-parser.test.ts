@@ -187,6 +187,60 @@ describe("SagaParser", () => {
     });
   });
 
+  describe("ancestorChain header", () => {
+    it("should parse ancestorChain from saga-ancestor-chain header", () => {
+      const parser = new SagaParser(noopOtel);
+      const message = makeMessage({
+        headers: {
+          "saga-id": "saga-C",
+          "saga-step-name": "step",
+          "saga-occurred-at": "2024-01-01T00:00:00.000Z",
+          "saga-root-id": "saga-A",
+          "saga-parent-id": "saga-B",
+          "saga-ancestor-chain": "saga-B,saga-A",
+        },
+      });
+
+      const event = parser.parse(message);
+
+      expect(event).not.toBeNull();
+      expect(event!.ancestorChain).toEqual(["saga-B", "saga-A"]);
+    });
+
+    it("should return undefined ancestorChain when header is absent", () => {
+      const parser = new SagaParser(noopOtel);
+      const message = makeMessage({
+        headers: {
+          "saga-id": "saga-123",
+          "saga-step-name": "order",
+          "saga-occurred-at": "2024-01-01T00:00:00.000Z",
+        },
+      });
+
+      const event = parser.parse(message);
+
+      expect(event).not.toBeNull();
+      expect(event!.ancestorChain).toBeUndefined();
+    });
+
+    it("should return undefined ancestorChain when header is empty string", () => {
+      const parser = new SagaParser(noopOtel);
+      const message = makeMessage({
+        headers: {
+          "saga-id": "saga-123",
+          "saga-step-name": "order",
+          "saga-occurred-at": "2024-01-01T00:00:00.000Z",
+          "saga-ancestor-chain": "",
+        },
+      });
+
+      const event = parser.parse(message);
+
+      expect(event).not.toBeNull();
+      expect(event!.ancestorChain).toBeUndefined();
+    });
+  });
+
   describe("Priority", () => {
     it("should prefer Layer 1 (headers) over Layer 3 (body envelope)", () => {
       const parser = new SagaParser(noopOtel);

@@ -1,6 +1,6 @@
 {
   "name": "@fbsm/saga-nestjs",
-  "version": "0.2.0-beta.6",
+  "version": "0.3.0-beta.0",
   "description": "NestJS integration for saga choreography: dynamic module, decorators, auto-discovery",
   "license": "MIT",
   "author": "fbsm",

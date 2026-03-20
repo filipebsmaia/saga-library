@@ -486,6 +486,104 @@ describe("SagaRunner", () => {
     });
   });
 
+  describe("ancestorChain propagation", () => {
+    it("should pass ancestorChain to handler via IncomingEvent", async () => {
+      const handler = vi.fn().mockResolvedValue(undefined);
+      registry.register({
+        serviceId: "svc-a",
+        on: { "order.created": handler },
+      });
+
+      const runner = new SagaRunner(registry, transport, publisher, parser, {
+        groupId: "test-group",
+      });
+
+      await runner.start();
+
+      const message: InboundMessage = {
+        topic: "order.created",
+        key: "saga-B",
+        value: JSON.stringify({ orderId: "456" }),
+        headers: {
+          "saga-id": "saga-B",
+          "saga-causation-id": "saga-B",
+          "saga-event-id": "evt-001",
+          "saga-step-name": "order",
+          "saga-published-at": "2024-01-01T00:00:01.000Z",
+          "saga-schema-version": "1",
+          "saga-root-id": "saga-A",
+          "saga-parent-id": "saga-A",
+          "saga-occurred-at": "2024-01-01T00:00:00.000Z",
+          "saga-ancestor-chain": "saga-A",
+        },
+      };
+
+      await subscribeHandler!(message);
+
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sagaId: "saga-B",
+          ancestorChain: ["saga-A"],
+        }),
+        expect.any(Function),
+      );
+    });
+
+    it("should build ancestorChain for forked sub-sagas", async () => {
+      let emittedMessage: any;
+      const handler = vi
+        .fn()
+        .mockImplementation(async (_event: any, emit: any) => {
+          await emit({
+            topic: "child.started",
+            stepName: "child",
+            payload: {},
+          });
+        });
+
+      registry.register({
+        serviceId: "svc-a",
+        on: { "order.created": handler },
+        handlerOptions: { "order.created": { fork: true } },
+      });
+
+      // Capture published messages
+      (transport.publish as any).mockImplementation(async (msg: any) => {
+        if (msg.topic === "child.started") {
+          emittedMessage = msg;
+        }
+      });
+
+      const runner = new SagaRunner(registry, transport, publisher, parser, {
+        groupId: "test-group",
+      });
+
+      await runner.start();
+
+      const message: InboundMessage = {
+        topic: "order.created",
+        key: "saga-A",
+        value: JSON.stringify({ orderId: "456" }),
+        headers: {
+          "saga-id": "saga-A",
+          "saga-causation-id": "saga-A",
+          "saga-event-id": "evt-001",
+          "saga-step-name": "order",
+          "saga-published-at": "2024-01-01T00:00:01.000Z",
+          "saga-schema-version": "1",
+          "saga-root-id": "saga-A",
+          "saga-occurred-at": "2024-01-01T00:00:00.000Z",
+        },
+      };
+
+      await subscribeHandler!(message);
+
+      expect(emittedMessage).toBeDefined();
+      expect(emittedMessage.headers["saga-parent-id"]).toBe("saga-A");
+      expect(emittedMessage.headers["saga-ancestor-chain"]).toBe("saga-A");
+    });
+  });
+
   describe("plain message routing", () => {
     it("should route plain messages to plain handler", async () => {
       const plainHandler = vi.fn().mockResolvedValue(undefined);

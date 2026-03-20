@@ -150,6 +150,138 @@ describe("SagaPublisher", () => {
     });
   });
 
+  describe("ancestorChain propagation", () => {
+    it("should include saga-ancestor-chain header when ancestorChain is provided", async () => {
+      const emit = publisher.forSaga("sub-saga-C", {
+        parentSagaId: "saga-B",
+        rootSagaId: "saga-A",
+        ancestorChain: ["saga-B", "saga-A"],
+      });
+      await emit({
+        topic: "child.step",
+        stepName: "step",
+        payload: {},
+      });
+
+      const msg = transport.publishedMessages[0];
+      expect(msg.headers["saga-ancestor-chain"]).toBe("saga-B,saga-A");
+    });
+
+    it("should not include saga-ancestor-chain header when ancestorChain is empty", async () => {
+      const emit = publisher.forSaga("saga-A", {
+        parentSagaId: undefined,
+        rootSagaId: "saga-A",
+        ancestorChain: [],
+      });
+      await emit({
+        topic: "root.step",
+        stepName: "step",
+        payload: {},
+      });
+
+      const msg = transport.publishedMessages[0];
+      expect(msg.headers["saga-ancestor-chain"]).toBeUndefined();
+    });
+
+    it("should not include saga-ancestor-chain header when ancestorChain is undefined", async () => {
+      const emit = publisher.forSaga("saga-A");
+      await emit({
+        topic: "root.step",
+        stepName: "step",
+        payload: {},
+      });
+
+      const msg = transport.publishedMessages[0];
+      expect(msg.headers["saga-ancestor-chain"]).toBeUndefined();
+    });
+
+    it("start() should set ancestorChain to empty array in context", async () => {
+      let capturedAncestorChain: string[] | undefined;
+      await publisher.start(async () => {
+        const { SagaContext } = await import("../src/context/saga-context");
+        const ctx = SagaContext.require();
+        capturedAncestorChain = ctx.ancestorChain;
+      });
+
+      expect(capturedAncestorChain).toEqual([]);
+    });
+
+    it("startChild() should build ancestorChain with parent sagaId prepended", async () => {
+      let parentSagaId: string | undefined;
+      let childAncestorChain: string[] | undefined;
+
+      await publisher.start(async () => {
+        const { SagaContext } = await import("../src/context/saga-context");
+        parentSagaId = SagaContext.require().sagaId;
+
+        await publisher.startChild(async () => {
+          const childCtx = SagaContext.require();
+          childAncestorChain = childCtx.ancestorChain;
+        });
+      });
+
+      expect(childAncestorChain).toEqual([parentSagaId]);
+    });
+
+    it("emitToParent() with 3 levels should set correct parentSagaId (grandparent)", async () => {
+      let rootId: string | undefined;
+      let midId: string | undefined;
+
+      await publisher.start(async () => {
+        const { SagaContext } = await import("../src/context/saga-context");
+        rootId = SagaContext.require().sagaId;
+
+        await publisher.startChild(async () => {
+          midId = SagaContext.require().sagaId;
+
+          await publisher.startChild(async () => {
+            // Leaf level (C) — emitToParent should target B with parentSagaId=A
+            await publisher.emitToParent({
+              topic: "leaf.done",
+              stepName: "leaf-done",
+              payload: { result: "ok" },
+            });
+          });
+        });
+      });
+
+      const msg = transport.publishedMessages[0];
+      expect(msg.headers["saga-id"]).toBe(midId);
+      expect(msg.headers["saga-parent-id"]).toBe(rootId);
+      expect(msg.headers["saga-ancestor-chain"]).toBe(rootId);
+    });
+
+    it("emitToParent() callback with 3 levels should set correct context", async () => {
+      let rootId: string | undefined;
+      let midId: string | undefined;
+      let parentCtxInsideCallback: { sagaId: string; parentSagaId?: string; ancestorChain?: string[] } | undefined;
+
+      await publisher.start(async () => {
+        const { SagaContext } = await import("../src/context/saga-context");
+        rootId = SagaContext.require().sagaId;
+
+        await publisher.startChild(async () => {
+          midId = SagaContext.require().sagaId;
+
+          await publisher.startChild(async () => {
+            await publisher.emitToParent(async () => {
+              const ctx = SagaContext.require();
+              parentCtxInsideCallback = {
+                sagaId: ctx.sagaId,
+                parentSagaId: ctx.parentSagaId,
+                ancestorChain: ctx.ancestorChain,
+              };
+            });
+          });
+        });
+      });
+
+      expect(parentCtxInsideCallback!.sagaId).toBe(midId);
+      expect(parentCtxInsideCallback!.parentSagaId).toBe(rootId);
+      expect(parentCtxInsideCallback!.ancestorChain).toEqual([rootId]);
+    });
+  });
+
   describe("with NoopOtelContext", () => {
     it("should work without errors", async () => {
       const noopPublisher = new SagaPublisher(transport, new NoopOtelContext());

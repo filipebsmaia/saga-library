@@ -35,6 +35,11 @@ export class SagaParser {
       return null;
     }
 
+    const rawAncestorChain = headers["saga-ancestor-chain"];
+    const ancestorChain = rawAncestorChain
+      ? rawAncestorChain.split(",").filter(Boolean)
+      : undefined;
+
     return {
       sagaId,
       causationId: headers["saga-causation-id"] ?? sagaId,
@@ -46,6 +51,7 @@ export class SagaParser {
       schemaVersion: 1,
       rootSagaId: headers["saga-root-id"] ?? sagaId,
       parentSagaId: headers["saga-parent-id"] || undefined,
+      ancestorChain,
       payload,
       sagaName: headers["saga-name"] || undefined,
       sagaDescription: headers["saga-description"] || undefined,

@@ -120,6 +120,7 @@ export class SagaRunner {
       occurredAt: event.occurredAt,
       parentSagaId: event.parentSagaId,
       rootSagaId: event.rootSagaId,
+      ancestorChain: event.ancestorChain,
       payload: event.payload,
       key: event.key,
       sagaName: event.sagaName,
@@ -131,6 +132,7 @@ export class SagaRunner {
       {
         parentSagaId: event.parentSagaId,
         rootSagaId: event.rootSagaId,
+        ancestorChain: event.ancestorChain,
       },
       event.eventId,
       event.key,
@@ -150,11 +152,17 @@ export class SagaRunner {
       ? async (params) => {
           const subSagaId = uuidv7();
 
+          const subAncestorChain = [
+            event.sagaId,
+            ...(event.ancestorChain ?? []),
+          ];
+
           const subEmit = this.publisher.forSaga(
             subSagaId,
             {
               parentSagaId: event.sagaId,
               rootSagaId: event.rootSagaId,
+              ancestorChain: subAncestorChain,
             },
             event.eventId,
             event.key,
@@ -165,6 +173,7 @@ export class SagaRunner {
             sagaId: subSagaId,
             rootSagaId: event.rootSagaId,
             parentSagaId: event.sagaId,
+            ancestorChain: subAncestorChain,
             causationId: event.eventId,
             key: event.key,
             sagaName: forkMeta.sagaName,
@@ -195,6 +204,7 @@ export class SagaRunner {
       sagaId: event.sagaId,
       rootSagaId: event.rootSagaId,
       parentSagaId: event.parentSagaId,
+      ancestorChain: event.ancestorChain,
       causationId: event.eventId,
       key: event.key,
       sagaName: event.sagaName,

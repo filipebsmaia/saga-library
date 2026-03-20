@@ -42,6 +42,10 @@ export function buildOutboundMessage<T>(
     headers["saga-key"] = event.key;
   }
 
+  if (event.ancestorChain && event.ancestorChain.length > 0) {
+    headers["saga-ancestor-chain"] = event.ancestorChain.join(",");
+  }
+
   headers["saga-occurred-at"] = event.occurredAt;
 
   const value = JSON.stringify(event.payload);

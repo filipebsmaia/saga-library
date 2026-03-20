@@ -29,6 +29,7 @@ export class SagaPublisher {
     const ctxData = {
       sagaId,
       rootSagaId: sagaId,
+      ancestorChain: [] as string[],
       causationId: sagaId,
       key: opts?.key,
       sagaName: opts?.sagaName,
@@ -45,6 +46,7 @@ export class SagaPublisher {
       {
         parentSagaId: ctx.parentSagaId,
         rootSagaId: ctx.rootSagaId,
+        ancestorChain: ctx.ancestorChain,
       },
       ctx.causationId,
       ctx.key,
@@ -62,6 +64,7 @@ export class SagaPublisher {
       sagaId,
       rootSagaId: ctx.rootSagaId,
       parentSagaId: ctx.sagaId,
+      ancestorChain: [ctx.sagaId, ...(ctx.ancestorChain ?? [])],
       causationId: ctx.causationId,
       key: opts?.key ?? ctx.key,
       sagaName: opts?.sagaName ?? ctx.sagaName,
@@ -79,11 +82,15 @@ export class SagaPublisher {
       throw new SagaNoParentError();
     }
 
+    const parentAncestorChain = (ctx.ancestorChain ?? []).slice(1);
+    const grandparent = parentAncestorChain[0];
+
     if (typeof paramsOrFn === "function") {
       const parentCtx = {
         sagaId: ctx.parentSagaId,
         rootSagaId: ctx.rootSagaId,
-        parentSagaId: ctx.parentSagaId,
+        parentSagaId: grandparent,
+        ancestorChain: parentAncestorChain,
         causationId: ctx.causationId,
         key: ctx.key,
       };
@@ -94,8 +101,9 @@ export class SagaPublisher {
     const parentEmit = this.forSaga(
       ctx.parentSagaId,
       {
-        parentSagaId: ctx.parentSagaId,
+        parentSagaId: grandparent,
         rootSagaId: ctx.rootSagaId,
+        ancestorChain: parentAncestorChain,
       },
       ctx.causationId,
       ctx.key,
@@ -111,6 +119,7 @@ export class SagaPublisher {
   ): Emit {
     const rootSagaId = parentCtx?.rootSagaId ?? sagaId;
     const parentSagaId = parentCtx?.parentSagaId;
+    const ancestorChain = parentCtx?.ancestorChain;
     const baseCausationId = causationId ?? sagaId;
     return async <T extends object>({
       topic,
@@ -135,6 +144,7 @@ export class SagaPublisher {
         schemaVersion: 1,
         rootSagaId,
         parentSagaId,
+        ancestorChain,
         payload,
         hint,
         key: resolvedKey,

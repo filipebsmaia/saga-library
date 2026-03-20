@@ -14,6 +14,7 @@ export interface SagaEvent<TPayload = Record<string, unknown>> {
   schemaVersion: 1;
   parentSagaId?: string;
   rootSagaId: string;
+  ancestorChain?: string[];
   payload: TPayload;
   hint?: EventHint;
   key?: string;

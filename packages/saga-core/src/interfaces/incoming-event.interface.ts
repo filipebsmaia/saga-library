@@ -3,6 +3,7 @@ export interface IncomingEvent<T = Record<string, unknown>> {
   sagaId: string;
   parentSagaId?: string;
   rootSagaId: string;
+  ancestorChain?: string[];
   causationId: string;
   topic: string;
   sagaName?: string;
